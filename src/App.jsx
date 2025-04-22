@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 const msList = [
-  { name: 'ガンダム', cost: 500, type: '強襲' },
+  { name: 'ガンダム🌟', cost: 500, type: '強襲' },
   { name: 'ザクII', cost: 300, type: '汎用' },
   { name: 'ドム', cost: 350, type: '支援' },
   { name: 'ジム・カスタム', cost: 400, type: '汎用' },
