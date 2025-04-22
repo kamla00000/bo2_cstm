@@ -1,91 +1,81 @@
 import React, { useState } from 'react';
+import CustomPartsSelector from './CustomPartsSelector';
 
-const partsList = [
-  { name: '強化フレームLv1', short: { close: 1, mid: 0, long: 0 }, effect: 'HP +100' },
-  { name: '脚部特殊装甲Lv2', short: { close: 2, mid: 1, long: 0 }, effect: '脚部HP +300' },
-  { name: '高性能スラスター', short: { close: 0, mid: 1, long: 1 }, effect: 'スラスター+3' },
-  { name: '攻撃強化プログラムLv3', short: { close: 1, mid: 2, long: 0 }, effect: '格闘+2%' },
-  { name: '高性能レーダー', short: { close: 0, mid: 0, long: 1 }, effect: 'レーダー範囲拡大' },
-  { name: '格闘強化プログラムLv2', short: { close: 1, mid: 1, long: 1 }, effect: '格闘+3%' },
+const msList = [
+  { name: 'ガンダム', cost: 500, type: '強襲' },
+  { name: 'ザクII', cost: 300, type: '汎用' },
+  { name: 'ドム', cost: 350, type: '支援' },
+  { name: 'ジム・カスタム', cost: 400, type: '汎用' },
 ];
 
-const SLOT_LIMIT = { close: 6, mid: 6, long: 6 }; // ← 機体によって変えてOK
+export default function App() {
+  const [costFilter, setCostFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
 
-export default function CustomPartsSelector() {
-  const [selectedParts, setSelectedParts] = useState([]);
-
-  const togglePart = (part) => {
-    const isSelected = selectedParts.find((p) => p.name === part.name);
-
-    if (isSelected) {
-      setSelectedParts(selectedParts.filter((p) => p.name !== part.name));
-    } else {
-      if (selectedParts.length < 8) {
-        setSelectedParts([...selectedParts, part]);
-      } else {
-        alert("最大8つまでしか選択できません！");
-      }
-    }
-  };
-
-  const totalSlots = selectedParts.reduce(
-    (acc, part) => {
-      acc.close += part.short.close;
-      acc.mid += part.short.mid;
-      acc.long += part.short.long;
-      return acc;
-    },
-    { close: 0, mid: 0, long: 0 }
-  );
-
-  const slotStatus = (used, limit) =>
-    used > limit ? 'text-red-600 font-bold' : '';
+  const filteredMS = msList.filter((ms) => {
+    const matchesCost = costFilter === '' || ms.cost === parseInt(costFilter);
+    const matchesType = typeFilter === '' || ms.type === typeFilter;
+    return matchesCost && matchesType;
+  });
 
   return (
-    <div className="mt-6">
-      <h2 className="text-xl font-bold mb-2">カスタムパーツ（最大8つ）</h2>
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
+          バトオペ2 カスタムパーツシミュレーター
+        </h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-        {partsList.map((part, index) => (
-          <label key={index} className="flex items-start gap-2 border p-2 rounded shadow-sm">
-            <input
-              type="checkbox"
-              checked={selectedParts.some(p => p.name === part.name)}
-              onChange={() => togglePart(part)}
-            />
-            <div>
-              <div className="font-semibold">{part.name}</div>
-              <div className="text-sm text-gray-600">効果: {part.effect}</div>
-              <div className="text-sm text-gray-500">
-                消費: 近{part.short.close} 中{part.short.mid} 遠{part.short.long}
-              </div>
-            </div>
-          </label>
-        ))}
-      </div>
+        {/* フィルターエリア */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">コストで絞り込み</label>
+            <select
+              value={costFilter}
+              onChange={(e) => setCostFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded p-2"
+            >
+              <option value="">全て</option>
+              <option value="300">300</option>
+              <option value="350">350</option>
+              <option value="400">400</option>
+              <option value="500">500</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">属性で絞り込み</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded p-2"
+            >
+              <option value="">全て</option>
+              <option value="強襲">強襲</option>
+              <option value="汎用">汎用</option>
+              <option value="支援">支援</option>
+            </select>
+          </div>
+        </div>
 
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-1">スロット使用量:</h3>
-        <ul className="space-y-1">
-          <li className={slotStatus(totalSlots.close, SLOT_LIMIT.close)}>
-            近距離: {totalSlots.close} / {SLOT_LIMIT.close}
-          </li>
-          <li className={slotStatus(totalSlots.mid, SLOT_LIMIT.mid)}>
-            中距離: {totalSlots.mid} / {SLOT_LIMIT.mid}
-          </li>
-          <li className={slotStatus(totalSlots.long, SLOT_LIMIT.long)}>
-            遠距離: {totalSlots.long} / {SLOT_LIMIT.long}
-          </li>
-        </ul>
-      </div>
+        {/* MS表示 */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2 text-blue-600">該当するモビルスーツ</h2>
+          {filteredMS.length > 0 ? (
+            <ul className="grid sm:grid-cols-2 gap-4">
+              {filteredMS.map((ms, index) => (
+                <li key={index} className="p-4 border rounded shadow-sm bg-gray-50">
+                  <p className="font-semibold">{ms.name}</p>
+                  <p className="text-sm text-gray-600">コスト: {ms.cost}</p>
+                  <p className="text-sm text-gray-600">属性: {ms.type}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 mt-2">該当する機体がありません。</p>
+          )}
+        </div>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-1">選択中のパーツ:</h3>
-        <ol className="list-decimal pl-5">
-          {selectedParts.map((part, idx) => (
-            <li key={idx}>{part.name}</li>
-          ))}
-        </ol>
+        {/* カスタムパーツセレクター */}
+        <CustomPartsSelector />
       </div>
     </div>
   );
