@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import CustomPartsSelector from './CustomPartsSelector';
+import CustomPartsSelector from "./components/CustomPartsSelector"; // 正しい場所に合わせて
+
 
 const msList = [
   { name: 'ガンダム', cost: 500, type: '強襲' },
