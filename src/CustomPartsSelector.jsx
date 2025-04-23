@@ -4,7 +4,7 @@ import partsData from './data/partsData';
 function CustomPartsSelector({ selectedParts, setSelectedParts }) {
   const handleSelect = (part) => {
     if (selectedParts.length >= 8) {
-      alert('最大8つまで選択できます');
+      alert('最大8つまで選択できます。');
       return;
     }
     if (!selectedParts.includes(part)) {
