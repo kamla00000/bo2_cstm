@@ -1,36 +1,15 @@
-import React, { useState } from "react";
-import CustomPartsSelector from "./CustomPartsSelector";
+import React from 'react'
+import CustomPartsSelector from './CustomPartsSelector'
+import ResultDisplay from './ResultDisplay'
 
-function App() {
-  const [filter, setFilter] = useState({ cost: "", attribute: "" });
-
+const App = () => {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">カスタムパーツシミュレーター</h1>
-      <div className="mb-4">
-        <label className="mr-2">属性:</label>
-        <select
-          value={filter.attribute}
-          onChange={(e) => setFilter({ ...filter, attribute: e.target.value })}
-        >
-          <option value="">全て</option>
-          <option value="地上">地上</option>
-          <option value="宇宙">宇宙</option>
-        </select>
-        <label className="ml-4 mr-2">コスト:</label>
-        <select
-          value={filter.cost}
-          onChange={(e) => setFilter({ ...filter, cost: e.target.value })}
-        >
-          <option value="">全て</option>
-          <option value="200">200</option>
-          <option value="300">300</option>
-          <option value="400">400</option>
-        </select>
-      </div>
-      <CustomPartsSelector filter={filter} />
+    <div className="p-4 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">BO2 Custom Parts Simulator</h1>
+      <CustomPartsSelector />
+      <ResultDisplay />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

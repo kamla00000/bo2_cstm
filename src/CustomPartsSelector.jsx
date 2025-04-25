@@ -1,12 +1,16 @@
-import React from "react";
+import React from 'react'
 
-function CustomPartsSelector({ filter }) {
+const CustomPartsSelector = () => {
   return (
-    <div>
-      <p>属性: {filter.attribute || "全て"}</p>
-      <p>コスト: {filter.cost || "全て"}</p>
+    <div className="mb-4">
+      <label className="block mb-2">カスタムパーツを選択してください:</label>
+      <select className="w-full border p-2 rounded">
+        <option>フレーム強化Lv1</option>
+        <option>強化フレームLv2</option>
+        <option>新型フレーム</option>
+      </select>
     </div>
-  );
+  )
 }
 
-export default CustomPartsSelector;
+export default CustomPartsSelector
