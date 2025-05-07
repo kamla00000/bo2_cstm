@@ -1,0 +1,6 @@
+[
+    { "name": "攻撃ブースター", "category": "攻撃", "close": 1, "mid": 0, "long": 1 },
+    { "name": "フレーム強化", "category": "防御", "close": 0, "mid": 2, "long": 1 },
+    { "name": "精密照準装置", "category": "攻撃", "close": 0, "mid": 1, "long": 2 },
+    { "name": "耐弾装甲", "category": "防御", "close": 2, "mid": 1, "long": 0 }
+  ]
