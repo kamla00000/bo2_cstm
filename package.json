@@ -6,10 +6,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npx vite build",
     "preview": "vite preview",
     "start": "serve dist"
   },
+  "keywords": [
+    "gundam",
+    "bo2",
+    "custom parts",
+    "vite",
+    "react"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -21,5 +30,6 @@
     "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.15",
     "postcss": "^8.4.31"
-  }
+  },
+  "browserslist": "> 0.5%, last 2 versions, Firefox ESR, not dead"
 }
