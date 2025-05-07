@@ -75,7 +75,10 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs }) => {
                 className="w-full h-auto mb-2 rounded"
               />
               <div className="text-sm font-semibold">{ms.name}</div>
-              <div className={`text-xs ${typeColors[ms.type]}`}>{ms.type} / COST: {ms.cost}</div>
+
+              {/* ↓ ここを削除済み ↓ */}
+              {/* <div className={`text-xs ${typeColors[ms.type]}`}>{ms.type} / COST: {ms.cost}</div> */}
+
               {isSelected && (
                 <div className="absolute top-2 right-2 text-blue-400 text-xl">★</div>
               )}

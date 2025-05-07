@@ -1,9 +1,12 @@
 import React from 'react';
 
 const SlotGauge = ({ type = '近', max = 10, used = 0 }) => {
-  const totalBars = 30;
-  const scale = totalBars / totalBars; // 実質1.0だが枠は30固定
-  const usedBars = Math.round((used / max) * max); // usedの正規化
+  // ここでmaxとusedを確認
+  console.log(`Max: ${max}, Used: ${used}`); // 親から渡された値を表示
+
+  const totalBars = 30; // 最大30バー
+  const usedBars = Math.round((used / max) * totalBars); // 使用バーの計算
+
   const filledColor =
     type === '近' ? 'bg-red-500' : type === '中' ? 'bg-yellow-500' : 'bg-blue-500';
 
@@ -14,8 +17,8 @@ const SlotGauge = ({ type = '近', max = 10, used = 0 }) => {
       </div>
       <div className="flex w-full h-3">
         {[...Array(totalBars)].map((_, i) => {
-          const isActive = i < max;
-          const isFilled = i < used;
+          const isActive = i < totalBars; // 常に30個のバー
+          const isFilled = i < usedBars; // 使用バーの計算（maxに基づく）
           return (
             <div
               key={i}
@@ -33,5 +36,5 @@ const SlotGauge = ({ type = '近', max = 10, used = 0 }) => {
     </div>
   );
 };
-console.log(`[SlotGauge] type=${type}, max=${max}, used=${used}`);
+
 export default SlotGauge;

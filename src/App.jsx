@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react'
 import MSSelector from './components/MSSelector'
 import PartList from './components/PartList'
 import SlotSelector from './components/SlotSelector'
+import SlotDisplay from './components/SlotDisplay'
 
 function App() {
   const [msList, setMsList] = useState([])
+  const [partList, setPartList] = useState([])
   const [msSelected, setMsSelected] = useState(null)
   const [hoveredMs, setHoveredMs] = useState(null)
   const [hoveredPart, setHoveredPart] = useState(null)
@@ -12,18 +14,16 @@ function App() {
   const [slotUsage, setSlotUsage] = useState({ close: 0, mid: 0, long: 0 })
   const [filterCategory, setFilterCategory] = useState('すべて')
 
-  const partList = [
-    { name: '攻撃ブースター', category: '攻撃', close: 1, mid: 0, long: 1 },
-    { name: 'フレーム強化', category: '防御', close: 0, mid: 2, long: 1 },
-    { name: '精密照準装置', category: '攻撃', close: 0, mid: 1, long: 2 },
-    { name: '耐弾装甲', category: '防御', close: 2, mid: 1, long: 0 },
-  ]
-
   useEffect(() => {
     fetch('/data/msData.json')
       .then(res => res.json())
       .then(data => setMsList(data))
       .catch(err => console.error('MSデータの読み込みに失敗しました:', err))
+
+    fetch('/data/partData.json')
+      .then(res => res.json())
+      .then(data => setPartList(data))
+      .catch(err => console.error('パーツデータの読み込みに失敗しました:', err))
 
     const savedMs = localStorage.getItem('selectedMs')
     const savedParts = localStorage.getItem('selectedParts')
@@ -63,17 +63,16 @@ function App() {
     if (selectedParts.length >= 8) return
     if (willExceedSlots(part)) return
 
-    setSelectedParts((prevParts) => {
-      const newParts = [...prevParts, part]
-      updateSlotUsage(newParts)
-      return newParts
-    })
+    const newParts = [...selectedParts, part]
+    setSelectedParts(newParts)
+    updateSlotUsage(newParts)
   }
 
   const handlePartRemove = (part) => {
     const newParts = selectedParts.filter(p => p.name !== part.name)
     setSelectedParts(newParts)
     updateSlotUsage(newParts)
+    setHoveredPart(null) // ← ホバー状態を解除して、ゲージを即更新！
   }
 
   const handleClearAllParts = () => {
@@ -164,6 +163,8 @@ function App() {
             parts={filteredParts}
             onHover={setHoveredPart}
           />
+
+          <SlotDisplay parts={selectedParts} onRemove={handlePartRemove} />
         </div>
       )}
     </div>
