@@ -1,8 +1,6 @@
-// StatusDisplay.jsx
-
 import React from 'react';
 
-const StatusDisplay = ({ stats, extraStats = {} }) => {
+const StatusDisplay = ({ stats }) => {
   const statusLabels = {
     cost: "コスト",
     type: "タイプ",
@@ -16,15 +14,9 @@ const StatusDisplay = ({ stats, extraStats = {} }) => {
     スラスター: "スラスター"
   };
 
-  // 通常ステータスと拡張ステータスをマージ
-  const mergedStats = {
-    ...stats,
-    ...extraStats,
-  };
-
   return (
     <ul className="space-y-1 text-sm">
-      {Object.entries(mergedStats).map(([key, value]) =>
+      {Object.entries(stats).map(([key, value]) =>
         key === 'close' || key === 'mid' || key === 'long' ? null : (
           <li key={key} className="flex justify-between">
             <span>{statusLabels[key] || key}</span>

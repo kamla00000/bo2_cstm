@@ -1,10 +1,17 @@
 [
-    { "name": "ガンダム", "cost": 400, "type": "汎用", "close": 3, "mid": 2, "long": 1 },
-    { "name": "MAXザクⅢMAX", "cost": 450, "type": "強襲", "close": 30, "mid": 30, "long": 30 },
-    { "name": "ザクⅡ改", "cost": 450, "type": "強襲", "close": 2, "mid": 3, "long": 1 },
-    { "name": "ザクⅢ", "cost": 450, "type": "強襲", "close": 4, "mid": 3, "long": 1 },
-    { "name": "ザク4", "cost": 450, "type": "強襲", "close": 5, "mid": 3, "long": 1 },
-    { "name": "ザク5", "cost": 450, "type": "強襲", "close": 6, "mid": 3, "long": 1 },
-    { "name": "ジム・スナイパーⅡ", "cost": 500, "type": "支援", "close": 1, "mid": 2, "long": 4 }
-  ]
-  
+  {
+    "name": "ナラティブガンダムC装備",
+    "cost": 650,
+    "type": "汎用",
+    "hp": 23000,
+    "armor": 30,
+    "beam": 32,
+    "melee": 34,
+    "shoot": 25,
+    "close": 18,
+    "mid": 18,
+    "long": 16,
+    "スピード": 17.3,
+    "スラスター": 85
+  }
+]
