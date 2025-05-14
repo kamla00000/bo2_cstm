@@ -1,11 +1,182 @@
-/* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/style.css */
 
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  /* ダークモードを Tailwind に任せるためここでは色を指定しない */
+/* ステータス一覧 */
+.status-display {
+  @apply bg-gray-900 p-4 rounded-lg shadow-md text-sm;
+}
+
+.status-display h3 {
+  @apply text-xl font-bold mb-3 text-blue-400;
+}
+
+.status-display li {
+  @apply flex justify-between py-1;
+}
+
+.status-display span.text-green-400 {
+  @apply ml-2;
+}
+
+/* パーツリストボタン */
+.part-list-item {
+  @apply relative w-full text-left flex px-4 py-3 rounded-xl border transition-all duration-200 cursor-pointer shadow-sm;
+}
+
+.part-list-item.selected {
+  @apply bg-green-700 text-white border-green-400;
+}
+
+.part-list-item:not(.selected) {
+  @apply bg-gray-800 text-gray-100 border-gray-600 hover:bg-gray-700 hover:border-blue-400;
+}
+
+.part-list-item .indicator-bar {
+  @apply absolute left-0 top-0 bottom-0 w-1 bg-green-400 rounded-l-xl;
+}
+
+.part-list-item .part-name {
+  @apply font-semibold text-sm flex items-center gap-1;
+}
+
+.part-list-item .part-category,
+.part-list-item .part-slots {
+  @apply text-xs text-gray-300;
+}
+
+.part-list-item .part-effects div {
+  @apply text-xs text-green-400;
+}
+
+/* ゲージバー */
+.gauge-container {
+  @apply mb-4;
+}
+
+.gauge-label {
+  @apply text-sm mb-1 text-left font-semibold text-gray-200;
+}
+
+.gauge-bar {
+  @apply flex overflow-x-auto h-3;
+}
+
+.gauge-bar-unit {
+  @apply h-3 mx-[1px] rounded-sm;
+}
+
+.gauge-bar-unit.full {
+  @apply bg-gray-700;
+}
+
+.gauge-bar-unit.active {
+  @apply bg-blue-400;
+}
+
+.gauge-bar-unit.over {
+  @apply bg-red-500 animate-pulse;
+}
+
+.gauge-bar-unit.disabled {
+  @apply bg-gray-900 opacity-30;
+}
+
+.gauge-value {
+  @apply text-xs mt-1 text-left text-gray-400;
+}
+
+.gauge-value.over {
+  @apply text-red-400 font-bold;
+}
+
+/* MSセレクターカード */
+.ms-card {
+  @apply relative p-3 rounded-xl shadow border-2 transition-all duration-200;
+}
+
+.ms-card.selected {
+  @apply border-blue-500 bg-green-700;
+}
+
+.ms-card.default {
+  @apply border-gray-600 bg-gray-800 hover:bg-gray-700;
+}
+
+.ms-card img {
+  @apply w-full h-auto mb-2 rounded;
+}
+
+.ms-card .star-icon {
+  @apply absolute top-2 right-2 text-blue-400 text-xl;
+}
+
+/* タブボタン */
+.tab-button {
+  @apply px-3 py-1 rounded-full text-sm transition-all;
+}
+
+.tab-button.active {
+  @apply text-blue-400 border-white bg-gray-700;
+}
+
+.tab-button.inactive {
+  @apply text-gray-400 border-gray-500;
+}
+
+/* カスタムセレクトボックス */
+.select-input {
+  @apply w-full p-2 bg-gray-800 text-white border border-gray-600 rounded;
+}
+
+/* コンテナ全体 */
+.container {
+  @apply min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center gap-6;
+}
+
+.title {
+  @apply text-4xl font-bold tracking-wide text-blue-400 drop-shadow-lg;
+}
+
+.card {
+  @apply bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700 w-full;
+}
+
+.section-title {
+  @apply text-xl font-semibold mb-2;
+}
+
+.filter-buttons {
+  @apply flex flex-wrap gap-2 mb-2;
+}
+
+.filter-button {
+  @apply px-3 py-1 rounded-full text-sm hover:bg-blue-600;
+}
+
+.filter-button.active {
+  @apply bg-blue-500 text-white;
+}
+
+.filter-button.inactive {
+  @apply bg-gray-600 text-gray-100;
+}
+
+.clear-button {
+  @apply text-sm text-red-400 hover:underline;
+}
+
+.slot-display {
+  @apply mt-6;
+}
+
+.slot-selector {
+  @apply mt-6;
+}
+
+/* 装着中のパーツ一覧 */
+.slot-part {
+  @apply flex justify-between items-center bg-gray-800 p-2 rounded-lg border border-gray-700 hover:bg-gray-700 transition;
+}
+
+.slot-part button {
+  @apply text-red-400 hover:text-red-300;
 }

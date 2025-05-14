@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useEffect, useState } from 'react';
 import MSSelector from './components/MSSelector';
 import PartList from './components/PartList';
@@ -15,58 +16,33 @@ function App() {
   const [slotUsage, setSlotUsage] = useState({ close: 0, mid: 0, long: 0 });
   const [filterCategory, setFilterCategory] = useState('すべて');
 
-  // ステータス計算関数（ホバー含む）
-  const calculateStats = (parts = []) => {
-    // MS未選択時のデフォルト値
-    if (!msSelected) {
-      return {
-        スピード: 0,
-        スラスター: 0
-      };
-    }
-
-    let stats = {
-      ...msSelected,
-      スピード: msSelected.スピード ?? 0,
-      スラスター: msSelected.スラスター ?? 0
-    };
-
-    parts.forEach((part) => {
-      Object.entries(part).forEach(([key, value]) => {
-        if (typeof value === 'number' && !isNaN(value)) {
-          stats[key] = (stats[key] || 0) + value;
-        }
-      });
-    });
-
-    return stats;
-  };
-
-  // 現在のステータス（ホバー含む）
-  const currentStats = calculateStats([
-    ...selectedParts,
-    ...(hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)
-      ? [hoveredPart]
-      : [])
-  ]);
-
   // MSデータとパーツデータを初期ロード
   useEffect(() => {
     fetch('/data/msData.json')
-      .then(res => res.json())
-      .then(data => setMsList(data))
-      .catch(err => console.error('MSデータの読み込みに失敗しました:', err));
+      .then(res => {
+        if (!res.ok) throw new Error('MSデータ取得失敗');
+        return res.json();
+      })
+      .then(data => {
+        console.log('📥 msData.json 読み込み成功:', data);
+        setMsList(data);
+      })
+      .catch(err => console.error('MSデータ読み込みエラー:', err));
 
     fetch('/data/partData.json')
       .then(res => res.json())
       .then(data => setPartList(data))
-      .catch(err => console.error('パーツデータの読み込みに失敗しました:', err));
+      .catch(err => console.error('パーツデータ読み込みエラー:', err));
 
-    // ローカルストレージから復元
     const savedMs = localStorage.getItem('selectedMs');
     const savedParts = localStorage.getItem('selectedParts');
 
-    if (savedMs) setMsSelected(JSON.parse(savedMs));
+    if (savedMs) {
+      const parsedMs = JSON.parse(savedMs);
+      console.log('💾 復元 MS:', parsedMs);
+      setMsSelected(parsedMs);
+    }
+
     if (savedParts) {
       const parsedParts = JSON.parse(savedParts);
       setSelectedParts(parsedParts);
@@ -80,8 +56,86 @@ function App() {
     localStorage.setItem('selectedParts', JSON.stringify(selectedParts));
   }, [msSelected, selectedParts]);
 
+  // ステータス計算関数（ホバー含む）
+  const calculateMSStats = (parts = []) => {
+    console.log('🚀 [App] calculateMSStats 実行開始');
+    console.log('📊 受け取った parts:', parts);
+    console.log('⚙️ 現在の msSelected:', msSelected);
+
+    if (!msSelected) {
+      console.warn('⚠️ msSelected が null または undefined');
+      return {};
+    }
+
+    // 表示用ラベルとキーのマッピングに基づいた構築
+    const stats = {
+      name: msSelected["MS名"] || msSelected.name || '不明',
+      コスト: msSelected.コスト || msSelected.cost || 0,
+      HP: msSelected.HP || msSelected.hp || 0,
+      耐実弾補正: msSelected.耐実弾補正 || msSelected.armor || 0,
+      耐ビーム補正: msSelected.耐ビーム補正 || msSelected.beam || 0,
+      耐格闘補正: msSelected.耐格闘補正 || msSelected.melee || 0,
+      射撃補正: msSelected.射撃補正 || msSelected.shoot || 0,
+      格闘補正: msSelected.格闘補正 ?? 0,
+      スピード: msSelected.スピード ?? 0,
+      高速移動: msSelected.高速移動 ?? 0,
+      スラスター: msSelected.スラスター ?? 0,
+      旋回_地上_通常時: msSelected.旋回_地上_通常時 ?? 0,
+      旋回_宇宙_通常時: msSelected.旋回_宇宙_通常時 ?? 0,
+      格闘判定力: msSelected.格闘判定力 ?? '',
+      カウンター: msSelected.カウンター ?? '',
+      close: (msSelected["近スロット"] || msSelected.close) ?? 0,
+      mid: (msSelected["中スロット"] || msSelected.mid) ?? 0,
+      long: (msSelected["遠スロット"] || msSelected.long) ?? 0
+    };
+
+    console.log('🧮 基本ステータス:', stats);
+
+    // 補正値オブジェクトを初期化
+    const bonus = {};
+    const total = {};
+
+    Object.keys(stats).forEach(key => {
+      bonus[key] = 0;
+      total[key] = stats[key];
+    });
+
+    // パーツによる補正を適用
+    parts.forEach(part => {
+      Object.entries(part).forEach(([key, value]) => {
+        if (typeof value === 'number' && !isNaN(value)) {
+          if (bonus.hasOwnProperty(key)) {
+            bonus[key] += value;
+            total[key] = stats[key] + bonus[key];
+          }
+        }
+      });
+    });
+
+    const result = {
+      base: stats,
+      bonus,
+      total
+    };
+
+    console.log('✅ 計算結果:', result);
+
+    return result;
+  };
+
+  // 現在のステータス（ホバー含む）
+  const currentStats = calculateMSStats([
+    ...selectedParts,
+    ...(hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)
+      ? [hoveredPart]
+      : [])
+  ]);
+
+  console.log('📌 App.jsx > currentStats:', currentStats);
+
   // MS 選択時処理
   const handleMsSelect = (ms) => {
+    console.log('🎯 handleMsSelect 実行:', ms);
     setMsSelected(ms);
     setHoveredMs(null);
     setHoveredPart(null);
@@ -94,9 +148,9 @@ function App() {
     if (!msSelected) return false;
 
     return (
-      slotUsage.close + part.close > msSelected.close ||
-      slotUsage.mid + part.mid > msSelected.mid ||
-      slotUsage.long + part.long > msSelected.long
+      slotUsage.close + part.close > msSelected["近スロット"] ||
+      slotUsage.mid + part.mid > msSelected["中スロット"] ||
+      slotUsage.long + part.long > msSelected["遠スロット"]
     );
   };
 
@@ -173,7 +227,6 @@ function App() {
         {/* 右：ステータス一覧表示 */}
         {msSelected && (
           <div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
-            <h2 className="text-xl font-semibold mb-2">ステータス一覧</h2>
             <StatusDisplay stats={currentStats} />
           </div>
         )}
