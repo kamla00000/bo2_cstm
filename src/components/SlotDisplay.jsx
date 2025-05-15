@@ -1,39 +1,22 @@
-// StatusDisplay.jsx
-
+// src/components/SlotDisplay.jsx
 import React from 'react';
 
-const StatusDisplay = ({ stats, extraStats = {} }) => {
-  const statusLabels = {
-    cost: "コスト",
-    type: "タイプ",
-    hp: "HP",
-    armor: "耐実弾補正",
-    beam: "耐ビーム補正",
-    melee: "耐格闘補正",
-    shoot: "射撃補正",
-    格闘補正: "格闘補正",
-    スピード: "スピード",
-    スラスター: "スラスター"
-  };
-
-  // 通常ステータスと拡張ステータスをマージ
-  const mergedStats = {
-    ...stats,
-    ...extraStats,
-  };
-
+const SlotDisplay = ({ parts = [], onRemove }) => {
   return (
-    <ul className="space-y-1 text-sm">
-      {Object.entries(mergedStats).map(([key, value]) =>
-        key === 'close' || key === 'mid' || key === 'long' ? null : (
-          <li key={key} className="flex justify-between">
-            <span>{statusLabels[key] || key}</span>
-            <span>{value}</span>
-          </li>
-        )
-      )}
-    </ul>
+    <div className="space-y-2">
+      {parts.length > 0 && <div className="text-lg font-semibold">装着中のカスタムパーツ</div>}
+      <div className="space-y-2">
+        {parts.map((part, index) => (
+          <div key={index} className="flex justify-between items-center bg-gray-800 p-2 rounded hover:bg-gray-700 transition">
+            <span>{part.name}</span>
+            <button onClick={() => onRemove(part)} className="text-xs text-red-400 hover:text-red-300">削除</button>
+          </div>
+        ))}
+        {parts.length === 0 && <p className="text-gray-500 text-sm">装着中のパーツはありません</p>}
+      </div>
+    </div>
   );
 };
 
-export default StatusDisplay;
+
+export default SlotDisplay;

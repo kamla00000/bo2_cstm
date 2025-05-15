@@ -2,37 +2,37 @@
   {
     "name": "射撃強化プログラムLV1",
     "category": "攻撃",
+    "射撃補正": 5,
     "close": 0,
     "mid": 2,
     "long": 3,
-    "shoot": 5,
     "description": "射撃補正 +5"
   },
   {
-    "name": "射撃強化プログラムLV2",
+    "name": "射撃強化LV2",
     "category": "攻撃",
+    "射撃補正": 7,
     "close": 0,
     "mid": 3,
     "long": 5,
-    "shoot": 7,
     "description": "射撃補正 +7"
   },
   {
     "name": "格闘強化プログラムLV1",
     "category": "攻撃",
+    "格闘補正": 5,
     "close": 2,
     "mid": 0,
     "long": 0,
-    "melee": 5,
     "description": "格闘補正 +5"
   },
   {
     "name": "格闘強化プログラムLV2",
     "category": "攻撃",
+    "格闘補正": 7,
     "close": 3,
     "mid": 0,
     "long": 0,
-    "melee": 7,
     "description": "格闘補正 +7"
   },
   {

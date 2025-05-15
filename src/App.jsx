@@ -58,24 +58,19 @@ function App() {
 
   // ステータス計算関数（ホバー含む）
   const calculateMSStats = (parts = []) => {
-    console.log('🚀 [App] calculateMSStats 実行開始');
-    console.log('📊 受け取った parts:', parts);
-    console.log('⚙️ 現在の msSelected:', msSelected);
-
     if (!msSelected) {
       console.warn('⚠️ msSelected が null または undefined');
       return {};
     }
 
-    // 表示用ラベルとキーのマッピングに基づいた構築
     const stats = {
-      name: msSelected["MS名"] || msSelected.name || '不明',
-      コスト: msSelected.コスト || msSelected.cost || 0,
-      HP: msSelected.HP || msSelected.hp || 0,
-      耐実弾補正: msSelected.耐実弾補正 || msSelected.armor || 0,
-      耐ビーム補正: msSelected.耐ビーム補正 || msSelected.beam || 0,
-      耐格闘補正: msSelected.耐格闘補正 || msSelected.melee || 0,
-      射撃補正: msSelected.射撃補正 || msSelected.shoot || 0,
+      name: msSelected["MS名"] || '不明',
+      コスト: msSelected.コスト || 0,
+      HP: msSelected.HP || 0,
+      耐実弾補正: msSelected.耐実弾補正 ?? 0,
+      耐ビーム補正: msSelected.耐ビーム補正 ?? 0,
+      耐格闘補正: msSelected.耐格闘補正 ?? 0,
+      射撃補正: msSelected.射撃補正 ?? 0,
       格闘補正: msSelected.格闘補正 ?? 0,
       スピード: msSelected.スピード ?? 0,
       高速移動: msSelected.高速移動 ?? 0,
@@ -84,27 +79,30 @@ function App() {
       旋回_宇宙_通常時: msSelected.旋回_宇宙_通常時 ?? 0,
       格闘判定力: msSelected.格闘判定力 ?? '',
       カウンター: msSelected.カウンター ?? '',
-      close: (msSelected["近スロット"] || msSelected.close) ?? 0,
-      mid: (msSelected["中スロット"] || msSelected.mid) ?? 0,
-      long: (msSelected["遠スロット"] || msSelected.long) ?? 0
+      close: msSelected.近スロット ?? 0,
+      mid: msSelected.中スロット ?? 0,
+      long: msSelected.遠スロット ?? 0,
     };
 
-    console.log('🧮 基本ステータス:', stats);
+    const noBonusKeys = ['カウンター', '格闘判定力', 'close', 'mid', 'long'];
 
-    // 補正値オブジェクトを初期化
     const bonus = {};
     const total = {};
 
-    Object.keys(stats).forEach(key => {
-      bonus[key] = 0;
-      total[key] = stats[key];
+    Object.keys(stats).forEach((key) => {
+      if (!noBonusKeys.includes(key)) {
+        bonus[key] = 0;
+        total[key] = stats[key];
+      } else {
+        bonus[key] = null;
+        total[key] = stats[key];
+      }
     });
 
-    // パーツによる補正を適用
-    parts.forEach(part => {
+    parts.forEach((part) => {
       Object.entries(part).forEach(([key, value]) => {
         if (typeof value === 'number' && !isNaN(value)) {
-          if (bonus.hasOwnProperty(key)) {
+          if (bonus.hasOwnProperty(key) && bonus[key] !== null) {
             bonus[key] += value;
             total[key] = stats[key] + bonus[key];
           }
@@ -112,18 +110,13 @@ function App() {
       });
     });
 
-    const result = {
+    return {
       base: stats,
       bonus,
       total
     };
-
-    console.log('✅ 計算結果:', result);
-
-    return result;
   };
 
-  // 現在のステータス（ホバー含む）
   const currentStats = calculateMSStats([
     ...selectedParts,
     ...(hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)
@@ -241,8 +234,8 @@ function App() {
             {['すべて', '攻撃', '防御'].map(cat => (
               <button
                 key={cat}
-                className={`px-3 py-1 rounded-full text-sm ${filterCategory === cat ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-100'} hover:bg-blue-600`}
                 onClick={() => setFilterCategory(cat)}
+                className={`px-3 py-1 rounded-full text-sm ${filterCategory === cat ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-100'} hover:bg-blue-600`}
               >
                 {cat}
               </button>
@@ -268,8 +261,12 @@ function App() {
 
           {/* 装着中のカスタムパーツ一覧 */}
           <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">装着中のカスタムパーツ</h2>
-            <SlotDisplay parts={selectedParts} onRemove={handlePartRemove} />
+            {selectedParts.length > 0 && (
+              <>
+                <h2 className="text-xl font-semibold mb-2">装着中のカスタムパーツ</h2>
+                <SlotDisplay parts={selectedParts} onRemove={handlePartRemove} />
+              </>
+            )}
           </div>
 
           {/* スロット使用状況 */}
