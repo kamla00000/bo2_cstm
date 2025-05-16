@@ -29,35 +29,41 @@ const SlotSelector = ({ usage, maxUsage }) => {
   return (
     <div className="space-y-6">
       {/* 近距離スロット */}
-      <div className="space-y-1">
-        <div className="flex items-center text-sm font-medium">
-          <span>近距離スロット</span>
-          <span className="ml-auto">{usage.close} / {closeMax}</span>
-        </div>
-        <div className="flex flex-wrap">
-          {renderSlotBar(usage.close, closeMax)}
+      <div className="flex flex-col space-y-2 text-sm font-medium">
+        <span className="text-gray-300">近距離スロット</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-lg font-bold text-white w-[60px]">
+            {usage.close} / {closeMax}
+          </span>
+          <div className="flex flex-wrap">
+            {renderSlotBar(usage.close, closeMax)}
+          </div>
         </div>
       </div>
 
       {/* 中距離スロット */}
-      <div className="space-y-1">
-        <div className="flex items-center text-sm font-medium">
-          <span>中距離スロット</span>
-          <span className="ml-auto">{usage.mid} / {midMax}</span>
-        </div>
-        <div className="flex flex-wrap">
-          {renderSlotBar(usage.mid, midMax)}
+      <div className="flex flex-col space-y-2 text-sm font-medium">
+        <span className="text-gray-300">中距離スロット</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-lg font-bold text-white w-[60px]">
+            {usage.mid} / {midMax}
+          </span>
+          <div className="flex flex-wrap">
+            {renderSlotBar(usage.mid, midMax)}
+          </div>
         </div>
       </div>
 
       {/* 遠距離スロット */}
-      <div className="space-y-1">
-        <div className="flex items-center text-sm font-medium">
-          <span>遠距離スロット</span>
-          <span className="ml-auto">{usage.long} / {longMax}</span>
-        </div>
-        <div className="flex flex-wrap">
-          {renderSlotBar(usage.long, longMax)}
+      <div className="flex flex-col space-y-2 text-sm font-medium">
+        <span className="text-gray-300">遠距離スロット</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-lg font-bold text-white w-[60px]">
+            {usage.long} / {longMax}
+          </span>
+          <div className="flex flex-wrap">
+            {renderSlotBar(usage.long, longMax)}
+          </div>
         </div>
       </div>
     </div>
