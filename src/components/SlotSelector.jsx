@@ -6,53 +6,58 @@ const SlotSelector = ({ usage, maxUsage }) => {
   const midMax = maxUsage?.["中スロット"] ?? 0;
   const longMax = maxUsage?.["遠スロット"] ?? 0;
 
+  // 各スロットのバー生成関数
+  const renderSlotBar = (current, max) => {
+    const cells = [];
+    for (let i = 0; i < max; i++) {
+      cells.push(
+        <div
+          key={i}
+          className={`w-4 h-8 mx-px ${
+            i < current ? 'bg-blue-500' : 'bg-gray-700'
+          }`}
+        ></div>
+      );
+    }
+    return (
+      <div className="flex">
+        {cells}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* 近距離スロット */}
-      <div>
-        <div className="flex justify-between text-sm font-medium mb-1">
+      <div className="space-y-1">
+        <div className="flex items-center text-sm font-medium">
           <span>近距離スロット</span>
-          <span>{usage.close} / {closeMax}</span>
+          <span className="ml-auto">{usage.close} / {closeMax}</span>
         </div>
-        <div className="relative h-4 bg-gray-700 rounded-full overflow-hidden w-[300px]">
-          <div
-            className={`h-full rounded-full transition-all duration-200 ${
-              usage.close > closeMax ? 'bg-red-500' : 'bg-blue-500'
-            }`}
-            style={{ width: `${Math.min((usage.close / closeMax) * 100, 100)}%` }}
-          ></div>
+        <div className="flex flex-wrap">
+          {renderSlotBar(usage.close, closeMax)}
         </div>
       </div>
 
       {/* 中距離スロット */}
-      <div>
-        <div className="flex justify-between text-sm font-medium mb-1">
+      <div className="space-y-1">
+        <div className="flex items-center text-sm font-medium">
           <span>中距離スロット</span>
-          <span>{usage.mid} / {midMax}</span>
+          <span className="ml-auto">{usage.mid} / {midMax}</span>
         </div>
-        <div className="relative h-4 bg-gray-700 rounded-full overflow-hidden w-[300px]">
-          <div
-            className={`h-full rounded-full transition-all duration-200 ${
-              usage.mid > midMax ? 'bg-red-500' : 'bg-blue-500'
-            }`}
-            style={{ width: `${Math.min((usage.mid / midMax) * 100, 100)}%` }}
-          ></div>
+        <div className="flex flex-wrap">
+          {renderSlotBar(usage.mid, midMax)}
         </div>
       </div>
 
       {/* 遠距離スロット */}
-      <div>
-        <div className="flex justify-between text-sm font-medium mb-1">
+      <div className="space-y-1">
+        <div className="flex items-center text-sm font-medium">
           <span>遠距離スロット</span>
-          <span>{usage.long} / {longMax}</span>
+          <span className="ml-auto">{usage.long} / {longMax}</span>
         </div>
-        <div className="relative h-4 bg-gray-700 rounded-full overflow-hidden w-[300px]">
-          <div
-            className={`h-full rounded-full transition-all duration-200 ${
-              usage.long > longMax ? 'bg-red-500' : 'bg-blue-500'
-            }`}
-            style={{ width: `${Math.min((usage.long / longMax) * 100, 100)}%` }}
-          ></div>
+        <div className="flex flex-wrap">
+          {renderSlotBar(usage.long, longMax)}
         </div>
       </div>
     </div>

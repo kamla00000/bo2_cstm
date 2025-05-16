@@ -6,9 +6,13 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // grid-cols-30 を使用可能にする
       gridTemplateColumns: {
-        // 30分割ゲージ用
         30: 'repeat(30, minmax(0, 1fr))',
+      },
+      // カスタムスペース：slot-cell（例：w-slot-cell）
+      spacing: {
+        'slot-cell': '1.2rem',
       },
     },
   },

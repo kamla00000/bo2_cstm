@@ -84,7 +84,7 @@ function App() {
       long: msSelected.遠スロット ?? 0,
     };
 
-    const noBonusKeys = ['カウンター', '格闘判定力', 'close', 'mid', 'long'];
+    const noBonusKeys = ['カウンター', 'close', 'mid', 'long'];
 
     const bonus = {};
     const total = {};
@@ -259,6 +259,12 @@ function App() {
             onHover={setHoveredPart}
           />
 
+          {/* スロット使用状況 */}
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">スロット使用状況</h2>
+            <SlotSelector usage={getUsageWithPreview()} maxUsage={msSelected} />
+          </div>
+
           {/* 装着中のカスタムパーツ一覧 */}
           <div className="mt-6">
             {selectedParts.length > 0 && (
@@ -267,12 +273,6 @@ function App() {
                 <SlotDisplay parts={selectedParts} onRemove={handlePartRemove} />
               </>
             )}
-          </div>
-
-          {/* スロット使用状況 */}
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">スロット使用状況</h2>
-            <SlotSelector usage={getUsageWithPreview()} maxUsage={msSelected} />
           </div>
         </div>
       )}
