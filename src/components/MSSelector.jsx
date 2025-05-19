@@ -1,41 +1,51 @@
 // src/components/MSSelector.jsx
 import React, { useState } from 'react';
+import SlotSelector from './SlotSelector';
 
-const typeColors = {
-  '強襲': 'text-red-400',
-  '汎用': 'text-blue-400',
-  '支援': 'text-yellow-400',
-};
+const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
+  const [filterType, setFilterType] = useState('すべて');
+  const [filterCost, setFilterCost] = useState('すべて');
 
-const MSSelector = ({ msList, onSelect, onHover, selectedMs }) => {
-  const [selectedType, setSelectedType] = useState('すべて');
-  const [selectedCost, setSelectedCost] = useState('ALL'); // ALL が初期値
-
-  // コストの一覧を取得（重複除去 + 降順ソート）
-  const costOptions = [...new Set(msList.map(ms => ms.コスト))].sort((a, b) => b - a);
-  costOptions.unshift('ALL');
+  // 属性ごとのカラー設定
+  const getTypeColor = (type) => {
+    switch (type) {
+      case '強襲':
+        return 'bg-red-500 text-white';
+      case '汎用':
+        return 'bg-blue-500 text-white';
+      case '支援':
+        return 'bg-yellow-500 text-black';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
 
   // フィルタリング処理
-  const filteredList = msList.filter(ms => {
-    const matchesType = selectedType === 'すべて' || ms.属性 === selectedType;
-    const matchesCost = selectedCost === 'ALL' || ms.コスト === selectedCost;
+  const filteredMS = msList.filter((ms) => {
+    const matchesType = filterType === 'すべて' || ms.属性 === filterType;
+    const costValue = ms.コスト;
+    const matchesCost =
+      filterCost === 'すべて' ||
+      (filterCost === '750' && costValue === 750) ||
+      (filterCost === '700' && costValue === 700) ||
+      (filterCost === '650' && costValue === 650) ||
+      (filterCost === '600' && costValue === 600);
 
     return matchesType && matchesCost;
   });
 
-  // 表示リストをコスト降順にソート
-  const sortedList = [...filteredList].sort((a, b) => b.コスト - a.コスト);
-
   return (
     <div className="space-y-4">
-      {/* 属性タブ */}
-      <div className="flex gap-2">
-        {['すべて', '強襲', '汎用', '支援'].map(type => (
+      {/* 属性フィルタ */}
+      <div className="flex flex-wrap gap-2">
+        {['すべて', '強襲', '汎用', '支援'].map((type) => (
           <button
             key={type}
-            onClick={() => setSelectedType(type)}
-            className={`px-3 py-1 rounded-full text-sm font-semibold border transition-all ${
-              selectedType === type ? `${typeColors[type]} border-white bg-gray-700` : 'text-gray-400 border-gray-500'
+            onClick={() => setFilterType(type)}
+            className={`px-3 py-1 rounded-full text-sm ${
+              filterType === type
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
             }`}
           >
             {type}
@@ -43,52 +53,86 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs }) => {
         ))}
       </div>
 
-      {/* コストセレクトボックス */}
-      <select
-        className="w-full p-2 bg-gray-800 text-white border border-gray-600 rounded"
-        value={selectedCost}
-        onChange={(e) => setSelectedCost(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
-      >
-        {costOptions.map(cost => (
-          <option key={cost} value={cost}>
-            {cost === 'ALL' ? '全コスト範囲' : `COST ${cost}`}
-          </option>
+      {/* コストフィルタ */}
+      <div className="flex flex-wrap gap-2">
+        {['すべて', '750', '700', '650', '600'].map((cost) => (
+          <button
+            key={cost}
+            onClick={() => setFilterCost(cost)}
+            className={`px-3 py-1 rounded-full text-sm ${
+              filterCost === cost
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-600 text-gray-100 hover:bg-green-600'
+            }`}
+          >
+            コスト: {cost}
+          </button>
         ))}
-      </select>
-
-      {/* 該当する機体一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {sortedList.length === 0 ? (
-          <p className="text-sm text-gray-400 col-span-full">該当するMSがありません</p>
-        ) : (
-          sortedList.map((ms, index) => {
-            const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
-            return (
-              <button
-                key={index}
-                onClick={() => onSelect(ms)}
-                onMouseEnter={() => onHover(ms)}
-                onMouseLeave={() => onHover(null)}
-                className={`relative p-3 rounded-xl shadow border-2 transition-all duration-200 ${
-                  isSelected
-                    ? 'border-blue-500 bg-green-900'
-                    : 'border-gray-600 bg-gray-800 hover:bg-gray-700'
-                }`}
-              >
-                <img
-                  src={`https://via.placeholder.com/150x100?text=         ${encodeURIComponent(ms["MS名"])}`}
-                  alt={`${ms["MS名"]} icon`}
-                  className="w-full h-auto mb-2 rounded"
-                />
-                <div className="text-sm font-semibold">{ms["MS名"]}</div>
-                {isSelected && (
-                  <div className="absolute top-2 right-2 text-blue-400 text-xl">★</div>
-                )}
-              </button>
-            );
-          })
-        )}
       </div>
+
+      {/* 機体一覧 */}
+      <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+        {filteredMS.map((ms) => {
+          const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
+          const baseName = ms["MS名"].split('(')[0].trim();
+
+          return (
+            <div
+              key={ms["MS名"]}
+              className={`cursor-pointer p-3 rounded transition-colors ${
+                isSelected ? 'bg-blue-800' : 'hover:bg-gray-700'
+              }`}
+              onClick={() => onSelect(ms)}
+              onMouseEnter={() => onHover?.(ms)}
+              onMouseLeave={() => onHover?.(null)}
+            >
+              <div className="flex items-center gap-3">
+                {/* 画像表示 */}
+                <div className="w-10 h-10 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                  <img
+                    src={`/images/ms/${baseName}.jpg`}
+                    alt={ms["MS名"]}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/images/ms/default.jpg';
+                    }}
+                  />
+                </div>
+
+                {/* 名前 + 属性 + コスト */}
+                <div className="flex-grow min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${getTypeColor(ms.属性)}`}
+                    >
+                      {ms.属性}
+                    </span>
+                    <span className="text-sm text-gray-400 whitespace-nowrap">
+                      コスト: {ms.コスト}
+                    </span>
+                    <span className="block font-medium truncate">{ms["MS名"]}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* スロット使用状況 */}
+      {selectedMs && (
+        <div className="mt-6 pt-4 border-t border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">スロット使用状況</h3>
+          <SlotSelector
+            usage={slotUsage}
+            maxUsage={{
+              close: selectedMs.近スロット,
+              mid: selectedMs.中スロット,
+              long: selectedMs.遠スロット,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
