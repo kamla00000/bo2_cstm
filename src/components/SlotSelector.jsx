@@ -1,3 +1,4 @@
+// src/components/SlotSelector.jsx
 import React from 'react';
 
 const SlotSelector = ({ usage, maxUsage }) => {
@@ -5,30 +6,42 @@ const SlotSelector = ({ usage, maxUsage }) => {
   const safeMaxUsage = maxUsage || { close: 0, mid: 0, long: 0 };
   const safeUsage = usage || { close: 0, mid: 0, long: 0 };
 
-  // 各スロット最大値を取得（優先順：maxUsage.〇スロット → maxUsage.close/mid/long）
+  // 各スロット最大値
   const closeMax = safeMaxUsage.近スロット ?? safeMaxUsage.close ?? 0;
   const midMax = safeMaxUsage.中スロット ?? safeMaxUsage.mid ?? 0;
   const longMax = safeMaxUsage.遠スロット ?? safeMaxUsage.long ?? 0;
 
-  // 各スロット現在値を取得
+  // 各スロット現在値
   const closeCurrent = safeUsage.close ?? 0;
   const midCurrent = safeUsage.mid ?? 0;
   const longCurrent = safeUsage.long ?? 0;
 
-  // スロットバー生成関数
+  // スロットバー生成関数（isPreview フラグ付き）
   const renderSlotBar = (current, max) => {
     const cells = [];
+
     for (let i = 0; i < max; i++) {
       let cellClass = "w-2 h-4 mx-px";
 
       if (i < current) {
-        if (current > max) {
+        if (i >= max) {
+          // オーバー部分 → 赤＋点滅
           cellClass += " bg-red-500 animate-pulse";
         } else {
+          // 装着済みセル → 青
           cellClass += " bg-blue-500";
         }
       } else {
-        cellClass += " bg-gray-700";
+        // 仮反映中のセル → グリーン＋点滅
+        if (i === current - 1 && current > (max)) {
+          // オーバー時は無視
+        } else if (i < current) {
+          // 装着済みと同じ（再チェック）
+          cellClass += " bg-blue-500";
+        } else if (i < max) {
+          // 空きスロット → グレー
+          cellClass += " bg-gray-700";
+        }
       }
 
       cells.push(<div key={i} className={cellClass}></div>);

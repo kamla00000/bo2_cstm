@@ -1,8 +1,9 @@
 // tailwind.config.js
+
 module.exports = {
   content: [
     './index.html',
-    './src/**/*.{js,jsx,ts,tsx}', // 🔧 クォートを修正
+    './src/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
     extend: {
@@ -11,6 +12,11 @@ module.exports = {
       },
       spacing: {
         'slot-cell': '1.2rem',
+      },
+      // 🎨 カスタムアニメーションを追加（ここがポイント）
+      animation: {
+        'fast-pulse': 'pulse 0.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'slow-pulse': 'pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

@@ -35,11 +35,13 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredP
   });
 
   // ホバー時のプレビュー用スロット情報生成
-  const previewUsage = () => {
+  const getUsageWithPreview = () => {
     if (!selectedMs) return { close: 0, mid: 0, long: 0 };
 
-    const usage = { ...slotUsage }; // 初期値
+    // 初期値は slotUsage（選択中のスロット数）
+    const usage = { ...slotUsage };
 
+    // hoveredPart があれば仮加算
     if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
       usage.close += hoveredPart.close || 0;
       usage.mid += hoveredPart.mid || 0;
@@ -49,7 +51,7 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredP
     return usage;
   };
 
-  const usageWithPreview = previewUsage();
+  const usageWithPreview = getUsageWithPreview();
 
   return (
     <div className="space-y-4">
@@ -60,7 +62,9 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredP
             key={type}
             onClick={() => setFilterType(type)}
             className={`px-3 py-1 rounded-full text-sm ${
-              filterType === type ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
+              filterType === type
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
             }`}
           >
             {type}
@@ -75,7 +79,9 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredP
             key={cost}
             onClick={() => setFilterCost(cost)}
             className={`px-3 py-1 rounded-full text-sm ${
-              filterCost === cost ? 'bg-green-500 text-white' : 'bg-gray-600 text-gray-100 hover:bg-green-600'
+              filterCost === cost
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-600 text-gray-100 hover:bg-green-600'
             }`}
           >
             コスト: {cost}
