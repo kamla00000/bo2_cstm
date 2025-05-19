@@ -122,7 +122,6 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
       {/* スロット使用状況 */}
       {selectedMs && (
         <div className="mt-6 pt-4 border-t border-gray-700">
-          <h3 className="text-lg font-semibold mb-3">スロット使用状況</h3>
           <SlotSelector
             usage={slotUsage}
             maxUsage={{

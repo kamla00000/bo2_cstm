@@ -256,16 +256,7 @@ function App() {
           />
           {/* 装着中的カスタムパーツ一覧 */}
           <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">装着中的カスタムパーツ</h2>
             <SlotDisplay parts={selectedParts} onRemove={handlePartRemove} />
-          </div>
-          {/* スロット使用状況 */}
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">スロット使用状況</h2>
-            <SlotSelector
-              usage={getUsageWithPreview()}
-              maxUsage={msSelected}
-            />
           </div>
         </div>
       )}
