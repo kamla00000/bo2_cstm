@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import SlotSelector from './SlotSelector';
 
-const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
+const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredPart, selectedParts }) => {
   const [filterType, setFilterType] = useState('すべて');
   const [filterCost, setFilterCost] = useState('すべて');
 
@@ -34,6 +34,23 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
     return matchesType && matchesCost;
   });
 
+  // ホバー時のプレビュー用スロット情報生成
+  const previewUsage = () => {
+    if (!selectedMs) return { close: 0, mid: 0, long: 0 };
+
+    const usage = { ...slotUsage }; // 初期値
+
+    if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
+      usage.close += hoveredPart.close || 0;
+      usage.mid += hoveredPart.mid || 0;
+      usage.long += hoveredPart.long || 0;
+    }
+
+    return usage;
+  };
+
+  const usageWithPreview = previewUsage();
+
   return (
     <div className="space-y-4">
       {/* 属性フィルタ */}
@@ -43,9 +60,7 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
             key={type}
             onClick={() => setFilterType(type)}
             className={`px-3 py-1 rounded-full text-sm ${
-              filterType === type
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
+              filterType === type ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
             }`}
           >
             {type}
@@ -60,9 +75,7 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
             key={cost}
             onClick={() => setFilterCost(cost)}
             className={`px-3 py-1 rounded-full text-sm ${
-              filterCost === cost
-                ? 'bg-green-500 text-white'
-                : 'bg-gray-600 text-gray-100 hover:bg-green-600'
+              filterCost === cost ? 'bg-green-500 text-white' : 'bg-gray-600 text-gray-100 hover:bg-green-600'
             }`}
           >
             コスト: {cost}
@@ -122,12 +135,13 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage }) => {
       {/* スロット使用状況 */}
       {selectedMs && (
         <div className="mt-6 pt-4 border-t border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">スロット使用状況</h3>
           <SlotSelector
-            usage={slotUsage}
+            usage={usageWithPreview}
             maxUsage={{
-              close: selectedMs.近スロット,
-              mid: selectedMs.中スロット,
-              long: selectedMs.遠スロット,
+              close: selectedMs.近スロット ?? 0,
+              mid: selectedMs.中スロット ?? 0,
+              long: selectedMs.遠スロット ?? 0,
             }}
           />
         </div>

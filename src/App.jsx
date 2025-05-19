@@ -13,20 +13,14 @@ function App() {
   const [hoveredMs, setHoveredMs] = useState(null);
   const [hoveredPart, setHoveredPart] = useState(null);
   const [selectedParts, setSelectedParts] = useState([]);
-  const [slotUsage, setSlotUsage] = useState({ close: 0, mid: 0, long: 0 }); // 初期値を 0 に設定
+  const [slotUsage, setSlotUsage] = useState({ close: 0, mid: 0, long: 0 });
   const [filterCategory, setFilterCategory] = useState('すべて');
 
-  // MSデータとパーツデータを初期ロード
+  // 初期データ読み込み
   useEffect(() => {
     fetch('/data/msData.json')
-      .then(res => {
-        if (!res.ok) throw new Error('MSデータ取得失敗');
-        return res.json();
-      })
-      .then(data => {
-        console.log('📥 msData.json 読み込み成功:', data);
-        setMsList(data);
-      })
+      .then(res => res.json())
+      .then(data => setMsList(data))
       .catch(err => console.error('MSデータ読み込みエラー:', err));
 
     fetch('/data/partData.json')
@@ -39,14 +33,13 @@ function App() {
 
     if (savedMs) {
       const parsedMs = JSON.parse(savedMs);
-      console.log('💾 復元 MS:', parsedMs);
       setMsSelected(parsedMs);
     }
 
     if (savedParts) {
       const parsedParts = JSON.parse(savedParts);
       setSelectedParts(parsedParts);
-      updateSlotUsage(parsedParts); // パーツを復元した際にスロット使用状況を更新
+      updateSlotUsage(parsedParts);
     }
   }, []);
 
@@ -56,12 +49,9 @@ function App() {
     localStorage.setItem('selectedParts', JSON.stringify(selectedParts));
   }, [msSelected, selectedParts]);
 
-  // ステータス計算関数（ホバー含む）
+  // ステータス計算関数（補正値）
   const calculateMSStats = (parts = []) => {
-    if (!msSelected) {
-      console.warn('⚠️ msSelected が null または undefined');
-      return {};
-    }
+    if (!msSelected) return {};
 
     const stats = {
       name: msSelected["MS名"] || '不明',
@@ -129,14 +119,14 @@ function App() {
 
   console.log('📌 App.jsx > currentStats:', currentStats);
 
-  // MS 選択時処理
+  // MS 選択処理
   const handleMsSelect = (ms) => {
     console.log('🎯 handleMsSelect 実行:', ms);
     setMsSelected(ms);
     setHoveredMs(null);
     setHoveredPart(null);
     setSelectedParts([]);
-    updateSlotUsage([]); // パーツを解除してスロット使用状況をリセット
+    updateSlotUsage([]);
   };
 
   // パーツ選択可否判定
@@ -172,21 +162,21 @@ function App() {
   // 全削除ボタン
   const handleClearAllParts = () => {
     setSelectedParts([]);
-    updateSlotUsage([]); // パーツを全解除してスロット使用状況をリセット
+    updateSlotUsage([]);
   };
 
   // スロット使用状況の更新
   const updateSlotUsage = (newParts) => {
-    const newUsage = { close: 0, mid: 0, long: 0 };
-    newParts.forEach((part) => {
-      newUsage.close += part.close || 0;
-      newUsage.mid += part.mid || 0;
-      newUsage.long += part.long || 0;
-    });
-    setSlotUsage(newUsage);
-  };
+  const usage = { close: 0, mid: 0, long: 0 };
+  newParts.forEach((part) => {
+    usage.close += part.close || 0;
+    usage.mid += part.mid || 0;
+    usage.long += part.long || 0;
+  });
+  setSlotUsage(usage);
+};
 
-  // ホバー時のプレビュー用スロット
+  // ホバー時のプレビュー用スロット情報生成
   const getUsageWithPreview = () => {
     const usage = { ...slotUsage };
     if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
@@ -207,16 +197,20 @@ function App() {
       <h1 className="text-4xl font-bold tracking-wide text-blue-400 drop-shadow-lg">bo2-cstm</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-6xl">
         {/* 左：モビルスーツ選択 */}
-        <div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
-          <h2 className="text-xl font-semibold mb-2">モビルスーツを選択</h2>
-          <MSSelector
-            msList={msList}
-            onSelect={handleMsSelect}
-            onHover={setHoveredMs}
-            selectedMs={msSelected}
-            slotUsage={slotUsage} // スロット使用状況を渡す
-          />
-        </div>
+{/* 左：モビルスーツ選択 */}
+<div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
+  <h2 className="text-xl font-semibold mb-2">モビルスーツを選択</h2>
+  <MSSelector
+    msList={msList}
+    onSelect={handleMsSelect}
+    onHover={setHoveredMs}
+    selectedMs={msSelected}
+    slotUsage={slotUsage}         // 👈 既に渡されている
+    hoveredPart={hoveredPart}   // 👈 既に渡されている
+    selectedParts={selectedParts} // ✅ この行を追加！
+  />
+</div>
+
         {/* 右：ステータス一覧表示 */}
         {msSelected && (
           <div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
@@ -224,6 +218,7 @@ function App() {
           </div>
         )}
       </div>
+
       {/* カスタムパーツセクション */}
       {msSelected && (
         <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
@@ -232,8 +227,12 @@ function App() {
             {['すべて', '攻撃', '防御'].map(cat => (
               <button
                 key={cat}
-                className={`px-3 py-1 rounded-full text-sm ${filterCategory === cat ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-100'} hover:bg-blue-600`}
                 onClick={() => setFilterCategory(cat)}
+                className={`px-3 py-1 rounded-full text-sm ${
+                  filterCategory === cat
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
+                }`}
               >
                 {cat}
               </button>
@@ -254,8 +253,10 @@ function App() {
             parts={filteredParts}
             onHover={setHoveredPart}
           />
+
           {/* 装着中的カスタムパーツ一覧 */}
           <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">装着中的カスタムパーツ</h2>
             <SlotDisplay parts={selectedParts} onRemove={handlePartRemove} />
           </div>
         </div>

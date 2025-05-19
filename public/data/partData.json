@@ -14,8 +14,17 @@
     "射撃補正": 7,
     "close": 0,
     "mid": 3,
-    "long": 5,
+    "long": 7,
     "description": "射撃補正 +7"
+  },
+  {
+    "name": "射撃強化プログラムMAX",
+    "category": "攻撃",
+    "射撃補正": 20,
+    "close": 0,
+    "mid": 2,
+    "long": 25,
+    "description": "射撃補正 +5"
   },
   {
     "name": "格闘強化プログラムLV1",
