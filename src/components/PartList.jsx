@@ -2,6 +2,7 @@
 import React from 'react';
 
 const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover }) => {
+  // ステータスキー → 日本語ラベルのマッピング
   const statusLabels = {
     hp: "HP",
     armor: "耐実弾補正",
@@ -15,13 +16,19 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-      {parts.map(part => {
+      {parts.map((part) => {
         const isSelected = selectedParts.some(p => p.name === part.name);
 
         return (
           <button
             key={part.name}
-            onClick={() => onSelect(part)}
+            onClick={() => {
+              if (isSelected) {
+                onRemove(part); // 解除
+              } else {
+                onSelect(part); // 選択
+              }
+            }}
             onMouseEnter={() => onHover?.(part)}
             onMouseLeave={() => onHover?.(null)}
             className={`relative w-full text-left flex px-4 py-3 rounded-xl border transition-all duration-200 cursor-pointer shadow-sm ${
@@ -30,7 +37,7 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover }) => {
                 : 'bg-gray-800 text-gray-100 border-gray-600 hover:border-blue-400'
             }`}
           >
-            {/* 左側の色バー（装備中） */}
+            {/* 左側の色バー（装備中だけ表示） */}
             {isSelected && (
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-400 rounded-l-xl"></div>
             )}
@@ -51,14 +58,14 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover }) => {
               </div>
 
               {/* 補正情報 */}
-              {Object.entries(part).filter(([key]) =>
-                ['hp', 'armor', 'beam', 'melee', 'shoot', '格闘補正', 'スピード', 'スラスター'].includes(key)
+              {Object.entries(part).filter(
+                ([key]) =>
+                  typeof part[key] === 'number' &&
+                  !['close', 'mid', 'long'].includes(key)
               ).length > 0 && (
                 <div className="mt-1 space-y-0.5">
                   {Object.entries(part)
-                    .filter(([key]) =>
-                      ['hp', 'armor', 'beam', 'melee', 'shoot', '格闘補正', 'スピード', 'スラスター'].includes(key)
-                    )
+                    .filter(([key]) => typeof part[key] === 'number' && !['close', 'mid', 'long'].includes(key))
                     .map(([key, value]) => (
                       <div key={key} className="text-xs text-green-400">
                         {statusLabels[key] || key}: +{value}

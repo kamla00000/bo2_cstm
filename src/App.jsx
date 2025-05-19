@@ -140,16 +140,35 @@ function App() {
     );
   };
 
-  // パーツ選択処理
-  const handlePartSelect = (part) => {
-    if (selectedParts.find(p => p.name === part.name)) return;
-    if (selectedParts.length >= 8) return;
-    if (willExceedSlots(part)) return;
-
-    const newParts = [...selectedParts, part];
+  // パーツ選択処理// src/App.jsx
+const handlePartSelect = (part) => {
+  // 既に選択中の場合 → 外す
+  if (selectedParts.find(p => p.name === part.name)) {
+    const newParts = selectedParts.filter(p => p.name !== part.name);
     setSelectedParts(newParts);
     updateSlotUsage(newParts);
-  };
+    return;
+  }
+
+  // 8個以上なら追加不可
+  if (selectedParts.length >= 8) return;
+
+  // スロットオーバーしてたら追加不可
+  if (
+    slotUsage.close + part.close > msSelected["近スロット"] ||
+    slotUsage.mid + part.mid > msSelected["中スロット"] ||
+    slotUsage.long + part.long > msSelected["遠スロット"]
+  ) {
+    return;
+  }
+
+  // 新規選択 → 追加
+  const newParts = [...selectedParts, part];
+  setSelectedParts(newParts);
+  updateSlotUsage(newParts);
+};
+  
+
 
   // パーツ解除処理
   const handlePartRemove = (part) => {
