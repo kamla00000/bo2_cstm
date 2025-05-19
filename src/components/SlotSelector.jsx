@@ -16,7 +16,7 @@ const SlotSelector = ({ usage, maxUsage }) => {
   const midCurrent = safeUsage.mid ?? 0;
   const longCurrent = safeUsage.long ?? 0;
 
-  // スロットバー生成関数（isPreview フラグ付き）
+  // スロットバー生成関数（仮反映部分のみグリーン点滅）
   const renderSlotBar = (current, max) => {
     const cells = [];
 
@@ -31,17 +31,12 @@ const SlotSelector = ({ usage, maxUsage }) => {
           // 装着済みセル → 青
           cellClass += " bg-blue-500";
         }
+      } else if (i === current && current > (safeUsage[i] || 0)) {
+        // 仮反映部分 → グリーン＋点滅
+        cellClass += " bg-green-500 animate-fast-pulse";
       } else {
-        // 仮反映中のセル → グリーン＋点滅
-        if (i === current - 1 && current > (max)) {
-          // オーバー時は無視
-        } else if (i < current) {
-          // 装着済みと同じ（再チェック）
-          cellClass += " bg-blue-500";
-        } else if (i < max) {
-          // 空きスロット → グレー
-          cellClass += " bg-gray-700";
-        }
+        // 空きスロット → グレー
+        cellClass += " bg-gray-700";
       }
 
       cells.push(<div key={i} className={cellClass}></div>);

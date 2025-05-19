@@ -42,7 +42,10 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredP
     const usage = { ...slotUsage };
 
     // hoveredPart があれば仮加算
-    if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
+    if (
+      hoveredPart &&
+      !selectedParts.some(p => p.name === hoveredPart.name)
+    ) {
       usage.close += hoveredPart.close || 0;
       usage.mid += hoveredPart.mid || 0;
       usage.long += hoveredPart.long || 0;

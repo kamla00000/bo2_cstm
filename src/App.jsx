@@ -217,6 +217,7 @@ const handlePartSelect = (part) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-6xl">
         {/* 左：モビルスーツ選択 */}
 {/* 左：モビルスーツ選択 */}
+{/* 左：モビルスーツ選択 */}
 <div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
   <h2 className="text-xl font-semibold mb-2">モビルスーツを選択</h2>
   <MSSelector
@@ -224,9 +225,9 @@ const handlePartSelect = (part) => {
     onSelect={handleMsSelect}
     onHover={setHoveredMs}
     selectedMs={msSelected}
-    slotUsage={slotUsage}         // 👈 既に渡されている
-    hoveredPart={hoveredPart}   // 👈 既に渡されている
-    selectedParts={selectedParts} // ✅ この行を追加！
+    slotUsage={slotUsage}
+    hoveredPart={hoveredPart}
+    selectedParts={selectedParts}
   />
 </div>
 
