@@ -152,6 +152,7 @@ const MSSelector = ({ msList, onSelect, onHover, selectedMs, slotUsage, hoveredP
               mid: selectedMs.中スロット ?? 0,
               long: selectedMs.遠スロット ?? 0,
             }}
+            baseUsage={slotUsage} // ここで baseUsage を渡す
           />
         </div>
       )}

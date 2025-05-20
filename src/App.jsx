@@ -167,7 +167,6 @@ const handlePartSelect = (part) => {
   setSelectedParts(newParts);
   updateSlotUsage(newParts);
 };
-  
 
 
   // パーツ解除処理
