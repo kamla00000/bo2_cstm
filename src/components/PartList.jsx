@@ -14,6 +14,11 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover }) => {
     スラスター: "スラスター"
   };
 
+  // ★ 追加: parts が存在し、配列であることを確認してから map を実行 ★
+  if (!parts || !Array.isArray(parts)) {
+    return <p className="text-gray-400">パーツデータがありません。</p>;
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       {parts.map((part) => {

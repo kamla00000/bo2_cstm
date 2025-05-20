@@ -1,12 +1,20 @@
 // src/components/StatusDisplay.jsx
 import React from 'react';
 
-const StatusDisplay = ({ stats }) => {
-  if (!stats || !stats.base) {
-    return <p>データがありません</p>;
-  }
-
-  const { base } = stats;
+const StatusDisplay = ({ stats, selectedMs }) => {
+  // 各ステータスの日本語ラベル
+  const statusLabels = {
+    hp: "HP",
+    armor: "耐実弾補正",
+    beam: "耐ビーム補正",
+    melee: "耐格闘補正",
+    shoot: "射撃補正",
+    格闘補正: "格闘補正",
+    speed: "スピード",
+    スラスター: "スラスター",
+    旋回_地上_通常時: "旋回(地上)",
+    旋回_宇宙_通常時: "旋回(宇宙)",
+  };
 
   // 属性ごとのカラー設定
   const getTypeColor = (type) => {
@@ -22,81 +30,101 @@ const StatusDisplay = ({ stats }) => {
     }
   };
 
-  // 補正不要なキー
-  const noBonusKeys = ['格闘判定力', 'カウンター', 'close', 'mid', 'long'];
+  const renderStatRow = (label, base, bonus, total) => {
+    // HPから旋回_宇宙_通常時までの項目のみを扱う
+    if (['name', '属性', 'コスト', '近スロット', '中スロット', '遠スロット', '格闘判定力', 'カウンター'].includes(label)) {
+      return null;
+    }
+
+    return (
+      <div key={label} className="flex justify-between items-center py-1 border-b border-gray-700 last:border-b-0">
+        <span className="text-gray-300 text-sm">{statusLabels[label] || label}</span>
+        <div className="flex items-center text-sm">
+          <span className="w-12 text-right">{base}</span>
+          <span className={`w-12 text-right font-bold ${
+            bonus > 0 ? 'text-green-400' : (bonus < 0 ? 'text-red-400' : 'text-gray-400')
+          }`}>
+            {bonus > 0 ? `+${bonus}` : bonus}
+          </span>
+          <span className="w-12 text-right text-white font-semibold">{total}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // MSが選択されていない場合は何も表示しない
+  if (!selectedMs) {
+    return <p className="text-gray-400">モビルスーツを選択してください。</p>;
+  }
+
+  const baseName = selectedMs["MS名"].split('(')[0].trim();
 
   return (
     <div className="space-y-6">
-      {/* 機体名 + 属性 + コスト */}
-      <div className="flex flex-wrap items-center gap-4 border-b border-gray-700 pb-3 mb-4">
-        {/* 属性ラベル */}
-        <span className={`px-3 py-1 rounded-full text-sm ${getTypeColor(base.属性)}`}>
-          {base.属性}
-        </span>
-
-        {/* コスト表示 */}
-        <span className="text-lg font-semibold text-gray-300">
-          コスト: {base.コスト}
-        </span>
-
-        {/* 機体名 */}
-        <h2 className="text-2xl font-bold text-blue-400">{base.name}</h2>
-      </div>
-
-      {/* ステータス一覧 */}
-      <div className="space-y-2">
-        {[
-          'HP',
-          '耐実弾補正',
-          '耐ビーム補正',
-          '耐格闘補正',
-          '射撃補正',
-          '格闘補正',
-          'スピード',
-          '高速移動',
-          'スラスター',
-          '旋回_地上_通常時',
-          '旋回_宇宙_通常時',
-        ].map((key) => (
-          <div
-            key={key}
-            className="grid grid-cols-12 gap-4 bg-gray-800 p-3 rounded-lg shadow-md"
-          >
-            <span className="col-span-4 font-medium text-sm whitespace-nowrap">
-              {key}
+      {/* MS基本情報 */}
+      <div className="flex items-center gap-4 p-3 bg-gray-800 rounded-xl shadow-inner border border-gray-700">
+        {/* 画像 */}
+        <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+          <img
+            src={`/images/ms/${baseName}.jpg`}
+            alt={selectedMs["MS名"]}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.src = '/images/ms/default.jpg';
+            }}
+          />
+        </div>
+        {/* 名前 + 属性 + コスト */}
+        <div className="flex flex-col flex-grow">
+          <div className="flex items-center gap-2 mb-1">
+            <span
+              className={`px-3 py-1 rounded-full text-sm ${getTypeColor(selectedMs.属性)} flex-shrink-0`}
+            >
+              {selectedMs.属性}
             </span>
-            <span className="col-span-3 text-right text-sm">{base[key]}</span>
-            <span className="col-span-2 text-right text-green-400 text-sm">
-              +{stats.bonus?.[key] ?? 0}
-            </span>
-            <span className="col-span-3 text-right font-semibold text-sm">
-              {stats.total?.[key] ?? base[key]}
+            <span className="text-sm text-gray-400 whitespace-nowrap">
+              コスト: {selectedMs.コスト}
             </span>
           </div>
-        ))}
+          <span className="text-2xl font-bold text-white leading-tight">{selectedMs["MS名"]}</span>
+        </div>
       </div>
 
-      {/* 補正なし項目：横並びで表示 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-        {[
-          { key: '格闘判定力', label: '格闘判定力' },
-          { key: 'カウンター', label: 'カウンター' },
-          { key: 'close', label: '近スロット' },
-          { key: 'mid', label: '中スロット' },
-          { key: 'long', label: '遠スロット' },
-        ].map(({ key, label }) => (
-          <div
-            key={key}
-            className="bg-gray-800 p-3 rounded-lg shadow-md"
-          >
-            <span className="block text-xs text-gray-400 whitespace-nowrap">
-              {label}
-            </span>
-            <span className="text-right font-semibold block text-sm whitespace-nowrap">
-              {base[key]}
-            </span>
-          </div>
-        ))}
+      <h2 className="text-xl font-semibold mb-3">ステータス一覧</h2>
+
+      {/* 通常ステータス表 */}
+      <div className="bg-gray-800 p-4 rounded-xl shadow-inner">
+        {Object.keys(stats.base).map(key => renderStatRow(key, stats.base[key], stats.bonus[key], stats.total[key]))}
+
+        {/* 格闘判定力、カウンター、スロット情報を画像のように並べる */}
+        {/* より画像に近づけるために、個別のボックスとしてflexで横並びにする */}
+        <div className="flex justify-around items-stretch py-2 mt-4 border-t border-gray-700 pt-4">
+            {/* 格闘判定力 */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-700 mx-1 flex-1 min-w-[70px]">
+                <span className="text-xs text-gray-400 whitespace-nowrap">格闘判定力</span>
+                <span className="text-base font-bold text-white mt-1">{selectedMs["格闘判定力"] || "N/A"}</span>
+            </div>
+            {/* カウンター */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-700 mx-1 flex-1 min-w-[70px]">
+                <span className="text-xs text-gray-400 whitespace-nowrap">カウンター</span>
+                <span className="text-base font-bold text-white mt-1">{selectedMs["カウンター"] || "N/A"}</span>
+            </div>
+            {/* 近スロット */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-700 mx-1 flex-1 min-w-[70px]">
+                <span className="text-xs text-gray-400 whitespace-nowrap">近スロット</span>
+                <span className="text-base font-bold text-blue-400 mt-1">{selectedMs["近スロット"] ?? 0}</span>
+            </div>
+            {/* 中スロット */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-700 mx-1 flex-1 min-w-[70px]">
+                <span className="text-xs text-gray-400 whitespace-nowrap">中スロット</span>
+                <span className="text-base font-bold text-blue-400 mt-1">{selectedMs["中スロット"] ?? 0}</span>
+            </div>
+            {/* 遠スロット */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-700 mx-1 flex-1 min-w-[70px]">
+                <span className="text-xs text-gray-400 whitespace-nowrap">遠スロット</span>
+                <span className="text-base font-bold text-blue-400 mt-1">{selectedMs["遠スロット"] ?? 0}</span>
+            </div>
+        </div>
       </div>
     </div>
   );
