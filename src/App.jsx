@@ -1,156 +1,458 @@
 // src/App.jsx
-import React, { useEffect, useState, useMemo } from 'react';
+// ※このファイルは前回の提供コードから変更なしです。
+// 一貫性を保つため、再度全体を提示します。
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import MSSelector from './components/MSSelector';
+import PartList from './components/PartList';
 import StatusDisplay from './components/StatusDisplay';
-import SlotDisplay from './components/SlotDisplay';
-import { calculateMSStats } from './utils/calculateMSStats';
+import SlotSelector from './components/SlotSelector';
+import SelectedPartDisplay from './components/SelectedPartDisplay';
 
 function App() {
-  const [msList, setMsList] = useState([]);
-  const [partList, setPartList] = useState([]);
-  const [msSelected, setMsSelected] = useState(null);
-  const [hoveredMs, setHoveredMs] = useState(null);
-  const [hoveredPart, setHoveredPart] = useState(null);
+  const [msData, setMsData] = useState([]);
+  const [partData, setPartData] = useState([]);
+  const allPartsCache = useRef({});
+  const [selectedMs, setSelectedMs] = useState(null);
   const [selectedParts, setSelectedParts] = useState([]);
-  const [slotUsage, setSlotUsage] = useState({ close: 0, mid: 0, long: 0 });
-  const [filterCategory, setFilterCategory] = useState('すべて');
+  const [hoveredPart, setHoveredPart] = useState(null);
+  const [filterCategory, setFilterCategory] = useState('防御');
+  const [isFullStrengthened, setIsFullStrengthened] = useState(false); // フル強化の状態
+  const [expansionType, setExpansionType] = useState('無し'); // 拡張選択の状態
+
+  const categories = [
+    { name: '防御', fileName: 'defensive_parts.json' },
+    { name: '攻撃', fileName: 'offensive_parts.json' },
+    { name: '移動', fileName: 'moving_parts.json' },
+    { name: '補助', fileName: 'support_parts.json' },
+    { name: '特殊', fileName: 'special_parts.json' }
+  ];
+  const allCategoryName = 'すべて';
+
+  const expansionOptions = [
+    "無し",
+    "射撃補正拡張",
+    "格闘補正拡張",
+    "耐実弾補正拡張",
+    "耐ビーム補正拡張",
+    "耐格闘補正拡張",
+    "スラスター拡張",
+    "カスタムパーツ拡張[HP]",
+    "カスタムパーツ拡張[攻撃]",
+    "カスタムパーツ拡張[装甲]",
+    "カスタムパーツ拡張[スラスター]",
+  ];
+
+  // --- データ読み込みロジック ---
 
   useEffect(() => {
     fetch('/data/msData.json')
-      .then(res => res.json())
-      .then(data => setMsList(data))
-      .catch(err => console.error('MSデータ読み込みエラー:', err));
-
-    fetch('/data/partData.json')
-      .then(res => res.json())
-      .then(data => setPartList(data))
-      .catch(err => console.error('パーツデータ読み込みエラー:', err));
-
-    const savedMs = localStorage.getItem('selectedMs');
-    const savedParts = localStorage.getItem('selectedParts');
-
-    if (savedMs) {
-      const parsedMs = JSON.parse(savedMs);
-      setMsSelected(parsedMs);
-    }
-
-    if (savedParts) {
-      const parsedParts = JSON.parse(savedParts);
-      setSelectedParts(parsedParts);
-      updateSlotUsage(parsedParts);
-    }
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => setMsData(data))
+      .catch(error => console.error("MSデータ読み込みエラー:", error));
   }, []);
 
-  useEffect(() => {
-    if (msSelected) localStorage.setItem('selectedMs', JSON.stringify(msSelected));
-    localStorage.setItem('selectedParts', JSON.stringify(selectedParts));
-  }, [msSelected, selectedParts]);
-
-  const currentStats = useMemo(() => {
-    if (msSelected) {
-      const stats = calculateMSStats(msSelected, selectedParts);
-      return stats;
-    }
-    return { base: {}, bonus: {}, total: {} };
-  }, [msSelected, selectedParts]);
-
-  const handleMsSelect = (ms) => {
-    setMsSelected(ms);
-    setHoveredMs(null);
-    setHoveredPart(null);
-    setSelectedParts([]);
-    updateSlotUsage([]);
-  };
-
-  const handlePartSelect = (part) => {
-    if (selectedParts.find(p => p.name === part.name)) {
-      const newParts = selectedParts.filter(p => p.name !== part.name);
-      setSelectedParts(newParts);
-      updateSlotUsage(newParts);
-      return;
-    }
-
-    if (!msSelected) return;
-
-    if (selectedParts.length >= 8) {
-      alert('装着できるカスタムパーツは最大8個です。');
-      return;
-    }
-
-    if (
-      (slotUsage.close + part.close) > (msSelected["近スロット"] ?? 0) ||
-      (slotUsage.mid + part.mid) > (msSelected["中スロット"] ?? 0) ||
-      (slotUsage.long + part.long) > (msSelected["遠スロット"] ?? 0)
-    ) {
-      alert('スロットが不足しています。');
-      return;
-    }
-
-    const newParts = [...selectedParts, part];
-    setSelectedParts(newParts);
-    updateSlotUsage(newParts);
-  };
-
-  const handlePartRemove = (part) => {
-    const newParts = selectedParts.filter(p => p.name !== part.name);
-    setSelectedParts(newParts);
-    updateSlotUsage(newParts);
-    setHoveredPart(null);
-  };
-
-  const handleClearAllParts = () => {
-    setSelectedParts([]);
-    updateSlotUsage([]);
-    setHoveredPart(null);
-  };
-
-  const updateSlotUsage = (newParts) => {
-    const usage = { close: 0, mid: 0, long: 0 };
-    newParts.forEach((part) => {
-      usage.close += part.close || 0;
-      usage.mid += part.mid || 0;
-      usage.long += part.long || 0;
+  const loadAllPartsIntoCache = useCallback(async () => {
+    const promises = categories.map(async (cat) => {
+      if (!allPartsCache.current[cat.name]) {
+        try {
+          const response = await fetch(`/data/${cat.fileName}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} for ${cat.fileName}`);
+          }
+          const data = await response.json();
+          allPartsCache.current[cat.name] = data;
+        } catch (error) {
+          console.error(`パーツデータ読み込みエラー (${cat.fileName}):`, error);
+        }
+      }
     });
-    setSlotUsage(usage);
-  };
+    await Promise.all(promises);
+  }, [categories]);
 
-  const filteredParts = useMemo(() => {
-    return filterCategory === 'すべて'
-      ? partList
-      : partList.filter(part => part.category === filterCategory);
-  }, [partList, filterCategory]);
+  useEffect(() => {
+    const updateDisplayedParts = async () => {
+      await loadAllPartsIntoCache();
+
+      let loadedParts = [];
+      if (filterCategory === allCategoryName) {
+        for (const cat of categories) {
+          if (allPartsCache.current[cat.name]) {
+            loadedParts.push(...allPartsCache.current[cat.name]);
+          }
+        }
+      } else {
+        const targetCategory = categories.find(cat => cat.name === filterCategory);
+        if (targetCategory && allPartsCache.current[targetCategory.name]) {
+          loadedParts = allPartsCache.current[targetCategory.name];
+        }
+      }
+      setPartData(loadedParts);
+    };
+
+    updateDisplayedParts();
+  }, [filterCategory, categories, loadAllPartsIntoCache]);
+
+
+  // --- 計算関数 ---
+
+  const calculateSlotUsage = useCallback((ms, parts) => {
+    if (!ms) return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
+    let usedClose = 0;
+    let usedMid = 0;
+    let usedLong = 0;
+    parts.forEach(part => {
+      usedClose += Number(part.close || 0);
+      usedMid += Number(part.mid || 0);
+      usedLong += Number(part.long || 0);
+    });
+    return {
+      close: usedClose,
+      mid: usedMid,
+      long: usedLong,
+      maxClose: Number(ms["近スロット"] || 0),
+      maxMid: Number(ms["中スロット"] || 0),
+      maxLong: Number(ms["遠スロット"] || 0)
+    };
+  }, []);
+
+  const calculateMSStats = useCallback((ms, parts, isFullStrengthened, expansionType) => {
+    if (!ms) {
+      const defaultStats = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
+      return { 
+        base: defaultStats, 
+        partBonus: { ...defaultStats }, 
+        fullStrengthenBonus: { ...defaultStats }, 
+        expansionBonus: { ...defaultStats }, 
+        total: { ...defaultStats }
+      };
+    }
+
+    const baseStats = {
+      hp: Number(ms.HP || 0), armor: Number(ms.耐実弾補正 || 0), beam: Number(ms.耐ビーム補正 || 0), melee: Number(ms.耐格闘補正 || 0),
+      shoot: Number(ms.射撃補正 || 0), meleeCorrection: Number(ms.格闘補正 || 0), speed: Number(ms.スピード || 0), thruster: Number(ms.スラスター || 0),
+      turnPerformanceGround: Number(ms["旋回(地上)"] || 0), turnPerformanceSpace: Number(ms["旋回(宇宙)"] || 0)
+    };
+
+    // 各種ボーナスを初期化
+    const partBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
+    const fullStrengthenBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
+    const expansionBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
+    
+    // パーツによるボーナス
+    parts.forEach(part => {
+      if (typeof part.hp === 'number') partBonus.hp += part.hp;
+      if (typeof part.armor_range === 'number') partBonus.armor += part.armor_range;
+      if (typeof part.armor_beam === 'number') partBonus.beam += part.armor_beam;
+      if (typeof part.armor_melee === 'number') partBonus.melee += part.armor_melee;
+      if (typeof part.shoot === 'number') partBonus.shoot += part.shoot;
+      if (typeof part.melee === 'number') partBonus.meleeCorrection += part.melee;
+      if (typeof part.speed === 'number') partBonus.speed += part.speed;
+      if (typeof part.thruster === 'number') partBonus.thruster += part.thruster;
+      if (typeof part.turnPerformanceGround === 'number') partBonus.turnPerformanceGround += part.turnPerformanceGround;
+      if (typeof part.turnPerformanceSpace === 'number') partBonus.turnPerformanceSpace += part.turnPerformanceSpace;
+    });
+
+    // フル強化によるボーナス（仮の値、調整してください）
+    if (isFullStrengthened) {
+      fullStrengthenBonus.hp += 2500; // 仮
+      fullStrengthenBonus.armor += 5; // 仮
+      fullStrengthenBonus.beam += 5; // 仮
+      fullStrengthenBonus.melee += 5; // 仮
+      fullStrengthenBonus.shoot += 5; // 仮
+      fullStrengthenBonus.meleeCorrection += 5; // 仮
+      fullStrengthenBonus.speed += 5; // 仮
+      fullStrengthenBonus.thruster += 5; // 仮
+    }
+
+    // 拡張選択によるステータスボーナス
+    switch (expansionType) {
+      case "射撃補正拡張":
+        expansionBonus.shoot += 5;
+        break;
+      case "格闘補正拡張":
+        expansionBonus.meleeCorrection += 5;
+        break;
+      case "耐実弾補正拡張":
+        expansionBonus.armor += 5;
+        break;
+      case "耐ビーム補正拡張":
+        expansionBonus.beam += 5;
+        break;
+      case "耐格闘補正拡張":
+        expansionBonus.melee += 5;
+        break;
+      case "スラスター拡張":
+        expansionBonus.thruster += 5;
+        break;
+      case "カスタムパーツ拡張[HP]":
+        expansionBonus.hp += 500;
+        break;
+      case "カスタムパーツ拡張[攻撃]":
+        expansionBonus.shoot += 2;
+        expansionBonus.meleeCorrection += 2;
+        break;
+      case "カスタムパーツ拡張[装甲]":
+        expansionBonus.armor += 2;
+        expansionBonus.beam += 2;
+        expansionBonus.melee += 2;
+        break;
+      case "カスタムパーツ拡張[スラスター]":
+        expansionBonus.thruster += 2;
+        break;
+      default:
+        break;
+    }
+
+    const totalStats = {};
+    
+    Object.keys(baseStats).forEach(key => {
+        totalStats[key] = baseStats[key] + partBonus[key] + fullStrengthenBonus[key] + expansionBonus[key];
+    });
+
+    return {
+        base: baseStats,
+        partBonus: partBonus,
+        fullStrengthenBonus: fullStrengthenBonus,
+        expansionBonus: expansionBonus,
+        total: totalStats,
+    };
+  }, []);
+
+  const getUsageWithPreview = useCallback(() => {
+    if (!selectedMs) return { close: 0, mid: 0, long: 0 };
+    const usage = { ...calculateSlotUsage(selectedMs, selectedParts) };
+    if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
+      usage.close += Number(hoveredPart.close || 0);
+      usage.mid += Number(hoveredPart.mid || 0);
+      usage.long += Number(hoveredPart.long || 0);
+    }
+    return usage;
+  }, [selectedMs, hoveredPart, selectedParts, calculateSlotUsage]);
+
+  const currentStats = calculateMSStats(selectedMs, selectedParts, isFullStrengthened, expansionType);
+  const slotUsage = calculateSlotUsage(selectedMs, selectedParts);
+  const usageWithPreview = getUsageWithPreview();
+
+
+  // --- イベントハンドラ ---
+
+  const handleMsSelect = useCallback((ms) => {
+    setSelectedMs(ms);
+    setSelectedParts([]);
+    setHoveredPart(null);
+    setIsFullStrengthened(false); // MS選択時にリセット
+    setExpansionType('無し'); // MS選択時にリセット
+  }, []);
+
+  const handlePartSelect = useCallback((part) => {
+    if (!selectedMs) {
+      alert("先にモビルスーツを選択してください。");
+      return;
+    }
+
+    if (selectedParts.some(p => p.name === part.name)) {
+      alert("このパーツは既に装備されています。");
+      return;
+    }
+
+    const currentSlots = calculateSlotUsage(selectedMs, selectedParts);
+    const newClose = (currentSlots.close || 0) + (part.close || 0);
+    const newMid = (currentSlots.mid || 0) + (part.mid || 0);
+    const newLong = (currentSlots.long || 0) + (part.long || 0);
+
+    if (newClose > (Number(selectedMs["近スロット"]) || 0) ||
+        newMid > (Number(selectedMs["中スロット"]) || 0) ||
+        newLong > (Number(selectedMs["遠スロット"]) || 0)) {
+      return;
+    }
+
+    setSelectedParts(prevParts => [...prevParts, part]);
+  }, [selectedMs, selectedParts, calculateSlotUsage]);
+
+  const handlePartRemove = useCallback((partToRemove) => {
+    setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
+  }, []);
+
+  const handleClearAllParts = useCallback(() => {
+    setSelectedParts([]);
+  }, []);
+
+  // MSデータがまだ読み込まれていない場合は、ローディング表示
+  if (msData.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center justify-center">
+        <p className="text-xl">データを読み込み中...</p>
+      </div>
+    );
+  }
+
+  // selectedMsから画像パスのベース名を取得
+  const baseName = selectedMs ? selectedMs["MS名"].split('(')[0].trim() : 'default';
+
+  // 属性ごとのカラー設定
+  const getTypeColor = (type) => {
+    switch (type) {
+      case '強襲':
+        return 'bg-red-500 text-white';
+      case '汎用':
+        return 'bg-blue-500 text-white';
+      case '支援':
+        return 'bg-yellow-500 text-black';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center gap-6">
-      <h1 className="text-4xl font-bold tracking-wide text-blue-400 drop-shadow-lg">bo2-cstm</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-6xl">
-        <div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
+      <h1 className="text-4xl font-bold tracking-wide text-white drop-shadow-lg">bo2-cstm</h1>
+
+      {/* グリッドレイアウト: max-w-screen-xl を使用 (1280px) */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 w-full max-w-screen-xl items-stretch">
+        {/* 左側のカラム：MS選択、MS基本情報、フル強化/拡張選択、スロット情報 */}
+        <div className="space-y-4 md:col-span-3 flex flex-col">
           <MSSelector
-            msList={msList}
+            msData={msData}
             onSelect={handleMsSelect}
-            onHover={setHoveredMs}
-            selectedMs={msSelected}
-            slotUsage={slotUsage}
-            hoveredPart={hoveredPart}
-            selectedParts={selectedParts}
-            parts={filteredParts}
-            filterCategory={filterCategory}
-            setFilterCategory={setFilterCategory}
-            onPartSelect={handlePartSelect}
-            onPartRemove={handlePartRemove}
-            onPartHover={setHoveredPart}
-            onPartLeave={() => setHoveredPart(null)}
-            onClearAllParts={handleClearAllParts}
-            SlotDisplayComponent={SlotDisplay}
+            selectedMs={selectedMs}
           />
+
+          {/* MS基本情報（selectedMsが選択されている場合のみ表示） */}
+          {selectedMs && (
+            <>
+              <div className="flex items-center gap-4 p-3 bg-gray-800 rounded-xl shadow-inner border border-gray-700">
+                {/* 画像 */}
+                <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={`/images/ms/${baseName}.jpg`}
+                    alt={selectedMs["MS名"]}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/images/ms/default.jpg';
+                      e.target.onerror = null;
+                    }}
+                  />
+                </div>
+                {/* 名前 + 属性 + コスト */}
+                <div className="flex flex-col flex-grow">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${getTypeColor(selectedMs.属性)} flex-shrink-0`}
+                    >
+                      {selectedMs.属性}
+                    </span>
+                    <span className="text-base text-gray-400 whitespace-nowrap">
+                      コスト: {selectedMs.コスト}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold text-white leading-tight">{selectedMs["MS名"]}</span>
+                </div>
+              </div>
+
+              {/* フル強化チェックボックスと拡張選択プルダウン - 横並び */}
+              <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 flex items-center gap-x-4">
+                <label className="flex items-center text-white text-base cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={isFullStrengthened}
+                    onChange={(e) => setIsFullStrengthened(e.target.checked)}
+                    className="form-checkbox h-5 w-5 text-blue-500 bg-gray-700 border-gray-600 rounded mr-2 focus:ring-blue-500"
+                  />
+                  フル強化
+                </label>
+                {/* 拡張選択プルダウンの幅を内容に合わせる */}
+                <div className="flex items-center gap-2 text-white text-base">
+                  <label htmlFor="expansion-select" className="whitespace-nowrap flex-shrink-0">拡張選択:</label>
+                  <select
+                    id="expansion-select"
+                    value={expansionType}
+                    onChange={(e) => setExpansionType(e.target.value)}
+                    className="block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white w-auto"
+                  >
+                    {expansionOptions.map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 flex-grow">
+                <SlotSelector
+                  usage={usageWithPreview}
+                  maxUsage={{
+                    close: Number(selectedMs.近スロット ?? 0),
+                    mid: Number(selectedMs.中スロット ?? 0),
+                    long: Number(selectedMs.遠スロット ?? 0),
+                  }}
+                  baseUsage={slotUsage}
+                />
+              </div>
+            </>
+          )}
         </div>
 
-        {msSelected && (
-          <div className="bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700">
+        {/* 右上のカラム：ステータスディスプレイ */}
+        <div className="space-y-4 md:col-span-2 flex flex-col">
+          {selectedMs && (
             <StatusDisplay
               stats={currentStats}
-              selectedMs={msSelected}
+              selectedMs={selectedMs}
+              hoveredPart={hoveredPart}
+              isFullStrengthened={isFullStrengthened}
             />
+          )}
+        </div>
+
+        {/* 下段のパーツ選択・装着中パーツセクション */}
+        {selectedMs && (
+          <div className="w-full bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 col-span-5">
+            <h2 className="text-xl font-semibold mb-2 text-white">カテゴリ別パーツ選択</h2>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="flex flex-wrap gap-2">
+                {[{ name: allCategoryName, fileName: '' }, ...categories].map(cat => (
+                  <button
+                    key={cat.name}
+                    onClick={() => setFilterCategory(cat.name)}
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      filterCategory === cat.name
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleClearAllParts}
+                className="text-sm text-red-400 hover:underline flex-shrink-0"
+              >
+                🗑 全パーツ解除
+              </button>
+            </div>
+            <PartList
+              parts={partData}
+              selectedParts={selectedParts}
+              onSelect={handlePartSelect}
+              onRemove={handlePartRemove}
+              onHover={setHoveredPart}
+              selectedMs={selectedMs}
+              currentSlotUsage={slotUsage}
+            />
+
+            <div className="mt-6">
+              <h2 className="text-xl font-semibold mb-2 text-white">装着中のカスタムパーツ</h2>
+              <SelectedPartDisplay
+                parts={selectedParts}
+                onRemove={handlePartRemove}
+              />
+            </div>
           </div>
         )}
       </div>

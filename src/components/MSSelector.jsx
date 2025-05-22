@@ -1,32 +1,40 @@
 // src/components/MSSelector.jsx
-import React, { useState } from 'react';
-import SlotSelector from './SlotSelector';
-import PartList from './PartList'; // PartListをインポート
-// SlotDisplayはMSSelector内では直接使用しないので、ここではインポート不要
-// StatusDisplay内でのSlotDisplayの使用は、App.jsxからのPropsで制御されます。
+import React, { useState, useEffect } from 'react'; // useEffect を追加
 
 const MSSelector = ({
-  msList,
+  msData, // msList ではなく msData を受け取るように変更（App.jsxの渡し方に合わせる）
   onSelect,
-  onHover,
   selectedMs,
-  slotUsage,
-  hoveredPart,
-  selectedParts,
-  // App.jsxから受け取るパーツ関連のPropsを追加
-  parts, // filteredPartsが渡される想定
-  filterCategory,
-  setFilterCategory,
-  onPartSelect,
-  onPartRemove,
-  onPartHover,
-  onPartLeave,
-  onClearAllParts,
-  SlotDisplayComponent // SlotDisplayを直接渡すのではなく、Propsとして受け取る
+  // MSSelector ではパーツ関連のPropsは直接使用しないため削除
+  // slotUsage, hoveredPart, selectedParts, parts, filterCategory, setFilterCategory,
+  // onPartSelect, onPartRemove, onPartHover, onPartLeave, onClearAllParts, SlotDisplayComponent
 }) => {
   const [filterType, setFilterType] = useState('すべて');
   const [filterCost, setFilterCost] = useState('すべて');
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false); // 初期状態は閉じておく
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [filteredMs, setFilteredMs] = useState([]); // フィルターされたMSを管理するstateを追加
+
+  // msData またはフィルター条件が変更されたときに filteredMs を更新
+  useEffect(() => {
+    // msData がundefinedやnullでないことを確認
+    if (!msData || !Array.isArray(msData)) {
+      setFilteredMs([]);
+      return;
+    }
+
+    const results = msData.filter((ms) => {
+      const matchesType = filterType === 'すべて' || ms.属性 === filterType;
+      const costValue = ms.コスト;
+      const matchesCost =
+        filterCost === 'すべて' ||
+        (filterCost === '750' && costValue === 750) ||
+        (filterCost === '700' && costValue === 700) ||
+        (filterCost === '650' && costValue === 650) ||
+        (filterCost === '600' && costValue === 600);
+      return matchesType && matchesCost;
+    });
+    setFilteredMs(results);
+  }, [filterType, filterCost, msData]); // 依存配列に msData を追加
 
   // 属性ごとのカラー設定
   const getTypeColor = (type) => {
@@ -36,25 +44,12 @@ const MSSelector = ({
       case '汎用':
         return 'bg-blue-500 text-white';
       case '支援':
+      case '支援攻撃': // '支援攻撃'のような新しい属性がある場合を考慮
         return 'bg-yellow-500 text-black';
       default:
         return 'bg-gray-500 text-white';
     }
   };
-
-  // フィルタリング処理
-  const filteredMS = msList.filter((ms) => {
-    const matchesType = filterType === 'すべて' || ms.属性 === filterType;
-    const costValue = ms.コスト;
-    const matchesCost =
-      filterCost === 'すべて' ||
-      (filterCost === '750' && costValue === 750) ||
-      (filterCost === '700' && costValue === 700) ||
-      (filterCost === '650' && costValue === 650) ||
-      (filterCost === '600' && costValue === 600);
-
-    return matchesType && matchesCost;
-  });
 
   // セレクターの開閉を切り替える関数
   const toggleSelector = () => {
@@ -65,34 +60,10 @@ const MSSelector = ({
   const handleMsSelect = (ms) => {
     onSelect(ms); // App.jsxのhandleMsSelectを呼び出す
     setIsSelectorOpen(false); // MS選択後に閉じる
-    // selectedPartsやhoveredPartのリセットはApp.jsxのhandleMsSelectで行われる
   };
-
-  // ホバー時のプレビュー用スロット情報生成
-  const getUsageWithPreview = () => {
-    // MSが選択されていなければ、使用スロットは0
-    if (!selectedMs) return { close: 0, mid: 0, long: 0 };
-
-    // 初期値は App.jsx から渡された slotUsage（現在選択中のパーツのスロット合計）
-    const usage = { ...slotUsage };
-
-    // hoveredPart があり、かつまだ選択されていないパーツであれば仮加算
-    if (
-      hoveredPart &&
-      !selectedParts.some(p => p.name === hoveredPart.name)
-    ) {
-      usage.close += hoveredPart.close || 0;
-      usage.mid += hoveredPart.mid || 0;
-      usage.long += hoveredPart.long || 0;
-    }
-
-    return usage;
-  };
-
-  const usageWithPreview = getUsageWithPreview();
 
   return (
-    <div className="space-y-4">
+    <div className="bg-gray-800 p-4 rounded-xl shadow-inner space-y-4">
       {/* ヘッダー部分（クリックで展開） */}
       {!isSelectorOpen && (
         <div
@@ -141,116 +112,62 @@ const MSSelector = ({
           </div>
 
           {/* 機体一覧 */}
-          <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
-            {filteredMS.map((ms) => {
-              const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
-              const baseName = ms["MS名"].split('(')[0].trim();
+          <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+            {filteredMs.length > 0 ? (
+              filteredMs.map((ms) => {
+                const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
+                const baseName = ms["MS名"].split('(')[0].trim();
 
-              return (
-                <div
-                  key={ms["MS名"]}
-                  className={`cursor-pointer p-3 rounded transition-colors ${
-                    isSelected ? 'bg-blue-800' : 'hover:bg-gray-700'
-                  }`}
-                  onClick={() => handleMsSelect(ms)} // handleMsSelect を使用
-                  onMouseEnter={() => onHover?.(ms)}
-                  onMouseLeave={() => onHover?.(null)}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* 画像表示 */}
-                    <div className="w-10 h-10 bg-gray-700 rounded overflow-hidden flex-shrink-0">
-                      <img
-                        src={`/images/ms/${baseName}.jpg`}
-                        alt={ms["MS名"]}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = '/images/ms/default.jpg';
-                        }}
-                      />
-                    </div>
+                return (
+                  <div
+                    key={ms["MS名"]}
+                    className={`cursor-pointer p-3 rounded transition-colors ${
+                      isSelected ? 'bg-blue-800' : 'hover:bg-gray-700'
+                    }`}
+                    onClick={() => handleMsSelect(ms)}
+                    // MSSelectorではMSのホバーは不要な場合が多いので削除（App.jsxで管理）
+                    // onMouseEnter={() => onHover?.(ms)}
+                    // onMouseLeave={() => onHover?.(null)}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* 画像表示 */}
+                      <div className="w-10 h-10 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                        <img
+                          src={`/images/ms/${baseName}.jpg`}
+                          alt={ms["MS名"]}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = '/images/ms/default.jpg';
+                          }}
+                        />
+                      </div>
 
-                    {/* 名前 + 属性 + コスト */}
-                    <div className="flex-grow min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm ${getTypeColor(ms.属性)} flex-shrink-0`}
-                        >
-                          {ms.属性}
-                        </span>
-                        <span className="text-sm text-gray-400 whitespace-nowrap">
-                          コスト: {ms.コスト}
-                        </span>
-                        <span className="block font-medium truncate">{ms["MS名"]}</span>
+                      {/* 名前 + 属性 + コスト */}
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm ${getTypeColor(ms.属性)} flex-shrink-0`}
+                          >
+                            {ms.属性}
+                          </span>
+                          <span className="text-sm text-gray-400 whitespace-nowrap">
+                            コスト: {ms.コスト}
+                          </span>
+                        </div>
+                        <span className="block font-medium truncate text-white">{ms["MS名"]}</span>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <p className="text-gray-400">該当するMSが見つかりません。</p>
+            )}
           </div>
         </div>
       )}
-
-      {/* スロット使用状況 */}
-      {selectedMs && (
-        <div className="mt-6 pt-4 border-t border-gray-700">
-          <h3 className="text-lg font-semibold mb-3 text-white">スロット使用状況</h3>
-          <SlotSelector
-            usage={usageWithPreview}
-            maxUsage={{
-              close: selectedMs.近スロット ?? 0,
-              mid: selectedMs.中スロット ?? 0,
-              long: selectedMs.遠スロット ?? 0,
-            }}
-            baseUsage={slotUsage} // 現在選択中のパーツのスロット数
-          />
-
-          {/* ★ ここにカテゴリ別パーツ選択を移動 ★ */}
-          <div className="w-full bg-gray-900 p-4 rounded-2xl shadow-xl border border-gray-700 mt-6">
-            <h2 className="text-xl font-semibold mb-2 text-white">カテゴリ別パーツ選択</h2>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {['すべて', '攻撃', '防御'].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setFilterCategory(cat)}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    filterCategory === cat
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={onClearAllParts}
-                className="text-sm text-red-400 hover:underline"
-              >
-                🗑 全パーツ解除
-              </button>
-            </div>
-            <PartList
-              parts={parts} // filteredPartsが渡される想定
-              selectedParts={selectedParts}
-              onSelect={onPartSelect}
-              onRemove={onPartRemove}
-              onHover={onPartHover}
-              onLeave={onPartLeave}
-            />
-
-            {/* 装着中のカスタムパーツ一覧もここに移動 */}
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-2">装着中のカスタムパーツ</h2>
-              {/* SlotDisplayComponent がApp.jsxから渡されることを想定 */}
-              {SlotDisplayComponent && (
-                <SlotDisplayComponent parts={selectedParts} onRemove={onPartRemove} />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* MSSelector内からパーツ選択やスロット表示を削除 */}
+      {/* これらはApp.jsxで管理し、それぞれのコンポーネントに渡すべき */}
     </div>
   );
 };
