@@ -1,44 +1,74 @@
 // src/components/StatusDisplay.jsx
 import React from 'react';
 
-// statsオブジェクトに base, partBonus, fullStrengthenBonus, total が含まれていることを前提とします
+// statsオブジェクトに base, partBonus, fullStrengthenBonus, expansionBonus, currentLimits, total が含まれていることを前提とします
 const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) => {
   // statsから必要な値を分解して取得
-  const { base, partBonus, fullStrengthenBonus, total } = stats;
+  const { base, partBonus, fullStrengthenBonus, expansionBonus, currentLimits, total, rawTotal } = stats;
 
   // ステータス表示用の共通関数
-  // formatFn はここでは使用しない
   const renderStatRow = (label, statKey) => {
     const baseValue = Number(base[statKey] || 0);
     const partBonusValue = Number(partBonus[statKey] || 0);
     const fullStrengthenBonusValue = Number(fullStrengthenBonus[statKey] || 0);
+    const expansionBonusValue = Number(expansionBonus[statKey] || 0); // expansionBonusValue を取得
+    const rawTotalValue = Number(rawTotal[statKey] || 0); // クリップ前の合計値
     const totalValue = Number(total[statKey] || 0);
 
     // ボーナス値の表示形式 (0の場合は'-', 正の場合は'+')
     const formatBonus = (value) => {
-        if (value === 0) return '-';
-        return value > 0 ? `+${value}` : `${value}`;
+      if (value === 0) return '-';
+      return value > 0 ? `+${value}` : `${value}`;
     };
 
-    // 既存の値をそのまま表示
+    // 数値をそのまま表示する関数
     const displayValue = (value) => {
       return value;
     };
     
+    // 上限値の表示と色
+    let limitDisplay = '-';
+    let limitColorClass = 'text-gray-400'; // デフォルトの色
+
+    if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
+      limitDisplay = displayValue(currentLimits[statKey]);
+      // App.jsxで設定した個別の変更フラグをチェック
+      if (currentLimits.flags && currentLimits.flags[statKey]) {
+        limitColorClass = 'text-green-400';
+      }
+    }
+
+
     return (
-      <div key={statKey} className="grid grid-cols-6 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
-        <div className="text-gray-300 text-sm font-semibold whitespace-nowrap">{label}</div> {/* 項目 */}
-        <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayValue(baseValue)}</div> {/* 初期値 */}
-        <div className="text-sm text-right text-gray-400 whitespace-nowrap">-</div> {/* 上限 (常に'-'で固定表示) */}
+      // grid-cols-7 に変更
+      <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
+        <div className="text-gray-300 text-sm font-semibold whitespace-nowrap">{label}</div>                 {/* 項目 */}
+        <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayValue(baseValue)}</div>   {/* 初期値 */}
         <div className={`text-sm text-right whitespace-nowrap ${partBonusValue > 0 ? 'text-green-400' : (partBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(partBonusValue)}
-        </div> {/* 補正値 (パーツ) */}
+        </div>                                                                                                {/* 補正値 (パーツ) */}
         <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(fullStrengthenBonusValue)}
-        </div> {/* フル強化 */}
-        <div className="text-sm text-right font-bold text-white whitespace-nowrap">
-          {displayValue(totalValue)}
-        </div> {/* 合計値 */}
+        </div>                                                                                                {/* フル強化 */}
+        <div className={`text-sm text-right whitespace-nowrap ${expansionBonusValue > 0 ? 'text-green-400' : (expansionBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
+          {formatBonus(expansionBonusValue)} {/* 拡張ボーナスの表示 */}
+        </div>                                                                                                {/* 拡張 */}
+        <div className="text-sm text-right whitespace-nowrap">
+          <span className={limitColorClass}>{limitDisplay}</span> {/* 上限値の表示と色 */}
+        </div>                                                                                                {/* 上限 */}
+        <div className="text-sm text-right font-bold flex flex-col items-end justify-center"> {/* 合計値の表示とオーバー分 */}
+          <span className={
+            // クリップ前の値が上限を超えている場合に赤くする
+            (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey])
+            ? 'text-red-500' : 'text-white'
+          }>{displayValue(totalValue)}</span>
+          {/* オーバー分の表示 */}
+          {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && (
+            <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
+              +{rawTotalValue - currentLimits[statKey]} OVER
+            </span>
+          )}
+        </div>                                                                                                {/* 合計値 */}
       </div>
     );
   };
@@ -49,14 +79,15 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) =
       <h2 className="text-xl font-semibold mb-3 text-white">ステータス一覧</h2>
       {selectedMs ? (
         <div className="space-y-1">
-          {/* ヘッダー行 - 6列に調整 */}
-          <div className="grid grid-cols-6 gap-2 pb-2 border-b border-gray-600 text-gray-400 font-bold">
+          {/* ヘッダー行 - grid-cols-7 に調整 */}
+          <div className="grid grid-cols-7 gap-2 pb-2 border-b border-gray-600 text-gray-400 font-bold">
             <div className="whitespace-nowrap">項目</div>
-            <div className="text-right whitespace-nowrap">初期値</div>
-            <div className="text-right whitespace-nowrap">上限</div> {/* 新しい上限列 */}
+            <div className="text-right whitespace-nowrap">初期値</div>            
             <div className="text-right whitespace-nowrap">補正値</div> {/* パーツによる補正 */}
             <div className="text-right whitespace-nowrap">フル強化</div> {/* フル強化による補正 */}
-            <div className="text-right whitespace-nowrap">合計値</div>
+            <div className="text-right whitespace-nowrap">拡張</div> {/* 拡張列 */}
+            <div className="text-right whitespace-nowrap">上限</div>             
+            <div className="text-right whitespace-nowrap">合計値</div>            
           </div>
 
           {renderStatRow('HP', 'hp')}
@@ -70,7 +101,17 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) =
           {renderStatRow('旋回(地上)', 'turnPerformanceGround')}
           {renderStatRow('旋回(宇宙)', 'turnPerformanceSpace')}
 
-          {/* ... その他のステータス */}
+          {/* 格闘判定力とカウンターを1行にまとめる - grid-cols-7 に調整 */}
+          <div className="grid grid-cols-7 gap-2 py-1 items-center border-b border-gray-700 last:border-b-0">
+            {/* この行は統計値ではないため、col-spanを調整して表示 */}
+            <div className="col-span-full text-sm text-right text-white pr-2"> {/* pr-2 で右端の余白を調整 */}
+              <span className="font-semibold mr-4">格闘判定力:</span> 
+              <span className="font-bold mr-8">{selectedMs["格闘判定力"] || '-'}</span>
+              <span className="font-semibold mr-4">カウンター:</span> 
+              <span className="font-bold">{selectedMs["カウンター"] || '-'}</span>
+            </div>
+          </div>
+
         </div>
       ) : (
         <p className="text-gray-400">モビルスーツを選択してください。</p>

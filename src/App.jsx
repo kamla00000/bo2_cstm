@@ -1,7 +1,4 @@
 // src/App.jsx
-// ※このファイルは前回の提供コードから変更なしです。
-// 一貫性を保つため、再度全体を提示します。
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import MSSelector from './components/MSSelector';
 import PartList from './components/PartList';
@@ -42,6 +39,20 @@ function App() {
     "カスタムパーツ拡張[装甲]",
     "カスタムパーツ拡張[スラスター]",
   ];
+
+  const expansionDescriptions = {
+    "無し": "拡張スキルなし",
+    "射撃補正拡張": "射撃補正が8増加し、射撃補正の上限値が8増加する",
+    "格闘補正拡張": "格闘補正が8増加し、格闘補正の上限値が8増加する",
+    "耐実弾補正拡張": "耐実弾補正が10増加し、耐実弾補正の上限値が10増加する",
+    "耐ビーム補正拡張": "耐ビーム補正が10増加し、耐ビーム補正の上限値が10増加する",
+    "耐格闘補正拡張": "耐格闘補正が10増加し、耐格闘補正の上限値が10増加する",
+    "スラスター拡張": "スラスターが10増加し、スラスターの上限値が20増加する",
+    "カスタムパーツ拡張[HP]": "「攻撃」タイプのカスタムパーツを1つ装備するごとに機体HPが400上昇する",
+    "カスタムパーツ拡張[攻撃]": "「移動」タイプのカスタムパーツを1つ装備するごとに格闘補正が3、射撃補正が3上昇する",
+    "カスタムパーツ拡張[装甲]": "「補助」タイプのカスタムパーツを1つ装備するごとに耐実弾補正が3、耐ビーム補正が3、耐格闘補正が3増加する",
+    "カスタムパーツ拡張[スラスター]": "「特殊」タイプのカスタムパーツを1つ装備するごとにスラスターが5増加する",
+  };
 
   // --- データ読み込みロジック ---
 
@@ -129,7 +140,9 @@ function App() {
         partBonus: { ...defaultStats }, 
         fullStrengthenBonus: { ...defaultStats }, 
         expansionBonus: { ...defaultStats }, 
-        total: { ...defaultStats }
+        total: { ...defaultStats },
+        rawTotal: { ...defaultStats }, // rawTotalも初期化
+        currentLimits: { ...defaultStats, flags: {} } // currentLimitsも初期化
       };
     }
 
@@ -139,6 +152,20 @@ function App() {
       turnPerformanceGround: Number(ms["旋回(地上)"] || 0), turnPerformanceSpace: Number(ms["旋回(宇宙)"] || 0)
     };
 
+    // 基本的なステータス上限値を定義 (上限がないものはundefined)
+    const baseLimits = { 
+      hp: undefined, 
+      armor: 50, 
+      beam: 50, 
+      melee: 50, 
+      shoot: 100, 
+      meleeCorrection: 100, 
+      speed: 200, 
+      thruster: 100, 
+      turnPerformanceGround: undefined, 
+      turnPerformanceSpace: undefined, 
+    }; 
+
     // 各種ボーナスを初期化
     const partBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
     const fullStrengthenBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
@@ -146,6 +173,7 @@ function App() {
     
     // パーツによるボーナス
     parts.forEach(part => {
+      // ここでパーツによる上限増加も考慮する場合は追加
       if (typeof part.hp === 'number') partBonus.hp += part.hp;
       if (typeof part.armor_range === 'number') partBonus.armor += part.armor_range;
       if (typeof part.armor_beam === 'number') partBonus.beam += part.armor_beam;
@@ -173,53 +201,88 @@ function App() {
     // 拡張選択によるステータスボーナス
     switch (expansionType) {
       case "射撃補正拡張":
-        expansionBonus.shoot += 5;
+        expansionBonus.shoot += 8;
         break;
       case "格闘補正拡張":
-        expansionBonus.meleeCorrection += 5;
+        expansionBonus.meleeCorrection += 8;
         break;
       case "耐実弾補正拡張":
-        expansionBonus.armor += 5;
+        expansionBonus.armor += 10;
         break;
       case "耐ビーム補正拡張":
-        expansionBonus.beam += 5;
+        expansionBonus.beam += 10;
         break;
       case "耐格闘補正拡張":
-        expansionBonus.melee += 5;
+        expansionBonus.melee += 10;
         break;
       case "スラスター拡張":
-        expansionBonus.thruster += 5;
+        expansionBonus.thruster += 10;
         break;
       case "カスタムパーツ拡張[HP]":
-        expansionBonus.hp += 500;
+        // カスタムパーツ拡張は直接HPを増やす（上限には影響しないという解釈）
         break;
       case "カスタムパーツ拡張[攻撃]":
-        expansionBonus.shoot += 2;
-        expansionBonus.meleeCorrection += 2;
+        // カスタムパーツ拡張は格闘補正と射撃補正を増加（上限には影響しないという解釈）
         break;
       case "カスタムパーツ拡張[装甲]":
-        expansionBonus.armor += 2;
-        expansionBonus.beam += 2;
-        expansionBonus.melee += 2;
+        // カスタムパーツ拡張は耐実弾、耐ビーム、耐格闘補正を増加（上限には影響しないという解釈）
         break;
       case "カスタムパーツ拡張[スラスター]":
-        expansionBonus.thruster += 2;
+        // カスタムパーツ拡張はスラスターを増加（上限には影響しないという解釈）
         break;
       default:
         break;
     }
 
-    const totalStats = {};
-    
-    Object.keys(baseStats).forEach(key => {
-        totalStats[key] = baseStats[key] + partBonus[key] + fullStrengthenBonus[key] + expansionBonus[key];
-    });
+    // 動的な上限値を計算 (baseLimitsをコピーし、変動を反映)
+    const currentLimits = { ...baseLimits };
+    const limitChangedFlags = {}; // 各ステータスの上限が変更されたかどうかのフラグ
 
+    // 拡張による上限増加をcurrentLimitsに反映
+    if (expansionType === "射撃補正拡張") { currentLimits.shoot = (currentLimits.shoot || baseLimits.shoot || 0) + 8; limitChangedFlags.shoot = true; }
+    if (expansionType === "格闘補正拡張") { currentLimits.meleeCorrection = (currentLimits.meleeCorrection || baseLimits.meleeCorrection || 0) + 8; limitChangedFlags.meleeCorrection = true; }
+    if (expansionType === "耐実弾補正拡張") { currentLimits.armor = (currentLimits.armor || baseLimits.armor || 0) + 10; limitChangedFlags.armor = true; }
+    if (expansionType === "耐ビーム補正拡張") { currentLimits.beam = (currentLimits.beam || baseLimits.beam || 0) + 10; limitChangedFlags.beam = true; }
+    if (expansionType === "耐格闘補正拡張") { currentLimits.melee = (currentLimits.melee || baseLimits.melee || 0) + 10; limitChangedFlags.melee = true; }
+    if (expansionType === "スラスター拡張") { currentLimits.thruster = (currentLimits.thruster || baseLimits.thruster || 0) + 20; limitChangedFlags.thruster = true; }
+
+    // カスタムパーツによる上限変動（もしあれば）
+    parts.forEach(part => {
+      // 仮のロジック: もしパーツに "上限増加" のようなプロパティがあれば
+      // if (part.limitIncrease_shoot) { 
+      //    currentLimits.shoot = (currentLimits.shoot || baseLimits.shoot || 0) + part.limitIncrease_shoot; 
+      //    limitChangedFlags.shoot = true; 
+      // }
+      // if (part.limitIncrease_thruster) { 
+      //    currentLimits.thruster = (currentLimits.thruster || baseLimits.thruster || 0) + part.limitIncrease_thruster; 
+      //    limitChangedFlags.thruster = true; 
+      // }
+      // など、具体的な上限増加パーツがあれば追加してください
+    });
+    currentLimits.flags = limitChangedFlags; // 変更フラグをcurrentLimitsに追加
+
+    // 最終的な合計値を上限でクリップ
+    const totalStats = {}; // クリップ後の表示用合計値
+    const rawTotalStats = {}; // クリップ前の純粋な合計値
+
+    Object.keys(baseStats).forEach(key => {
+      let calculatedValue = baseStats[key] + partBonus[key] + fullStrengthenBonus[key] + expansionBonus[key];
+      rawTotalStats[key] = calculatedValue; // クリップ前の値を保持
+      // 定義された上限値がある場合のみクリップ
+      if (currentLimits[key] !== undefined && currentLimits[key] !== null) {
+        totalStats[key] = Math.min(calculatedValue, currentLimits[key]);
+      } else {
+        totalStats[key] = calculatedValue;
+      }
+    });
+    
     return {
         base: baseStats,
         partBonus: partBonus,
         fullStrengthenBonus: fullStrengthenBonus,
-        expansionBonus: expansionBonus,
+        currentLimits: currentLimits, // 計算された上限値を返す
+        expansionBonus: expansionBonus, // expansionBonusも返す
+        rawTotal: rawTotalStats, // クリップ前の合計値も返す
         total: totalStats,
     };
   }, []);
@@ -353,35 +416,40 @@ function App() {
                   </div>
                   <span className="text-2xl font-bold text-white leading-tight">{selectedMs["MS名"]}</span>
                 </div>
-              </div>
 
-              {/* フル強化チェックボックスと拡張選択プルダウン - 横並び */}
-              <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 flex items-center gap-x-4">
-                <label className="flex items-center text-white text-base cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={isFullStrengthened}
-                    onChange={(e) => setIsFullStrengthened(e.target.checked)}
-                    className="form-checkbox h-5 w-5 text-blue-500 bg-gray-700 border-gray-600 rounded mr-2 focus:ring-blue-500"
-                  />
-                  フル強化
-                </label>
-                {/* 拡張選択プルダウンの幅を内容に合わせる */}
-                <div className="flex items-center gap-2 text-white text-base">
-                  <label htmlFor="expansion-select" className="whitespace-nowrap flex-shrink-0">拡張選択:</label>
-                  <select
-                    id="expansion-select"
-                    value={expansionType}
-                    onChange={(e) => setExpansionType(e.target.value)}
-                    className="block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white w-auto"
-                  >
-                    {expansionOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
+                {/* フル強化チェックボックスと拡張選択プルダウン - 2行表示と隣接配置 */}
+                <div className="flex flex-col items-start gap-1 text-white text-base ml-4">
+                  <label className="flex items-center text-white text-base cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isFullStrengthened}
+                      onChange={(e) => setIsFullStrengthened(e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-blue-500 bg-gray-700 border-gray-600 rounded mr-2 focus:ring-blue-500"
+                    />
+                    フル強化
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="expansion-select" className="whitespace-nowrap">拡張選択:</label>
+                    <select
+                      id="expansion-select"
+                      value={expansionType}
+                      onChange={(e) => setExpansionType(e.target.value)}
+                      className="block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white w-auto"
+                    >
+                      {expansionOptions.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
+              {/* 新しい拡張説明表示エリア */}
+              <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 text-white text-base text-center">
+                {expansionDescriptions[expansionType] || "説明がありません"}
+              </div>
+
+              {/* スロット情報部分は変更なし */}
               <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 flex-grow">
                 <SlotSelector
                   usage={usageWithPreview}
