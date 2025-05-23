@@ -87,50 +87,34 @@ function App() {
         }
       });
       await Promise.all(promises);
-      // キャッシュの読み込みが完了したら、現在のfilterCategoryに基づいてpartDataを初期化
-      // setFilterCategoryが設定されているため、初期のfilterCategory（防御）で自動的に`updateDisplayedParts`が呼ばれる
-      // ここで改めて`setPartData`を直接呼ばなくても良い
-      // もし初期値が'すべて'なら、ここで設定する必要があるが、現在は'防御'なので不要
-      // updateDisplayedParts(filterCategory); // この行は削除またはコメントアウト
     };
 
     loadAllPartsIntoCache();
-  }, []); // 依存配列が空なので、コンポーネントマウント時に一度だけ実行
+  }, []);
 
-
-  // filterCategoryが変更されたときに、キャッシュされたデータから表示パーツを更新する
-  // この関数自体は、categoriesの変更に依存するためuseCallbackでメモ化
   const updateDisplayedParts = useCallback((category) => {
     let loadedParts = [];
     if (category === allCategoryName) {
       for (const cat of categories) {
-        // キャッシュにそのカテゴリのデータがあることを確認
         if (allPartsCache.current[cat.name]) {
           loadedParts.push(...allPartsCache.current[cat.name]);
         }
       }
     } else {
       const targetCategory = categories.find(cat => cat.name === category);
-      // 選択されたカテゴリのデータがキャッシュに存在するか確認
       if (targetCategory && allPartsCache.current[targetCategory.name]) {
         loadedParts = allPartsCache.current[targetCategory.name];
       }
     }
     setPartData(loadedParts);
-  }, [categories]); // categoriesが変更されない限り、この関数の参照は変わらない
+  }, [categories]);
 
-
-  // filterCategoryが変更されたときにだけ、表示パーツを更新するuseEffect
-  // キャッシュが全て埋まった後、filterCategoryの変更に応じてPartListの表示を更新する
   useEffect(() => {
-    // 全てのカテゴリがキャッシュにロードされていることを確認してから更新処理を実行
     const allCacheLoaded = categories.every(cat => allPartsCache.current[cat.name]);
-
     if (allCacheLoaded) {
       updateDisplayedParts(filterCategory);
     }
   }, [filterCategory, updateDisplayedParts, categories]);
-
 
   // --- 計算関数 ---
 
@@ -329,6 +313,7 @@ function App() {
   // --- イベントハンドラ ---
 
   const handleMsSelect = useCallback((ms) => {
+    console.log("App: Selected MS in handleMsSelect:", ms); // 選択されたMSオブジェクト全体をログ
     setSelectedMs(ms);
     setSelectedParts([]);
     setHoveredPart(null);
@@ -406,13 +391,27 @@ function App() {
     );
   }
 
-  const baseName = selectedMs ? selectedMs["MS名"].split('(')[0].trim() : 'default';
+  const baseName = selectedMs
+    ? selectedMs["MS名"]
+        .replace(/_LV\d+$/, '')    // 末尾の"_LV数字" を削除
+        .replace(/［/g, '[')    // 全角の '[' を半角に変換
+        .replace(/］/g, ']')    // 全角の ']' を半角に変換
+        .replace(/（/g, '(')    // 全角の '(' を半角に変換
+        .replace(/）/g, ')')    // 全角の ')' を半角に変換
+        .replace(/【/g, '[')    // 全角の '【' を半角に変換
+        .replace(/】/g, ']')    // 全角の '】' を半角に変換
+        .trim() // 余分な空白を削除
+    : 'default';
+
+  console.log("App: MS Name from JSON:", selectedMs ? selectedMs["MS名"] : "No MS Selected"); // JSONからの元々のMS名
+  console.log("App: Generated baseName for image:", baseName); // 画像ファイル名に変換されたbaseName
 
   const getTypeColor = (type) => {
     switch (type) {
       case '強襲':
         return 'bg-red-500 text-white';
       case '汎用':
+      case '汎用（変形）':
         return 'bg-blue-500 text-white';
       case '支援':
       case '支援攻撃':
@@ -443,6 +442,7 @@ function App() {
                     alt={selectedMs["MS名"]}
                     className="w-full h-full object-cover"
                     onError={(e) => {
+                      console.error(`App: Image load error for: /images/ms/${baseName}.jpg`); // 画像読み込みエラーログ
                       e.target.src = '/images/ms/default.jpg';
                       e.target.onerror = null;
                     }}
