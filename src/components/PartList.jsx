@@ -1,8 +1,6 @@
-// src/components/PartList.jsx
 import React, { useState } from 'react';
 
-// Propsとして selectedMs と currentSlotUsage を追加
-const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover, selectedMs, currentSlotUsage }) => {
+const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, currentSlotUsage }) => {
   if (!parts || !Array.isArray(parts)) {
     return <p className="text-gray-400">パーツデータがありません。</p>;
   }
@@ -11,18 +9,18 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover, selectedM
 
   // ステータス表示用のヘルパー関数
   const renderStat = (label, value, isSlot = false) => {
-    if (value === 0 || value === undefined) {
+    if (value === 0 || value === undefined || value === null) { // null も追加
       return null;
     }
     const displayValue = value > 0 ? `+${value}` : value;
     const textColor = isSlot ? 'text-blue-400' : (value > 0 ? 'text-green-400' : 'text-red-400');
-    
+
     let displayLabel = label;
     if (!isSlot) {
       if (label === '耐実弾' || label === '耐ビーム' || label === '耐格闘') {
-        displayLabel = label; 
+        displayLabel = label;
       } else {
-        displayLabel = label.replace('補正', '').replace('力', '').replace('修正',''); 
+        displayLabel = label.replace('補正', '').replace('力', '').replace('修正','');
       }
     }
 
@@ -43,9 +41,9 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover, selectedM
     const maxMid = Number(selectedMs["中スロット"] || 0);
     const maxLong = Number(selectedMs["遠スロット"] || 0);
 
-    const currentClose = currentSlotUsage.close || 0;
-    const currentMid = currentSlotUsage.mid || 0;
-    const currentLong = currentSlotUsage.long || 0;
+    const currentClose = currentSlotUsage?.close || 0;
+    const currentMid = currentSlotUsage?.mid || 0;
+    const currentLong = currentSlotUsage?.long || 0;
 
     const partClose = Number(part.close || 0);
     const partMid = Number(part.mid || 0);
@@ -60,51 +58,50 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover, selectedM
   };
 
   return (
-    <div className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+    // 親要素が `h-full` と `flex-col` を持っている前提で `flex-grow` と `overflow-y-auto` を適用
+    <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
       {parts.length === 0 ? (
-        <p className="text-gray-400">選択されたカテゴリのパーツはありません。</p>
+        <p className="text-gray-400 text-center py-4">選択されたカテゴリのパーツはありません。</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {parts.map((part, index) => {
             const isSelected = selectedParts.some(p => p.name === part.name);
             const imageFileName = part.imagePath || `${part.name}.jpg`;
             const isPartHovered = hoveredPartName === part.name;
-            
+
             // スロットオーバーするパーツかどうかを判定
-            // MSが選択されていない場合は常にfalseとする
             const isOverflowing = selectedMs ? willCauseSlotOverflow(part) : false;
-            
-            // 既に装着されているパーツはグレーアウトしない
-            const isGrayedOut = isOverflowing && !isSelected;
+
+            // パーツ数の上限に達しているかどうかを判定
+            const isPartLimitReached = selectedParts.length >= 8;
+
+            // グレーアウトする条件: スロットオーバー もしくは パーツ数上限に達している AND 既に選択済みではない
+            const isGrayedOut = (isOverflowing || isPartLimitReached) && !isSelected;
 
             return (
               <button
                 key={`${part.name}-${index}`}
                 onClick={() => {
-                  if (isSelected) {
-                    onRemove(part);
-                  } else if (!isOverflowing) { // スロットオーバーしない場合のみ選択可能
-                    onSelect(part);
+                  // グレーアウトしていない、または既に選択済みの場合はクリック可能
+                  if (!isGrayedOut || isSelected) {
+                      onSelect(part);
                   }
-                  // スロットオーバーする場合はクリックしても何も起こらない (onClickで制御)
                 }}
                 onMouseEnter={() => {
                   setHoveredPartName(part.name);
-                  onHover?.(part); // ここでhoveredPartがApp.jsxに渡される
+                  onHover?.(part);
                 }}
                 onMouseLeave={() => {
                   setHoveredPartName(null);
-                  onHover?.(null); // ここでhoveredPartがApp.jsxでクリアされる
+                  onHover?.(null);
                 }}
                 className={`relative w-full text-left flex items-center p-2 rounded-xl border transition-all duration-200 shadow-sm
                   ${isSelected
                     ? 'bg-green-700 text-white border-green-400 cursor-pointer'
-                    : isGrayedOut // グレーアウトする条件
-                      ? 'bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed opacity-50' // グレーアウトスタイル
+                    : isGrayedOut
+                      ? 'bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
                       : 'bg-gray-800 text-gray-100 border-gray-600 hover:border-blue-400 cursor-pointer'
                   }`}
-                // disabled属性は削除して、onMouseEnter/onMouseLeaveが発火するようにする
-                // disabled={isGrayedOut} // ★この行を削除
               >
                 {/* 左側の色バー（装備中だけ表示） */}
                 {isSelected && (
@@ -148,6 +145,7 @@ const PartList = ({ selectedParts, onSelect, onRemove, parts, onHover, selectedM
                     {renderStat('射撃', part.shoot)}
                     {renderStat('格闘', part.melee)}
                     {renderStat('速度', part.speed)}
+                    {renderStat('高速移動', part.highSpeedMovement)}
                     {renderStat('スラ', part.thruster)}
                     {renderStat('旋回(地)', part.turnPerformanceGround)}
                     {renderStat('旋回(宇)', part.turnPerformanceSpace)}
