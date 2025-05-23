@@ -391,15 +391,10 @@ function App() {
     );
   }
 
+  // ★全角括弧の変換処理を削除
   const baseName = selectedMs
     ? selectedMs["MS名"]
         .replace(/_LV\d+$/, '')    // 末尾の"_LV数字" を削除
-        .replace(/［/g, '[')    // 全角の '[' を半角に変換
-        .replace(/］/g, ']')    // 全角の ']' を半角に変換
-        .replace(/（/g, '(')    // 全角の '(' を半角に変換
-        .replace(/）/g, ')')    // 全角の ')' を半角に変換
-        .replace(/【/g, '[')    // 全角の '【' を半角に変換
-        .replace(/】/g, ']')    // 全角の '】' を半角に変換
         .trim() // 余分な空白を削除
     : 'default';
 
