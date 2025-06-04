@@ -1,5 +1,6 @@
 // src/hooks/useAppData.js
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { calculateMSStatsLogic } from '../utils/calculateStats'; // ★★★ この行を追加 ★★★
 
 // カテゴリ定義はApp.jsから移動
 const categories = [
@@ -142,7 +143,9 @@ export const useAppData = () => {
     };
   }, []);
 
-  // MSステータス計算関数
+  // MSステータス計算関数 (この関数は削除または置換されます)
+  // calculateMSStatsLogic をインポートして使用するため、このローカル関数は不要
+  /* ★★★ このブロックを削除またはコメントアウト ★★★
   const calculateMSStats = useCallback((ms, parts, isFullStrengthened, expansionType) => {
     if (!ms) {
       const defaultStats = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
@@ -298,6 +301,7 @@ export const useAppData = () => {
       total: totalStats,
     };
   }, [allPartsCache]); // allPartsCache は useRef なので依存配列に含めない
+  */ // ★★★ ここまで削除またはコメントアウト ★★★
 
   const getUsageWithPreview = useCallback(() => {
     if (!selectedMs) return { close: 0, mid: 0, long: 0 };
@@ -394,7 +398,8 @@ export const useAppData = () => {
     allCategoryName,
     expansionOptions,
     expansionDescriptions,
-    currentStats: calculateMSStats(selectedMs, selectedParts, isFullStrengthened, expansionType),
+    // ★★★ ここを修正 ★★★
+    currentStats: calculateMSStatsLogic(selectedMs, selectedParts, isFullStrengthened, expansionType, allPartsCache.current), // allPartsCache.current を渡す
     slotUsage: calculateSlotUsage(selectedMs, selectedParts),
     usageWithPreview: getUsageWithPreview(),
     setHoveredPart,
