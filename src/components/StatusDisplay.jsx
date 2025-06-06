@@ -26,15 +26,19 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) =
     };
     
     // 上限値の表示と色
-    let limitDisplay = '-';
+    let limitDisplay = '-'; // デフォルトは '-'
     let limitColorClass = 'text-gray-400'; // デフォルトの色
 
-    if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
-      limitDisplay = displayValue(currentLimits[statKey]);
-      // App.jsxで設定した個別の変更フラグをチェック
-      if (currentLimits.flags && currentLimits.flags[statKey]) {
-        limitColorClass = 'text-green-400'; // 上限が動的に変更された場合
-      }
+    // HPの上限は表示しない（-）
+    // currentLimitsがInfinityの場合も -
+    if (statKey === 'hp' || currentLimits[statKey] === Infinity) {
+        limitDisplay = '-';
+    } else if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
+        limitDisplay = displayValue(currentLimits[statKey]);
+        // App.jsxで設定した個別の変更フラグをチェック
+        if (currentLimits.flags && currentLimits.flags[statKey]) {
+            limitColorClass = 'text-green-400'; // 上限が動的に変更された場合
+        }
     }
 
 
@@ -52,10 +56,9 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) =
         <div className={`text-sm text-right whitespace-nowrap ${expansionBonusValue > 0 ? 'text-green-400' : (expansionBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(expansionBonusValue)} {/* 拡張ボーナスの表示 */}
         </div>                                                                                                {/* 拡張 */}
-        <div className="text-sm text-right whitespace-nowrap">
-          <span className={limitColorClass}>{limitDisplay}</span> {/* 上限値の表示と色 */}
-        </div>                                                                                                {/* 上限 */}
-        <div className="text-sm text-right font-bold flex flex-col items-end justify-center"> {/* 合計値の表示とオーバー分 */}
+        
+        {/* 合計値の表示とオーバー分 (上限値の前に移動) */}
+        <div className="text-sm text-right font-bold flex flex-col items-end justify-center">
           <span className={
             // クリップ前の値が上限を超えている場合に赤くする
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey])
@@ -68,6 +71,11 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) =
             </span>
           )}
         </div>                                                                                                {/* 合計値 */}
+
+        {/* 上限値の表示と色 (合計値の後に移動し、太文字に) */}
+        <div className="text-sm text-right whitespace-nowrap font-bold">
+          <span className={limitColorClass}>{limitDisplay}</span>
+        </div>                                                                                                {/* 上限 */}
       </div>
     );
   };
@@ -85,8 +93,8 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened }) =
             <div className="text-right whitespace-nowrap">補正値</div> {/* パーツによる補正 */}
             <div className="text-right whitespace-nowrap">フル強化</div> {/* フル強化による補正 */}
             <div className="text-right whitespace-nowrap">拡張</div> {/* 拡張列 */}
-            <div className="text-right whitespace-nowrap">上限</div>         
-            <div className="text-right whitespace-nowrap">合計値</div>         
+            <div className="text-right whitespace-nowrap">合計値</div>         {/* 合計値 (上限値の前に移動) */}
+            <div className="text-right whitespace-nowrap">上限</div>         {/* 上限値 (合計値の後に移動) */}
           </div>
 
           {renderStatRow('HP', 'hp')}

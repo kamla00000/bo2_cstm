@@ -1,3 +1,4 @@
+// src/components/PartList.jsx
 import React, { useState } from 'react';
 
 const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, currentSlotUsage }) => {
@@ -7,9 +8,8 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
 
   const [hoveredPartName, setHoveredPartName] = useState(null);
 
-  // ステータス表示用のヘルパー関数
   const renderStat = (label, value, isSlot = false) => {
-    if (value === 0 || value === undefined || value === null) { // null も追加
+    if (value === 0 || value === undefined || value === null) {
       return null;
     }
     const displayValue = value > 0 ? `+${value}` : value;
@@ -31,10 +31,9 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
     );
   };
 
-  // スロットオーバーを判定するヘルパー関数
   const willCauseSlotOverflow = (part) => {
     if (!selectedMs) {
-      return false; // MSが選択されていなければオーバーフロー判定はしない
+      return false;
     }
 
     const maxClose = Number(selectedMs["近スロット"] || 0);
@@ -49,7 +48,6 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
     const partMid = Number(part.mid || 0);
     const partLong = Number(part.long || 0);
 
-    // このパーツを装着した場合にスロットがオーバーするかどうか
     return (
       (currentClose + partClose > maxClose && maxClose > 0) ||
       (currentMid + partMid > maxMid && maxMid > 0) ||
@@ -58,31 +56,27 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
   };
 
   return (
-    // 親要素が `h-full` と `flex-col` を持っている前提で `flex-grow` と `overflow-y-auto` を適用
-    <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+    // ★ ここが重要: overflow-y-auto と一時的な固定高さを適用
+    //    カスタムスクロールバーもここに追加
+    <div className="overflow-y-auto pr-2 custom-scrollbar h-[500px]"> 
       {parts.length === 0 ? (
         <p className="text-gray-400 text-center py-4">選択されたカテゴリのパーツはありません。</p>
       ) : (
+        // グリッドレイアウトはこの内部のdivに適用
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {parts.map((part, index) => {
             const isSelected = selectedParts.some(p => p.name === part.name);
             const imageFileName = part.imagePath || `${part.name}.jpg`;
             const isPartHovered = hoveredPartName === part.name;
 
-            // スロットオーバーするパーツかどうかを判定
             const isOverflowing = selectedMs ? willCauseSlotOverflow(part) : false;
-
-            // パーツ数の上限に達しているかどうかを判定
             const isPartLimitReached = selectedParts.length >= 8;
-
-            // グレーアウトする条件: スロットオーバー もしくは パーツ数上限に達している AND 既に選択済みではない
             const isGrayedOut = (isOverflowing || isPartLimitReached) && !isSelected;
 
             return (
               <button
                 key={`${part.name}-${index}`}
                 onClick={() => {
-                  // グレーアウトしていない、または既に選択済みの場合はクリック可能
                   if (!isGrayedOut || isSelected) {
                       onSelect(part);
                   }
@@ -103,12 +97,10 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
                       : 'bg-gray-800 text-gray-100 border-gray-600 hover:border-blue-400 cursor-pointer'
                   }`}
               >
-                {/* 左側の色バー（装備中だけ表示） */}
                 {isSelected && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-400 rounded-l-xl"></div>
                 )}
 
-                {/* 画像部分 */}
                 <div className="mr-2 w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
                   <img
                     src={`/images/parts/${encodeURIComponent(imageFileName)}`}
@@ -121,22 +113,18 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
                   />
                 </div>
 
-                {/* テキストコンテンツ部分 */}
                 <div className="flex flex-col flex-grow min-w-0">
-                  {/* パーツ名 */}
                   <div className="font-semibold text-sm flex items-center gap-1 leading-tight">
                     {isSelected && <span className="text-green-300">✔</span>}
                     <span className="break-words">{part.name}</span>
                   </div>
 
-                  {/* 説明文 (オプション) */}
                   {part.description && (
                     <p className={`text-xs text-gray-300 mt-0.5 leading-tight whitespace-normal break-words ${isPartHovered ? '' : 'line-clamp-2'}`}>
                       {part.description}
                     </p>
                   )}
 
-                  {/* スロット値とステータスボーナス */}
                   <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-gray-400 mt-1">
                     {renderStat('HP', part.hp)}
                     {renderStat('耐実弾', part.armor_range)}

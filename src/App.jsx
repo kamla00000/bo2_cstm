@@ -1,12 +1,7 @@
 // src/App.js
 import React from 'react';
-import MSSelector from './components/MSSelector';
-// import PartList from './components/PartList'; // PartSelectionSection内でインポートされるため、ここからは削除
-import StatusDisplay from './components/StatusDisplay';
-import SlotSelector from './components/SlotSelector';
-import SelectedPartDisplay from './components/SelectedPartDisplay';
-import MsInfoDisplay from './components/MsInfoDisplay';
-import PartSelectionSection from './components/PartSelectionSection'; // ★新規コンポーネントをインポート
+import MsSelection from './components/MsSelection';
+import PartSelectionSection from './components/PartSelectionSection';
 import { useAppData } from './hooks/useAppData';
 
 function App() {
@@ -17,6 +12,7 @@ function App() {
     selectedParts,
     hoveredPart,
     filterCategory,
+    setFilterCategory,
     isFullStrengthened,
     expansionType,
     categories,
@@ -27,7 +23,6 @@ function App() {
     slotUsage,
     usageWithPreview,
     setHoveredPart,
-    setFilterCategory,
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
@@ -44,105 +39,64 @@ function App() {
     );
   }
 
-  const baseName = selectedMs
-    ? selectedMs["MS名"]
-        .replace(/_LV\d+$/, '') // 末尾の"_LV数字" を削除
-        .trim() // 余分な空白を削除
-    : 'default';
-
-  console.log("App: MS Name from JSON:", selectedMs ? selectedMs["MS名"] : "No MS Selected");
-  console.log("App: Generated baseName for image:", baseName);
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case '強襲':
-        return 'bg-red-500 text-white';
-      case '汎用':
-      case '汎用（変形）':
-        return 'bg-blue-500 text-white';
-      case '支援':
-      case '支援攻撃':
-        return 'bg-yellow-500 text-black';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center gap-6">
-      <h1 className="text-4xl font-bold tracking-wide text-white drop-shadow-lg">bo2-cstm</h1>
+    // ★ ルートのdiv: min-h-screenでビューポート高さを確保し、flex-colで縦に並べる
+    //    p-4 (padding) は全体の高さに影響するため、box-sizing: border-box の Tailwind デフォルトでは問題ないが、
+    //    厳密に高さを制御するため、このルート div の flex コンテナ内で padding を考慮した flex-grow を子に与える。
+    //    ここでは gap を使わず、明示的な mb で間隔を制御する。
+    <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center">
+      <h1 className="text-4xl font-bold tracking-wide text-white drop-shadow-lg flex-shrink-0 mb-6">bo2-cstm</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 w-full max-w-screen-xl items-stretch">
-        <div className="space-y-4 md:col-span-3 flex flex-col">
-          <MSSelector
-            msData={msData}
-            onSelect={handleMsSelect}
-            selectedMs={selectedMs}
-          />
+      {/* ★ メインコンテンツエリア: h1 の下の残りの全高さを占める (flex-grow) かつ縦方向のFlexコンテナ */}
+      {/* w-full max-w-screen-xl で中央寄せにし、横幅を制限。 */}
+      {/* この div が flex-col であれば、内部の flex-grow が機能する。 */}
+      <div className="flex flex-col flex-grow w-full max-w-screen-xl"> 
 
-          {selectedMs && (
-            <>
-              <MsInfoDisplay
-                selectedMs={selectedMs}
-                baseName={baseName}
-                isFullStrengthened={isFullStrengthened}
-                setIsFullStrengthened={setIsFullStrengthened}
-                expansionType={expansionType}
-                setExpansionType={setExpansionType}
-                expansionOptions={expansionOptions}
-                expansionDescriptions={expansionDescriptions}
-                getTypeColor={getTypeColor}
-              />
-
-              <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700">
-                <SlotSelector
-                  usage={usageWithPreview}
-                  maxUsage={{
-                    close: Number(selectedMs.近スロット ?? 0),
-                    mid: Number(selectedMs.中スロット ?? 0),
-                    long: Number(selectedMs.遠スロット ?? 0),
-                  }}
-                  baseUsage={slotUsage}
-                />
-              </div>
-
-              <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 mt-4">
-                <SelectedPartDisplay
-                  parts={selectedParts}
-                  onRemove={handlePartRemove}
-                  onClearAllParts={handleClearAllParts}
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="space-y-4 md:col-span-2 flex flex-col">
-          {selectedMs && (
-            <StatusDisplay
-              stats={currentStats}
-              selectedMs={selectedMs}
-              hoveredPart={hoveredPart}
-              isFullStrengthened={isFullStrengthened}
-            />
-          )}
-        </div>
-
-        {/* ★ PartSelectionSection コンポーネントを使用 */}
-        <PartSelectionSection
-          partData={partData}
-          selectedParts={selectedParts}
-          onSelectPart={handlePartSelect} // props名を変更して渡す
-          onRemovePart={handlePartRemove} // props名を変更して渡す
-          onHoverPart={setHoveredPart} // props名を変更して渡す
+        {/* MsSelection コンポーネント */}
+        {/* flex-shrink-0 でこのブロックの高さを固定し、縮まないようにする。 */}
+        {/* mb-6 で PartSelectionSection との間に下マージンを設定。 */}
+        <MsSelection
+          msData={msData}
           selectedMs={selectedMs}
-          currentSlotUsage={slotUsage}
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
-          categories={categories}
-          allCategoryName={allCategoryName}
-          onClearAllParts={handleClearAllParts} // props名を変更して渡す
+          selectedParts={selectedParts}
+          hoveredPart={hoveredPart}
+          isFullStrengthened={isFullStrengthened}
+          expansionType={expansionType}
+          expansionOptions={expansionOptions}
+          expansionDescriptions={expansionDescriptions}
+          currentStats={currentStats}
+          slotUsage={slotUsage}
+          usageWithPreview={usageWithPreview}
+          setHoveredPart={setHoveredPart}
+          setIsFullStrengthened={setIsFullStrengthened}
+          setExpansionType={setExpansionType}
+          handleMsSelect={handleMsSelect}
+          handlePartRemove={handlePartRemove}
+          handleClearAllParts={handleClearAllParts}
+          className="flex-shrink-0 mb-6" // MsSelection のルートdivに適用されるよう調整が必要
         />
+
+        {/* ★ 「カテゴリ別パーツ選択」タイトルと「🗑 全パーツ解除」ボタンを完全に削除 */}
+        {/* ここには何も追加せず、PartSelectionSection に直接接続する */}
+
+        {/* PartSelectionSection コンポーネントを囲むdiv */}
+        {/* flex-grow を適用し、MsSelection の下の残りのスペースをすべて埋めるようにする */}
+        <div className="md:col-span-full flex-grow">
+          <PartSelectionSection
+            partData={partData}
+            selectedParts={selectedParts}
+            onSelectPart={handlePartSelect}
+            onRemovePart={handlePartRemove}
+            onHoverPart={setHoveredPart}
+            selectedMs={selectedMs}
+            currentSlotUsage={slotUsage}
+            filterCategory={filterCategory}
+            setFilterCategory={setFilterCategory}
+            categories={categories}
+            allCategoryName={allCategoryName}
+            // onClearAllParts はPartSelectionSectionでは使わない
+          />
+        </div>
       </div>
     </div>
   );

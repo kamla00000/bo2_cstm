@@ -1,29 +1,32 @@
 // src/components/PartSelectionSection.jsx
 import React from 'react';
-import PartList from './PartList'; // PartListもこのファイルからインポート
+import PartList from './PartList';
 
 const PartSelectionSection = ({
   partData,
   selectedParts,
-  onSelectPart, // handlePartSelectをprops名変更
-  onRemovePart, // handlePartRemoveをprops名変更
-  onHoverPart, // setHoveredPartをprops名変更
+  onSelectPart,
+  onRemovePart,
+  onHoverPart,
   selectedMs,
   currentSlotUsage,
   filterCategory,
   setFilterCategory,
   categories,
   allCategoryName,
-  onClearAllParts // handleClearAllPartsをprops名変更
 }) => {
   if (!selectedMs) {
-    return null; // MSが選択されていない場合は表示しない
+    return null;
   }
 
   return (
-    <div className="w-full bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 col-span-5">
-      <h2 className="text-xl font-semibold mb-3 text-white">カテゴリ別パーツ選択</h2>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+    // App.js からの flex-grow を受け取る (flex-grow) が、
+    // 自身は内部要素 (カテゴリボタンとPartList) を縦に並べる (flex-col)。
+    // padding-4 (p-4) も適用。
+    <div className="w-full bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 col-span-5 flex flex-col flex-grow">
+      
+      {/* カテゴリボタンのみのセクション。flex-shrink-0 でこの要素の高さは固定 */}
+      <div className="flex flex-wrap items-center justify-start gap-2 mb-3 flex-shrink-0">
         <div className="flex flex-wrap gap-2">
           {[{ name: allCategoryName, fileName: '' }, ...categories].map(cat => (
             <button
@@ -39,22 +42,22 @@ const PartSelectionSection = ({
             </button>
           ))}
         </div>
-        <button
-          onClick={onClearAllParts}
-          className="text-sm text-red-400 hover:underline flex-shrink-0"
-        >
-          🗑 全パーツ解除
-        </button>
       </div>
-      <PartList
-        parts={partData}
-        selectedParts={selectedParts}
-        onSelect={onSelectPart}
-        onRemove={onRemovePart}
-        onHover={onHoverPart}
-        selectedMs={selectedMs}
-        currentSlotUsage={currentSlotUsage}
-      />
+      
+      {/* ★ PartList を囲む div: flex-grow, overflow-y-auto, h-full を削除。 */}
+      {/*    PartList 自体がスクロールと高さを制御するため、ここでは特にスタイルは指定しない。 */}
+      {/*    これにより、PartList は自身に設定された 500px の高さで表示される。 */}
+      <div> 
+        <PartList
+          parts={partData}
+          selectedParts={selectedParts}
+          onSelect={onSelectPart}
+          onRemove={onRemovePart}
+          onHover={onHoverPart}
+          selectedMs={selectedMs}
+          currentSlotUsage={currentSlotUsage}
+        />
+      </div>
     </div>
   );
 };
