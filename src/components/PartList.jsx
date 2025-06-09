@@ -32,44 +32,55 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
   };
 
   const willCauseSlotOverflow = (part) => {
-    if (!selectedMs) {
+    if (!selectedMs || !currentSlotUsage) { // currentSlotUsage もチェック
       return false;
     }
 
-    const maxClose = Number(selectedMs["近スロット"] || 0);
-    const maxMid = Number(selectedMs["中スロット"] || 0);
-    const maxLong = Number(selectedMs["遠スロット"] || 0);
+    // ★★★ 修正点: ここで currentSlotUsage から max スロット数を取得する ★★★
+    const maxClose = currentSlotUsage.maxClose || 0;
+    const maxMid = currentSlotUsage.maxMid || 0;
+    const maxLong = currentSlotUsage.maxLong || 0;
+    // ★★★ 修正点ここまで ★★★
 
-    const currentClose = currentSlotUsage?.close || 0;
-    const currentMid = currentSlotUsage?.mid || 0;
-    const currentLong = currentSlotUsage?.long || 0;
+    const currentClose = currentSlotUsage.close || 0; // currentSlotUsage から現在の使用量を取得
+    const currentMid = currentSlotUsage.mid || 0;
+    const currentLong = currentSlotUsage.long || 0;
 
     const partClose = Number(part.close || 0);
     const partMid = Number(part.mid || 0);
     const partLong = Number(part.long || 0);
 
-    return (
-      (currentClose + partClose > maxClose && maxClose > 0) ||
-      (currentMid + partMid > maxMid && maxMid > 0) ||
-      (currentLong + partLong > maxLong && maxLong > 0)
+    // デバッグ用: willCauseSlotOverflow の詳細ログ
+    console.log(`--- willCauseSlotOverflow Debug for ${part.name} ---`);
+    console.log(`Current Used: (C:${currentClose}, M:${currentMid}, L:${currentLong})`);
+    console.log(`Part Cost: (C:${partClose}, M:${partMid}, L:${partLong})`);
+    console.log(`Max Slots (from currentSlotUsage): (C:${maxClose}, M:${maxMid}, L:${maxLong})`);
+    console.log(`Projected Total: (C:${currentClose + partClose}, M:${currentMid + partMid}, L:${currentLong + partLong})`);
+    const overflow = (
+      (currentClose + partClose > maxClose) || // maxClose > 0 のチェックは不要、0の場合でもオーバーフローは0/0で判断
+      (currentMid + partMid > maxMid) ||
+      (currentLong + partLong > maxLong)
     );
+    console.log(`Will Overflow: ${overflow}`);
+    console.log("-----------------------------------------------");
+
+    return overflow;
   };
 
   return (
-    // ★ ここが重要: overflow-y-auto と一時的な固定高さを適用
-    //    カスタムスクロールバーもここに追加
-    <div className="overflow-y-auto pr-2 custom-scrollbar h-[500px]"> 
+    <div className="overflow-y-auto pr-2 custom-scrollbar h-[500px]">
       {parts.length === 0 ? (
         <p className="text-gray-400 text-center py-4">選択されたカテゴリのパーツはありません。</p>
       ) : (
-        // グリッドレイアウトはこの内部のdivに適用
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {parts.map((part, index) => {
             const isSelected = selectedParts.some(p => p.name === part.name);
             const imageFileName = part.imagePath || `${part.name}.jpg`;
             const isPartHovered = hoveredPartName === part.name;
 
-            const isOverflowing = selectedMs ? willCauseSlotOverflow(part) : false;
+            // MSが選択されていない場合はオーバーフローチェックを行わない
+            // selectedMs の有無だけでなく、currentSlotUsage の有無も確認
+            const isOverflowing = (selectedMs && currentSlotUsage) ? willCauseSlotOverflow(part) : false;
             const isPartLimitReached = selectedParts.length >= 8;
             const isGrayedOut = (isOverflowing || isPartLimitReached) && !isSelected;
 

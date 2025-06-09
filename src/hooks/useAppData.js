@@ -1,3 +1,4 @@
+// src/hooks/useAppData.js
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
 
@@ -135,20 +136,9 @@ export const useAppData = () => {
   }, [filterCategory, selectedMs, updateDisplayedParts]);
 
 
-  // スロット使用量計算関数
-  const calculateSlotUsage = useCallback((ms, parts, isFullStrengthened, fullStrengtheningEffectsData) => {
-    // ログは最低限に
-    // console.log("--- calculateSlotUsage START ---");
-    // console.log("ms parameter received (full object):", ms);
-    // console.log("ms parameter received (type of ms):", typeof ms);
-    // MS名プロパティにアクセスするように修正
-    // console.log("MS名 (param):", ms?.MS名); // MS名プロパティを参照
-    // console.log("isFullStrengthened (param):", isFullStrengthened);
-    // console.log("ms?.fullst:", ms?.fullst);
-    // console.log("fullStrengtheningEffectsData available:", fullStrengtheningEffectsData && fullStrengtheningEffectsData.length > 0);
-
+  // スロット使用量計算関数 (useCallback でラップしてメモ化)
+  const calculateSlotUsage = useCallback((ms, parts, isFullStrengthenedParam, fullStrengtheningEffectsData) => {
     if (!ms) {
-      console.log("--- calculateSlotUsage: MS is null or undefined, returning default ---"); // ログを簡潔に
       return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
     }
     let usedClose = 0;
@@ -160,19 +150,10 @@ export const useAppData = () => {
       usedLong += Number(part.long || 0);
     });
 
-    // フル強化によるスロット拡張の考慮
     let additionalSlots = { close: 0, mid: 0, long: 0 };
-    // 以下のデバッグログは削除またはコメントアウトします
-    // console.log("--- calculateSlotUsage Debug ---");
-    // console.log("ms:", ms?.name); // この行はMS名プロパティがないため undefined になっていた
-    // console.log("isFullStrengthened (param):", isFullStrengthened);
-    // console.log("ms.fullst:", ms?.fullst); 
-    // console.log("fullStrengtheningEffectsData available:", fullStrengtheningEffectsData && fullStrengtheningEffectsData.length > 0);
 
-
-    // ms.fullst が存在し、配列であることを確認
-    if (isFullStrengthened && ms.fullst && Array.isArray(ms.fullst) && fullStrengtheningEffectsData) {
-      ms.fullst.forEach(fsPart => { // fullStrengtheningをfullstに変更
+    if (isFullStrengthenedParam && ms.fullst && Array.isArray(ms.fullst) && fullStrengtheningEffectsData) {
+      ms.fullst.forEach(fsPart => {
         const foundFsEffect = fullStrengtheningEffectsData.find(
           fse => fse.name === fsPart.name
         );
@@ -186,14 +167,27 @@ export const useAppData = () => {
         }
       });
     }
-    // console.log("Calculated additionalSlots:", additionalSlots); // デバッグ時に必要に応じて表示
 
-    // ms["近スロット"] のままでOK（JSONデータがこのキー名で格納されているため）
     const maxClose = Number(ms["近スロット"] || 0) + additionalSlots.close;
     const maxMid = Number(ms["中スロット"] || 0) + additionalSlots.mid;
     const maxLong = Number(ms["遠スロット"] || 0) + additionalSlots.long;
 
-    // console.log(`Final calculated max slots: C:${maxClose}, M:${maxMid}, L:${maxLong}`); // デバッグ時に必要に応じて表示
+    // ★★★ 問題特定のための詳細ログ追加 (これはデバッグ用なので、修正完了後に削除推奨) ★★★
+    console.log("--- calculateSlotUsage Detail (for Debugging Discrepancy) ---");
+    console.log(`MS Base Slots (from msData.json for ${ms.MS名}):`, {
+        close: Number(ms["近スロット"] || 0),
+        mid: Number(ms["中スロット"] || 0),
+        long: Number(ms["遠スロット"] || 0)
+    });
+    console.log("Is Full Strengthened:", isFullStrengthenedParam);
+    console.log("Additional Slots from Full Strengthening:", additionalSlots);
+    console.log("Final Calculated Max Slots (by calculateSlotUsage):", {
+        close: maxClose,
+        mid: maxMid,
+        long: maxLong
+    });
+    console.log("---------------------------------------------------------------");
+    // ★★★ ここまで詳細ログ追加 ★★★
 
     return {
       close: usedClose,
@@ -203,7 +197,7 @@ export const useAppData = () => {
       maxMid: maxMid,
       maxLong: maxLong
     };
-  }, []);
+  }, []); // calculateSlotUsage は依存配列なしでOK。引数で受け取るためstateの変更に依存しない。
 
 
   // useMemo を使用して currentStats をキャッシュ
@@ -221,13 +215,11 @@ export const useAppData = () => {
   // useMemo を使用して slotUsage をキャッシュ
   const slotUsage = useMemo(() => {
     if (!selectedMs) {
-      // console.log("--- slotUsage useMemo: selectedMs is null, skipping calculation ---"); // 冗長なためコメントアウト
       return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
     }
-    // console.log("--- slotUsage useMemo: selectedParts before calculateSlotUsage ---"); // デバッグ時に必要に応じて表示
-    // console.log(selectedParts.map(p => ({ name: p.name, close: p.close, mid: p.mid, long: p.long }))); // デバッグ時に必要に応じて表示
     return calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
-  }, [selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects]);
+    // ★ 修正点1: fullStrengtheningEffects を依存配列に追加
+  }, [selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects, calculateSlotUsage]);
 
 
   // ホバー時のスロット使用状況プレビュー
@@ -241,22 +233,15 @@ export const useAppData = () => {
       long: current.long,
     };
 
-    // hoveredPart が存在し、かつそれがまだ選択されていないパーツの場合のみコストを加算
     if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
       newUsed.close += Number(hoveredPart.close || 0);
       newUsed.mid += Number(hoveredPart.mid || 0);
       newUsed.long += Number(hoveredPart.long || 0);
     }
 
-    // getUsageWithPreview の最終的な結果をログ出力（デバッグ時に必要に応じて表示）
-    // console.log("--- getUsageWithPreview Result ---");
-    // console.log("Current (before adding hovered):", current);
-    // console.log("New Used (after adding hovered):", newUsed);
-    // console.log("Max Slots:", { close: current.maxClose, mid: current.maxMid, long: current.maxLong });
     const canAddResult = (newUsed.close <= current.maxClose &&
                           newUsed.mid <= current.maxMid &&
                           newUsed.long <= current.maxLong);
-    // console.log("canAdd (calculated):", canAddResult); // デバッグ時に必要に応じて表示
 
     return {
       close: newUsed.close,
@@ -267,13 +252,11 @@ export const useAppData = () => {
       maxLong: current.maxLong,
       canAdd: canAddResult
     };
-  }, [selectedMs, hoveredPart, selectedParts, slotUsage]);
+  }, [selectedMs, hoveredPart, selectedParts, slotUsage]); // ★ 修正点2: slotUsage を依存配列に追加
 
 
   // --- イベントハンドラ ---
   const handleMsSelect = useCallback((ms) => {
-    // console.log("--- handleMsSelect Called ---"); // 冗長なためコメントアウト
-    // console.log("MS selected in handleMsSelect:", ms); // デバッグ時に必要に応じて表示
     setSelectedMs(ms);
     setSelectedParts([]);
     setHoveredPart(null);
@@ -287,12 +270,8 @@ export const useAppData = () => {
   }, []);
 
   const handlePartSelect = useCallback((part) => {
-    // handlePartSelect が呼ばれたときの初期情報ログ
-    console.log("--- handlePartSelect Called ---"); // 残す
-    console.log("Part attempting to select:", part.name); // 残す
-    // console.log("Selected MS (inside handlePartSelect):", selectedMs); // デバッグ時に必要に応じて表示
-    // console.log("Is Full Strengthened:", isFullStrengthened); // デバッグ時に必要に応じて表示
-
+    console.log("--- handlePartSelect Called ---");
+    console.log("Part attempting to select:", part.name);
 
     if (!selectedMs) {
       alert("先にモビルスーツを選択してください。");
@@ -300,7 +279,7 @@ export const useAppData = () => {
     }
 
     if (selectedParts.some(p => p.name === part.name)) {
-      handlePartRemove(part);
+      handlePartRemove(part); // 既に選択されている場合は解除
       return;
     }
 
@@ -309,35 +288,30 @@ export const useAppData = () => {
       return;
     }
 
+    // 「高性能走行制御機構」系パーツの重複チェック
     if (part.name.startsWith("高性能走行制御機構") && selectedParts.some(p => p.name.startsWith("高性能走行制御機構"))) {
       alert("「高性能走行制御機構」系パーツは複数装備できません。");
       return;
     }
 
-    // スロット計算は calculateSlotUsage を使用
-    const currentSlots = calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
-    // console.log("calculateSlotUsage result for handlePartSelect:", currentSlots); // デバッグ時に必要に応じて表示
+    const partsWithNew = [...selectedParts, part];
+    const projectedSlots = calculateSlotUsage(selectedMs, partsWithNew, isFullStrengthened, fullStrengtheningEffects);
 
-    // ここで part.close, part.mid, part.long が確実に数値として扱われるように Number() を使用
-    const newClose = (currentSlots.close || 0) + Number(part.close || 0);
-    const newMid = (currentSlots.mid || 0) + Number(part.mid || 0);
-    const newLong = (currentSlots.long || 0) + Number(part.long || 0);
-
-    // パーツ追加後の予測スロット使用量と上限をログ
-    console.log(`Attempting to add ${part.name}: Cost (C:${part.close}, M:${part.mid}, L:${part.long})`); // 残す
-    console.log(`Current Used Slots: (C:${currentSlots.close}, M:${currentSlots.mid}, L:${currentSlots.long})`); // 残す
-    console.log(`Max Slots: (C:${currentSlots.maxClose}, M:${currentSlots.maxMid}, L:${currentSlots.maxLong})`); // 残す
-    console.log(`Projected New Slots (C:${newClose}, M:${newMid}, L:${newLong})`); // 残す
+    console.log(`Attempting to add ${part.name}: Cost (C:${part.close || 0}, M:${part.mid || 0}, L:${part.long || 0})`);
+    console.log(`Current Used Slots (before adding ${part.name}): (C:${slotUsage.close}, M:${slotUsage.mid}, L:${slotUsage.long})`);
+    console.log(`Max Slots (used for check): (C:${projectedSlots.maxClose}, M:${projectedSlots.maxMid}, L:${projectedSlots.maxLong})`);
+    console.log(`Projected New Slots (C:${projectedSlots.close}, M:${projectedSlots.mid}, L:${projectedSlots.long})`);
 
 
-    if (newClose > currentSlots.maxClose ||
-      newMid > currentSlots.maxMid ||
-      newLong > currentSlots.maxLong) {
-      console.warn("Slot capacity insufficient based on calculation!"); // 残す
+    if (projectedSlots.close > projectedSlots.maxClose ||
+        projectedSlots.mid > projectedSlots.maxMid ||
+        projectedSlots.long > projectedSlots.maxLong) {
+      console.warn("Slot capacity insufficient based on calculation!");
       alert("スロット容量が不足しています。");
       return;
     }
 
+    // 特定のパーツ組み合わせ制限 (変更なし)
     if (part.name === "駆動系強化機構" || part.name === "コンポジットモーター") {
       const conflictingPart = selectedParts.find(p =>
         (p.speed > 0 || p.turnPerformanceGround > 0 || p.turnPerformanceSpace > 0) &&
@@ -355,7 +329,7 @@ export const useAppData = () => {
     }
 
     setSelectedParts(prevParts => [...prevParts, part]);
-  }, [selectedMs, selectedParts, calculateSlotUsage, handlePartRemove, isFullStrengthened, fullStrengtheningEffects]);
+  }, [selectedMs, selectedParts, calculateSlotUsage, handlePartRemove, isFullStrengthened, fullStrengtheningEffects, slotUsage]);
 
 
   const handleClearAllParts = useCallback(() => {
