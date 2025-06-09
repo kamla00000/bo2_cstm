@@ -252,7 +252,7 @@ export const useAppData = () => {
       maxLong: current.maxLong,
       canAdd: canAddResult
     };
-  }, [selectedMs, hoveredPart, selectedParts, slotUsage]); // ★ 修正点2: slotUsage を依存配列に追加
+  }, [selectedMs, hoveredPart, selectedParts, slotUsage]);
 
 
   // --- イベントハンドラ ---
@@ -260,7 +260,7 @@ export const useAppData = () => {
     setSelectedMs(ms);
     setSelectedParts([]);
     setHoveredPart(null);
-    setIsFullStrengthened(false);
+    setIsFullStrengthened(false); // ここでは元の setIsFullStrengthened を使う
     setExpansionType('無し');
     setFilterCategory(allCategoryName);
   }, []);
@@ -336,6 +336,17 @@ export const useAppData = () => {
     setSelectedParts([]);
   }, []);
 
+  // `setIsFullStrengthened` のラッパー関数を定義
+  const setFullStrengthenedWrapper = useCallback((newValue) => {
+    // newValue が false (フル強化がオフになった) かつ、既に何らかのパーツが選択されている場合
+    if (!newValue && selectedParts.length > 0) {
+      // 強制的に全てのパーツを解除
+      handleClearAllParts(); // handleClearAllParts を呼び出す
+    }
+    // 元の setIsFullStrengthened を呼び出して状態を更新
+    setIsFullStrengthened(newValue);
+  }, [selectedParts, handleClearAllParts]); // 依存配列に selectedParts と handleClearAllParts を追加
+
   return {
     msData,
     partData,
@@ -343,6 +354,7 @@ export const useAppData = () => {
     selectedParts,
     hoveredPart,
     filterCategory,
+    // ★ 修正点: setIsFullStrengthened の代わりにラッパー関数を公開する
     isFullStrengthened,
     expansionType,
     categories,
@@ -354,7 +366,7 @@ export const useAppData = () => {
     usageWithPreview: getUsageWithPreview(),
     setHoveredPart,
     setFilterCategory,
-    setIsFullStrengthened,
+    setIsFullStrengthened: setFullStrengthenedWrapper, // ここを修正
     setExpansionType,
     handleMsSelect,
     handlePartRemove,
