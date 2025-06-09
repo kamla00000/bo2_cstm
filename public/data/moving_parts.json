@@ -46,8 +46,7 @@
     "mid": 4,
     "long": 0,
     "thruster": 12,
-    "description": "スラスターが12増加。",
-    "image": "噴射制御装置_LV4.jpg"
+    "description": "スラスターが12増加。"
   },
   {
     "name": "噴射制御装置_LV5",
@@ -56,8 +55,7 @@
     "mid": 5,
     "long": 5,
     "thruster": 15,
-    "description": "スラスターが15増加。高速移動中のスラスター消費量を5%軽減。",
-    "image": "噴射制御装置_LV5.jpg"
+    "description": "スラスターが15増加。高速移動中のスラスター消費量を5%軽減。"
   },
   {
     "name": "大出力追加ブースター_LV1",
@@ -68,8 +66,7 @@
     "speed": 1,
     "thruster": 10,
     "highSpeedMovement": 1,
-    "description": "高速移動が1増加。スラスターが10増加。",
-    "image": "大出力追加ブースター_LV1.jpg"
+    "description": "高速移動が1増加。スラスターが10増加。"
   },
   {
     "name": "オーバーチューン[機動]_LV1",
@@ -77,8 +74,7 @@
     "close": 3,
     "mid": 1,
     "long": 0,
-    "description": "機体LVが1上昇するごとにスピードが3増加。同一のパーツ効果による最大上昇値は10。",
-    "image": "オーバーチューン[機動]_LV1.jpg"
+    "description": "機体LVが1上昇するごとにスピードが3増加。同一のパーツ効果による最大上昇値は10。"
   },
   {
     "name": "オーバーチューン[スラスター]_LV1",
@@ -86,11 +82,10 @@
     "close": 2,
     "mid": 3,
     "long": 2,
-    "description": "スラスターが3増加。機体LVが1上昇するごとにスラスターが4増加。同一のパーツ効果による最大上昇値は15。",
-    "image": "オーバーチューン[スラスター]_LV1.jpg"
+    "description": "スラスターが3増加。機体LVが1上昇するごとにスラスターが4増加。同一のパーツ効果による最大上昇値は15。"
   },
   {
-    "name": "駆動系強化機構",
+    "name": "駆動系強化機構_LV1",
     "category": "移動",
     "close": 5,
     "mid": 2,
@@ -98,20 +93,18 @@
     "speed": 10,
     "description": "スピードが10増加し、旋回性能が5増加。脚部負荷発生時の回復速度を20%上昇。なおスピードまたは旋回性能が上昇するパーツとの同時装備は行えない。",
     "turnPerformanceGround": 5,
-    "turnPerformanceSpace": 5,
-    "image": "駆動系強化機構.jpg"
+    "turnPerformanceSpace": 5
   },
   {
-    "name": "燃焼効率補助装置",
+    "name": "燃焼効率補助装置_LV1",
     "category": "移動",
     "close": 2,
     "mid": 2,
     "long": 1,
-    "description": "高速移動開始時と高速移動のスラスター消費量を10%軽減。",
-    "image": "燃焼効率補助装置.jpg"
+    "description": "高速移動開始時と高速移動のスラスター消費量を10%軽減。"
   },
   {
-    "name": "コンポジットモーター",
+    "name": "コンポジットモーター_LV1",
     "category": "移動",
     "close": 3,
     "mid": 0,
@@ -119,11 +112,10 @@
     "speed": 7,
     "description": "スピードが7増加し、旋回性能が12増加。ジャンプ後と高速移動後の脚部負荷を20%軽減する。なおスピードまたは旋回性能が上昇するパーツとの同時装備は行えない。",
     "turnPerformanceGround": 12,
-    "turnPerformanceSpace": 12,
-    "image": "コンポジットモーター.jpg"
+    "turnPerformanceSpace": 12
   },
   {
-    "name": "高効率推進材",
+    "name": "高効率推進材_LV1",
     "category": "移動",
     "close": 5,
     "mid": 2,

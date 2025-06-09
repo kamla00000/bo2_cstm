@@ -1,6 +1,11 @@
 // src/components/PartList.jsx
 import React, { useState } from 'react';
 
+// 画像パスを生成する関数をコンポーネントの外に定義
+// これにより、各 img タグのエラーハンドリングロジックが独立して動作する
+const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName)}`;
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp']; // 試す拡張子の優先順位
+
 const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, currentSlotUsage }) => {
   if (!parts || !Array.isArray(parts)) {
     return <p className="text-gray-400">パーツデータがありません。</p>;
@@ -32,17 +37,15 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
   };
 
   const willCauseSlotOverflow = (part) => {
-    if (!selectedMs || !currentSlotUsage) { // currentSlotUsage もチェック
+    if (!selectedMs || !currentSlotUsage) {
       return false;
     }
 
-    // ★★★ 修正点: ここで currentSlotUsage から max スロット数を取得する ★★★
     const maxClose = currentSlotUsage.maxClose || 0;
     const maxMid = currentSlotUsage.maxMid || 0;
     const maxLong = currentSlotUsage.maxLong || 0;
-    // ★★★ 修正点ここまで ★★★
 
-    const currentClose = currentSlotUsage.close || 0; // currentSlotUsage から現在の使用量を取得
+    const currentClose = currentSlotUsage.close || 0;
     const currentMid = currentSlotUsage.mid || 0;
     const currentLong = currentSlotUsage.long || 0;
 
@@ -50,20 +53,11 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
     const partMid = Number(part.mid || 0);
     const partLong = Number(part.long || 0);
 
-    // デバッグ用: willCauseSlotOverflow の詳細ログ
-    console.log(`--- willCauseSlotOverflow Debug for ${part.name} ---`);
-    console.log(`Current Used: (C:${currentClose}, M:${currentMid}, L:${currentLong})`);
-    console.log(`Part Cost: (C:${partClose}, M:${partMid}, L:${partLong})`);
-    console.log(`Max Slots (from currentSlotUsage): (C:${maxClose}, M:${maxMid}, L:${maxLong})`);
-    console.log(`Projected Total: (C:${currentClose + partClose}, M:${currentMid + partMid}, L:${currentLong + partLong})`);
     const overflow = (
-      (currentClose + partClose > maxClose) || // maxClose > 0 のチェックは不要、0の場合でもオーバーフローは0/0で判断
+      (currentClose + partClose > maxClose) ||
       (currentMid + partMid > maxMid) ||
       (currentLong + partLong > maxLong)
     );
-    console.log(`Will Overflow: ${overflow}`);
-    console.log("-----------------------------------------------");
-
     return overflow;
   };
 
@@ -75,11 +69,8 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {parts.map((part, index) => {
             const isSelected = selectedParts.some(p => p.name === part.name);
-            const imageFileName = part.imagePath || `${part.name}.jpg`;
             const isPartHovered = hoveredPartName === part.name;
 
-            // MSが選択されていない場合はオーバーフローチェックを行わない
-            // selectedMs の有無だけでなく、currentSlotUsage の有無も確認
             const isOverflowing = (selectedMs && currentSlotUsage) ? willCauseSlotOverflow(part) : false;
             const isPartLimitReached = selectedParts.length >= 8;
             const isGrayedOut = (isOverflowing || isPartLimitReached) && !isSelected;
@@ -113,15 +104,8 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
                 )}
 
                 <div className="mr-2 w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={`/images/parts/${encodeURIComponent(imageFileName)}`}
-                    alt={part.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = '/images/parts/default.jpg';
-                      e.target.onerror = null;
-                    }}
-                  />
+                  {/* ImageWithFallback コンポーネントを使用 */}
+                  <ImageWithFallback partName={part.name} />
                 </div>
 
                 <div className="flex flex-col flex-grow min-w-0">
@@ -163,3 +147,56 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
 };
 
 export default PartList;
+
+
+// 新規追加するコンポーネント: ImageWithFallback.jsx (または PartList.jsx 内に直接定義)
+// src/components/ImageWithFallback.jsx （推奨: 別ファイルにすると管理しやすい）
+
+// あるいは、PartList.jsx の中で定義する場合は、PartList 関数の外（export default PartList; の前）に書く
+const ImageWithFallback = ({ partName }) => {
+  const [currentExtIndex, setCurrentExtIndex] = useState(0);
+  const [hasLoaded, setHasLoaded] = useState(false); // 画像が正常にロードされたかを示すフラグ
+
+  const handleError = () => {
+    // 現在の拡張子インデックスを増やす
+    const nextExtIndex = currentExtIndex + 1;
+    if (nextExtIndex < IMAGE_EXTENSIONS.length) {
+      // 次の拡張子を試す
+      setCurrentExtIndex(nextExtIndex);
+    } else {
+      // 全ての拡張子を試したがロードできなかった場合
+      // default.jpg にフォールバックするため、currentExtIndex をさらに進めるか、
+      // 特殊な状態 (例: -1) にして、default.jpg を明示的に表示させる
+      setCurrentExtIndex(IMAGE_EXTENSIONS.length); // すべて試したことを示す
+    }
+  };
+
+  const handleLoad = () => {
+    setHasLoaded(true); // 正常にロードされたらフラグを立てる
+  };
+
+  // 表示する画像パスを決定
+  let src;
+  if (currentExtIndex < IMAGE_EXTENSIONS.length) {
+    const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
+    src = `${getBaseImagePath(partName)}.${currentExt}`;
+  } else {
+    // 全ての拡張子を試しても見つからなかった場合
+    src = '/images/parts/default.jpg';
+  }
+
+  // Debugging: 確認用
+  // console.log(`[ImageFallback] Part: ${partName}, Trying: ${src}, Index: ${currentExtIndex}`);
+
+  // hasLoadedがtrueの場合は、再レンダリング時にonErrorが発火しないようにする
+  // これにより、一度正常に表示された画像が、不要なエラーハンドリングを繰り返すのを防ぐ
+  return (
+    <img
+      src={src}
+      alt={partName}
+      className="w-full h-full object-cover"
+      onError={hasLoaded ? null : handleError} // 既にロード済みの場合はonErrorを無効化
+      onLoad={handleLoad} // 正常ロード時にフラグを立てる
+    />
+  );
+};

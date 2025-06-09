@@ -1,4 +1,6 @@
+// src/components/SelectedPartDisplay.jsx
 import React from 'react';
+import ImageWithFallback from './ImageWithFallback'; // ImageWithFallbackをインポート
 
 // onClearAllParts という新しいpropを追加します
 const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts }) => {
@@ -17,13 +19,10 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts }) => {
           onClick={() => onRemove(part)}
           title={`「${part.name}」を外す`}
         >
-          <img
-            src={`/images/parts/${part.name}.jpg`}
-            alt={part.name}
+          {/* ここを ImageWithFallback コンポーネントに置き換え */}
+          <ImageWithFallback
+            partName={part.name}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = '/images/parts/default.jpg'; // フォールバック画像
-            }}
           />
           {/* 外すボタンを重ねて表示 */}
           <div className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 transition-colors duration-200">
