@@ -5,19 +5,19 @@
       {
         "level": 1,
         "effects": {
-          "スラスター": 1
+          "thruster": 1
         }
       },
       {
         "level": 2,
         "effects": {
-          "スラスター": 2
+          "thruster": 2
         }
       },
       {
         "level": 3,
         "effects": {
-          "スラスター": 5
+          "thruster": 5
         }
       }
     ]
@@ -45,25 +45,25 @@
       {
         "level": 1,
         "effects": {
-          "射撃補正": 1
+          "shoot": 1
         }
       },
       {
         "level": 2,
         "effects": {
-          "射撃補正": 2
+          "shoot": 2
         }
       },
       {
         "level": 3,
         "effects": {
-          "射撃補正": 4
+          "shoot": 4
         }
       },
       {
         "level": 4,
         "effects": {
-          "射撃補正": 5
+          "shoot": 5
         }
       }
     ]
@@ -74,25 +74,25 @@
       {
         "level": 1,
         "effects": {
-          "格闘補正": 1
+          "melee": 1
         }
       },
       {
         "level": 2,
         "effects": {
-          "格闘補正": 2
+          "melee": 2
         }
       },
       {
         "level": 3,
         "effects": {
-          "格闘補正": 4
+          "melee": 4
         }
       },
       {
         "level": 4,
         "effects": {
-          "格闘補正": 5
+          "melee": 5
         }
       }
     ]
@@ -137,25 +137,25 @@
       {
         "level": 1,
         "effects": {
-          "耐実弾補正": 1
+          "armor_range": 1
         }
       },
       {
         "level": 2,
         "effects": {
-          "耐実弾補正": 3
+          "armor_range": 3
         }
       },
       {
         "level": 3,
         "effects": {
-          "耐実弾補正": 4
+          "armor_range": 4
         }
       },
       {
         "level": 4,
         "effects": {
-          "耐実弾補正": 5
+          "armor_range": 5
         }
       }
     ]
@@ -166,25 +166,25 @@
       {
         "level": 1,
         "effects": {
-          "耐ビーム補正": 1
+          "armor_beam": 1
         }
       },
       {
         "level": 2,
         "effects": {
-          "耐ビーム補正": 3
+          "armor_beam": 3
         }
       },
       {
         "level": 3,
         "effects": {
-          "耐ビーム補正": 4
+          "armor_beam": 4
         }
       },
       {
         "level": 4,
         "effects": {
-          "耐ビーム補正": 5
+          "armor_beam": 5
         }
       }
     ]
@@ -195,25 +195,25 @@
       {
         "level": 1,
         "effects": {
-          "耐格闘補正": 1
+          "armor_melee": 1
         }
       },
       {
         "level": 2,
         "effects": {
-          "耐格闘補正": 3
+          "armor_melee": 3
         }
       },
       {
         "level": 3,
         "effects": {
-          "耐格闘補正": 4
+          "armor_melee": 4
         }
       },
       {
         "level": 4,
         "effects": {
-          "耐格闘補正": 5
+          "armor_melee": 5
         }
       }
     ]

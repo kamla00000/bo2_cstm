@@ -292,7 +292,7 @@
     "近スロット": 15,
     "中スロット": 18,
     "遠スロット": 15,
-    "fullStrengthening": [
+    "fullst": [
       { "name": "耐ビーム装甲補強", "level": 1 },
       { "name": "AD-PA", "level": 1 },
       { "name": "フレーム補強", "level": 1 },
@@ -321,7 +321,7 @@
     "近スロット": 16,
     "中スロット": 20,
     "遠スロット": 16,
-    "fullStrengthening": [
+    "fullst": [
       { "name": "耐ビーム装甲補強", "level": 1 },
       { "name": "AD-PA", "level": 1 },
       { "name": "フレーム補強", "level": 1 },
@@ -351,7 +351,7 @@
   "近スロット": 16,
   "中スロット": 23,
   "遠スロット": 10,
-  "fullStrengthening": [
+  "fullst": [
     { "name": "耐格闘装甲補強", "level": 1 },
     { "name": "耐格闘装甲補強", "level": 2 },
     { "name": "AD-PA", "level": 1 },

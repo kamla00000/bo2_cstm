@@ -1,6 +1,5 @@
-// src/hooks/useAppData.js
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { calculateMSStatsLogic } from '../utils/calculateStats'; // ★★★ この行を追加 ★★★
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { calculateMSStatsLogic } from '../utils/calculateStats';
 
 // カテゴリ定義はApp.jsから移動
 const categories = [
@@ -30,9 +29,9 @@ const expansionDescriptions = {
   "無し": "拡張スキルなし",
   "射撃補正拡張": "射撃補正が8増加し、射撃補正の上限値が8増加する",
   "格闘補正拡張": "格闘補正が8増加し、格闘補正の上限値が8増加する",
-  "耐実弾補正拡張": "耐実弾補正が10増加し、耐実弾補正の上限値が10増加する",
-  "耐ビーム補正拡張": "耐ビーム補正が10増加し、耐ビーム補正の上限値が10増加する",
-  "耐格闘補正拡張": "耐格闘補正が10増加し、耐格闘補定の上限値が10増加する",
+  "耐実弾補正拡張": "対実弾補正が10増加し、対実弾補正の上限値が10増加する",
+  "耐ビーム補正拡張": "対ビーム補正が10増加し、対ビーム補正の上限値が10増加する",
+  "耐格闘補正拡張": "対格闘補正が10増加し、対格闘補定の上限値が10増加する",
   "スラスター拡張": "スラスターが10増加し、スラスターの上限値が20増加する",
   "カスタムパーツ拡張[HP]": "「攻撃」タイプのカスタムパーツを1つ装備するごとに機体HPが400上昇する",
   "カスタムパーツ拡張[攻撃]": "「移動」タイプのカスタムパーツを1つ装備するごとに格闘補正が3、射撃補正が3上昇する",
@@ -45,52 +44,15 @@ export const useAppData = () => {
   const [msData, setMsData] = useState([]);
   const [partData, setPartData] = useState([]); // 表示中のパーツデータ
   const allPartsCache = useRef({}); // 全てのパーツデータをキャッシュするためのref
+  // fullst.json からフル強化効果データを読み込む
+  const [fullStrengtheningEffects, setFullStrengtheningEffects] = useState([]);
+
   const [selectedMs, setSelectedMs] = useState(null);
   const [selectedParts, setSelectedParts] = useState([]);
   const [hoveredPart, setHoveredPart] = useState(null);
-  const [filterCategory, setFilterCategory] = useState(allCategoryName); // ★初期値を'すべて'に変更
+  const [filterCategory, setFilterCategory] = useState(allCategoryName);
   const [isFullStrengthened, setIsFullStrengthened] = useState(false);
   const [expansionType, setExpansionType] = useState('無し');
-
-  // MSデータを初回のみ読み込む
-  useEffect(() => {
-    fetch('/data/msData.json')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => setMsData(data))
-      .catch(error => console.error("MSデータ読み込みエラー:", error));
-  }, []);
-
-  // 全てのパーツデータを初回のみキャッシュに読み込む
-  useEffect(() => {
-    const loadAllPartsIntoCache = async () => {
-      const promises = categories.map(async (cat) => {
-        if (!allPartsCache.current[cat.name]) {
-          try {
-            const response = await fetch(`/data/${cat.fileName}`);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status} for ${cat.fileName}`);
-            }
-            const data = await response.json();
-            allPartsCache.current[cat.name] = data;
-          } catch (error) {
-            console.error(`パーツデータ読み込みエラー (${cat.fileName}):`, error);
-          }
-        }
-      });
-      await Promise.all(promises);
-      // ★キャッシュロード完了後、初期カテゴリでパーツデータをセット
-      // ここで updateDisplayedParts(allCategoryName) を呼ぶと、初回起動時にパーツが全て表示される
-      // ただし、MS選択前の状態なので、MSが選択された後に再表示が必要
-      updateDisplayedParts(allCategoryName);
-    };
-
-    loadAllPartsIntoCache();
-  }, []); // categories を useCallback の依存配列から削除
 
   // カテゴリに基づいて表示パーツを更新
   const updateDisplayedParts = useCallback((category) => {
@@ -110,21 +72,85 @@ export const useAppData = () => {
     setPartData(loadedParts);
   }, []);
 
+  // MSデータとfullStrengtheningEffectsデータを初回のみ読み込む
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const msResponse = await fetch('/data/msData.json');
+        if (!msResponse.ok) {
+          throw new Error(`HTTP error! status: ${msResponse.status} for msData.json`);
+        }
+        const msData = await msResponse.json();
+        setMsData(msData);
+
+        // fullst.json からフル強化効果データを読み込む
+        const fullStrengtheningResponse = await fetch('/data/fullst.json');
+        if (!fullStrengtheningResponse.ok) {
+          throw new Error(`HTTP error! status: ${fullStrengtheningResponse.status} for fullst.json`);
+        }
+        const fullStrengtheningData = await fullStrengtheningResponse.json();
+        setFullStrengtheningEffects(fullStrengtheningData);
+
+      } catch (error) {
+        console.error("データ読み込みエラー:", error);
+      }
+    };
+    loadInitialData();
+  }, []);
+
+
+  // 全てのパーツデータを初回のみキャッシュに読み込む
+  useEffect(() => {
+    const loadAllPartsIntoCache = async () => {
+      const promises = categories.map(async (cat) => {
+        if (!allPartsCache.current[cat.name]) {
+          try {
+            const response = await fetch(`/data/${cat.fileName}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status} for ${cat.fileName}`);
+            }
+            const data = await response.json();
+            allPartsCache.current[cat.name] = data;
+          } catch (error) {
+            console.error(`パーツデータ読み込みエラー (${cat.fileName}):`, error);
+          }
+        }
+      });
+      await Promise.all(promises);
+      // キャッシュロード完了後、初期カテゴリでパーツデータをセット
+      updateDisplayedParts(allCategoryName);
+    };
+
+    loadAllPartsIntoCache();
+  }, [updateDisplayedParts]);
+
   useEffect(() => {
     // MS選択後やカテゴリ変更時にパーツリストを更新する
-    // selectedMsがnullでない場合にのみ実行することで、MS選択後にパーツが表示されるようになる
     if (selectedMs) {
       updateDisplayedParts(filterCategory);
     } else if (filterCategory === allCategoryName && categories.every(cat => allPartsCache.current[cat.name])) {
       // MS選択前でも、初期カテゴリが「すべて」で全キャッシュがロードされていれば表示
       updateDisplayedParts(allCategoryName);
     }
-  }, [filterCategory, selectedMs, updateDisplayedParts, allCategoryName]); // ★selectedMs を依存配列に追加
+  }, [filterCategory, selectedMs, updateDisplayedParts]);
 
 
   // スロット使用量計算関数
-  const calculateSlotUsage = useCallback((ms, parts) => {
-    if (!ms) return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
+  const calculateSlotUsage = useCallback((ms, parts, isFullStrengthened, fullStrengtheningEffectsData) => {
+    // ログは最低限に
+    // console.log("--- calculateSlotUsage START ---");
+    // console.log("ms parameter received (full object):", ms);
+    // console.log("ms parameter received (type of ms):", typeof ms);
+    // MS名プロパティにアクセスするように修正
+    // console.log("MS名 (param):", ms?.MS名); // MS名プロパティを参照
+    // console.log("isFullStrengthened (param):", isFullStrengthened);
+    // console.log("ms?.fullst:", ms?.fullst);
+    // console.log("fullStrengtheningEffectsData available:", fullStrengtheningEffectsData && fullStrengtheningEffectsData.length > 0);
+
+    if (!ms) {
+      console.log("--- calculateSlotUsage: MS is null or undefined, returning default ---"); // ログを簡潔に
+      return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
+    }
     let usedClose = 0;
     let usedMid = 0;
     let usedLong = 0;
@@ -133,195 +159,127 @@ export const useAppData = () => {
       usedMid += Number(part.mid || 0);
       usedLong += Number(part.long || 0);
     });
+
+    // フル強化によるスロット拡張の考慮
+    let additionalSlots = { close: 0, mid: 0, long: 0 };
+    // 以下のデバッグログは削除またはコメントアウトします
+    // console.log("--- calculateSlotUsage Debug ---");
+    // console.log("ms:", ms?.name); // この行はMS名プロパティがないため undefined になっていた
+    // console.log("isFullStrengthened (param):", isFullStrengthened);
+    // console.log("ms.fullst:", ms?.fullst); 
+    // console.log("fullStrengtheningEffectsData available:", fullStrengtheningEffectsData && fullStrengtheningEffectsData.length > 0);
+
+
+    // ms.fullst が存在し、配列であることを確認
+    if (isFullStrengthened && ms.fullst && Array.isArray(ms.fullst) && fullStrengtheningEffectsData) {
+      ms.fullst.forEach(fsPart => { // fullStrengtheningをfullstに変更
+        const foundFsEffect = fullStrengtheningEffectsData.find(
+          fse => fse.name === fsPart.name
+        );
+        if (foundFsEffect) {
+          const levelEffect = foundFsEffect.levels.find(l => l.level === fsPart.level)?.effects;
+          if (levelEffect) {
+            if (typeof levelEffect['近スロット'] === 'number') additionalSlots.close += levelEffect['近スロット'];
+            if (typeof levelEffect['中スロット'] === 'number') additionalSlots.mid += levelEffect['中スロット'];
+            if (typeof levelEffect['遠スロット'] === 'number') additionalSlots.long += levelEffect['遠スロット'];
+          }
+        }
+      });
+    }
+    // console.log("Calculated additionalSlots:", additionalSlots); // デバッグ時に必要に応じて表示
+
+    // ms["近スロット"] のままでOK（JSONデータがこのキー名で格納されているため）
+    const maxClose = Number(ms["近スロット"] || 0) + additionalSlots.close;
+    const maxMid = Number(ms["中スロット"] || 0) + additionalSlots.mid;
+    const maxLong = Number(ms["遠スロット"] || 0) + additionalSlots.long;
+
+    // console.log(`Final calculated max slots: C:${maxClose}, M:${maxMid}, L:${maxLong}`); // デバッグ時に必要に応じて表示
+
     return {
       close: usedClose,
       mid: usedMid,
       long: usedLong,
-      maxClose: Number(ms["近スロット"] || 0),
-      maxMid: Number(ms["中スロット"] || 0),
-      maxLong: Number(ms["遠スロット"] || 0)
+      maxClose: maxClose,
+      maxMid: maxMid,
+      maxLong: maxLong
     };
   }, []);
 
-  // MSステータス計算関数 (この関数は削除または置換されます)
-  // calculateMSStatsLogic をインポートして使用するため、このローカル関数は不要
-  /* ★★★ このブロックを削除またはコメントアウト ★★★
-  const calculateMSStats = useCallback((ms, parts, isFullStrengthened, expansionType) => {
-    if (!ms) {
-      const defaultStats = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
-      return {
-        base: defaultStats,
-        partBonus: { ...defaultStats },
-        fullStrengthenBonus: { ...defaultStats },
-        expansionBonus: { ...defaultStats },
-        total: { ...defaultStats },
-        rawTotal: { ...defaultStats },
-        currentLimits: { ...defaultStats, flags: {} }
-      };
-    }
 
-    const baseStats = {
-      hp: Number(ms.HP || 0),
-      armor: Number(ms.耐実弾補正 || 0),
-      beam: Number(ms.耐ビーム補正 || 0),
-      melee: Number(ms.耐格闘補正 || 0),
-      shoot: Number(ms.射撃補正 || 0),
-      meleeCorrection: Number(ms.格闘補正 || 0),
-      speed: Number(ms.スピード || 0),
-      highSpeedMovement: Number(ms.高速移動 || 0),
-      thruster: Number(ms.スラスター || 0),
-      turnPerformanceGround: Number(ms["旋回_地上_通常時"] || 0),
-      turnPerformanceSpace: Number(ms["旋回_宇宙_通常時"] || 0)
+  // useMemo を使用して currentStats をキャッシュ
+  const currentStats = useMemo(() => {
+    return calculateMSStatsLogic(
+      selectedMs,
+      selectedParts,
+      isFullStrengthened,
+      expansionType,
+      allPartsCache.current,
+      fullStrengtheningEffects
+    );
+  }, [selectedMs, selectedParts, isFullStrengthened, expansionType, fullStrengtheningEffects]);
+
+  // useMemo を使用して slotUsage をキャッシュ
+  const slotUsage = useMemo(() => {
+    if (!selectedMs) {
+      // console.log("--- slotUsage useMemo: selectedMs is null, skipping calculation ---"); // 冗長なためコメントアウト
+      return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
+    }
+    // console.log("--- slotUsage useMemo: selectedParts before calculateSlotUsage ---"); // デバッグ時に必要に応じて表示
+    // console.log(selectedParts.map(p => ({ name: p.name, close: p.close, mid: p.mid, long: p.long }))); // デバッグ時に必要に応じて表示
+    return calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
+  }, [selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects]);
+
+
+  // ホバー時のスロット使用状況プレビュー
+  const getUsageWithPreview = useCallback(() => {
+    if (!selectedMs) return null;
+    const current = slotUsage; // 現在の確定したスロット使用量
+
+    const newUsed = {
+      close: current.close,
+      mid: current.mid,
+      long: current.long,
     };
 
-    const baseLimits = {
-      hp: undefined,
-      armor: 50,
-      beam: 50,
-      melee: 50,
-      shoot: 100,
-      meleeCorrection: 100,
-      speed: 200,
-      highSpeedMovement: undefined,
-      thruster: 100,
-      turnPerformanceGround: undefined,
-      turnPerformanceSpace: undefined,
-    };
-
-    const partBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
-    const fullStrengthenBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
-    const expansionBonus = { hp: 0, armor: 0, beam: 0, melee: 0, shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0, turnPerformanceGround: 0, turnPerformanceSpace: 0 };
-
-    parts.forEach(part => {
-      if (typeof part.hp === 'number') partBonus.hp += part.hp;
-      if (typeof part.armor_range === 'number') partBonus.armor += part.armor_range;
-      if (typeof part.armor_beam === 'number') partBonus.beam += part.armor_beam;
-      if (typeof part.armor_melee === 'number') partBonus.melee += part.armor_melee;
-      if (typeof part.shoot === 'number') partBonus.shoot += part.shoot;
-      if (typeof part.melee === 'number') partBonus.meleeCorrection += part.melee;
-      if (typeof part.speed === 'number') partBonus.speed += part.speed;
-      if (typeof part.highSpeedMovement === 'number') partBonus.highSpeedMovement += part.highSpeedMovement;
-      if (typeof part.thruster === 'number') partBonus.thruster += part.thruster;
-      if (typeof part.turnPerformanceGround === 'number') partBonus.turnPerformanceGround += part.turnPerformanceGround;
-      if (typeof part.turnPerformanceSpace === 'number') partBonus.turnPerformanceSpace += part.turnPerformanceSpace;
-    });
-
-    if (isFullStrengthened) {
-      fullStrengthenBonus.hp = 2500;
-      fullStrengthenBonus.armor = 5;
-      fullStrengthenBonus.beam = 5;
-      fullStrengthenBonus.melee = 5;
-      fullStrengthenBonus.shoot = 5;
-      fullStrengthenBonus.meleeCorrection = 5;
-      fullStrengthenBonus.speed = 5;
-      fullStrengthenBonus.highSpeedMovement = 5;
-      fullStrengthenBonus.thruster = 5;
-      fullStrengthenBonus.turnPerformanceGround = 5;
-      fullStrengthenBonus.turnPerformanceSpace = 5;
+    // hoveredPart が存在し、かつそれがまだ選択されていないパーツの場合のみコストを加算
+    if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
+      newUsed.close += Number(hoveredPart.close || 0);
+      newUsed.mid += Number(hoveredPart.mid || 0);
+      newUsed.long += Number(hoveredPart.long || 0);
     }
 
-    const currentLimits = { ...baseLimits };
-    const limitChangedFlags = {};
-
-    switch (expansionType) {
-      case "射撃補正拡張":
-        expansionBonus.shoot += 8;
-        currentLimits.shoot = (currentLimits.shoot || baseLimits.shoot || 0) + 8;
-        limitChangedFlags.shoot = true;
-        break;
-      case "格闘補正拡張":
-        expansionBonus.meleeCorrection += 8;
-        currentLimits.meleeCorrection = (currentLimits.meleeCorrection || baseLimits.meleeCorrection || 0) + 8;
-        limitChangedFlags.meleeCorrection = true;
-        break;
-      case "耐実弾補正拡張":
-        expansionBonus.armor += 10;
-        currentLimits.armor = (currentLimits.armor || baseLimits.armor || 0) + 10;
-        limitChangedFlags.armor = true;
-        break;
-      case "耐ビーム補正拡張":
-        expansionBonus.beam += 10;
-        currentLimits.beam = (currentLimits.beam || baseLimits.beam || 0) + 10;
-        limitChangedFlags.beam = true;
-        break;
-      case "耐格闘補正拡張":
-        expansionBonus.melee += 10;
-        currentLimits.melee = (currentLimits.melee || baseLimits.melee || 0) + 10;
-        limitChangedFlags.melee = true;
-        break;
-      case "スラスター拡張":
-        expansionBonus.thruster += 10;
-        currentLimits.thruster = (currentLimits.thruster || baseLimits.thruster || 0) + 20;
-        limitChangedFlags.thruster = true;
-        break;
-      case "カスタムパーツ拡張[HP]":
-        const offensivePartsCountHP = parts.filter(p => allPartsCache.current['攻撃']?.some(op => op.name === p.name)).length;
-        expansionBonus.hp += offensivePartsCountHP * 400;
-        break;
-      case "カスタムパーツ拡張[攻撃]":
-        const movingPartsCountAttack = parts.filter(p => allPartsCache.current['移動']?.some(mp => mp.name === p.name)).length;
-        expansionBonus.meleeCorrection += movingPartsCountAttack * 3;
-        expansionBonus.shoot += movingPartsCountAttack * 3;
-        break;
-      case "カスタムパーツ拡張[装甲]":
-        const supportPartsCountArmor = parts.filter(p => allPartsCache.current['補助']?.some(sp => sp.name === p.name)).length;
-        expansionBonus.armor += supportPartsCountArmor * 3;
-        expansionBonus.beam += supportPartsCountArmor * 3;
-        expansionBonus.melee += supportPartsCountArmor * 3;
-        break;
-      case "カスタムパーツ拡張[スラスター]":
-        const specialPartsCountThruster = parts.filter(p => allPartsCache.current['特殊']?.some(spp => spp.name === p.name)).length;
-        expansionBonus.thruster += specialPartsCountThruster * 5;
-        break;
-      default:
-        break;
-    }
-    currentLimits.flags = limitChangedFlags;
-
-    const totalStats = {};
-    const rawTotalStats = {};
-
-    Object.keys(baseStats).forEach(key => {
-      let calculatedValue = baseStats[key] + partBonus[key] + fullStrengthenBonus[key] + expansionBonus[key];
-      rawTotalStats[key] = calculatedValue;
-      if (currentLimits[key] !== undefined && currentLimits[key] !== null) {
-        totalStats[key] = Math.min(calculatedValue, currentLimits[key]);
-      } else {
-        totalStats[key] = calculatedValue;
-      }
-    });
+    // getUsageWithPreview の最終的な結果をログ出力（デバッグ時に必要に応じて表示）
+    // console.log("--- getUsageWithPreview Result ---");
+    // console.log("Current (before adding hovered):", current);
+    // console.log("New Used (after adding hovered):", newUsed);
+    // console.log("Max Slots:", { close: current.maxClose, mid: current.maxMid, long: current.maxLong });
+    const canAddResult = (newUsed.close <= current.maxClose &&
+                          newUsed.mid <= current.maxMid &&
+                          newUsed.long <= current.maxLong);
+    // console.log("canAdd (calculated):", canAddResult); // デバッグ時に必要に応じて表示
 
     return {
-      base: baseStats,
-      partBonus: partBonus,
-      fullStrengthenBonus: fullStrengthenBonus,
-      currentLimits: currentLimits,
-      expansionBonus: expansionBonus,
-      rawTotal: rawTotalStats,
-      total: totalStats,
+      close: newUsed.close,
+      mid: newUsed.mid,
+      long: newUsed.long,
+      maxClose: current.maxClose,
+      maxMid: current.maxMid,
+      maxLong: current.maxLong,
+      canAdd: canAddResult
     };
-  }, [allPartsCache]); // allPartsCache は useRef なので依存配列に含めない
-  */ // ★★★ ここまで削除またはコメントアウト ★★★
+  }, [selectedMs, hoveredPart, selectedParts, slotUsage]);
 
-  const getUsageWithPreview = useCallback(() => {
-    if (!selectedMs) return { close: 0, mid: 0, long: 0 };
-    const usage = { ...calculateSlotUsage(selectedMs, selectedParts) };
-    if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
-      usage.close += Number(hoveredPart.close || 0);
-      usage.mid += Number(hoveredPart.mid || 0);
-      usage.long += Number(hoveredPart.long || 0);
-    }
-    return usage;
-  }, [selectedMs, hoveredPart, selectedParts, calculateSlotUsage]);
 
   // --- イベントハンドラ ---
   const handleMsSelect = useCallback((ms) => {
+    // console.log("--- handleMsSelect Called ---"); // 冗長なためコメントアウト
+    // console.log("MS selected in handleMsSelect:", ms); // デバッグ時に必要に応じて表示
     setSelectedMs(ms);
     setSelectedParts([]);
     setHoveredPart(null);
     setIsFullStrengthened(false);
     setExpansionType('無し');
-    setFilterCategory(allCategoryName); // ★MS選択時にフィルタカテゴリを「すべて」にリセット
+    setFilterCategory(allCategoryName);
   }, []);
 
   const handlePartRemove = useCallback((partToRemove) => {
@@ -329,6 +287,13 @@ export const useAppData = () => {
   }, []);
 
   const handlePartSelect = useCallback((part) => {
+    // handlePartSelect が呼ばれたときの初期情報ログ
+    console.log("--- handlePartSelect Called ---"); // 残す
+    console.log("Part attempting to select:", part.name); // 残す
+    // console.log("Selected MS (inside handlePartSelect):", selectedMs); // デバッグ時に必要に応じて表示
+    // console.log("Is Full Strengthened:", isFullStrengthened); // デバッグ時に必要に応じて表示
+
+
     if (!selectedMs) {
       alert("先にモビルスーツを選択してください。");
       return;
@@ -349,6 +314,30 @@ export const useAppData = () => {
       return;
     }
 
+    // スロット計算は calculateSlotUsage を使用
+    const currentSlots = calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
+    // console.log("calculateSlotUsage result for handlePartSelect:", currentSlots); // デバッグ時に必要に応じて表示
+
+    // ここで part.close, part.mid, part.long が確実に数値として扱われるように Number() を使用
+    const newClose = (currentSlots.close || 0) + Number(part.close || 0);
+    const newMid = (currentSlots.mid || 0) + Number(part.mid || 0);
+    const newLong = (currentSlots.long || 0) + Number(part.long || 0);
+
+    // パーツ追加後の予測スロット使用量と上限をログ
+    console.log(`Attempting to add ${part.name}: Cost (C:${part.close}, M:${part.mid}, L:${part.long})`); // 残す
+    console.log(`Current Used Slots: (C:${currentSlots.close}, M:${currentSlots.mid}, L:${currentSlots.long})`); // 残す
+    console.log(`Max Slots: (C:${currentSlots.maxClose}, M:${currentSlots.maxMid}, L:${currentSlots.maxLong})`); // 残す
+    console.log(`Projected New Slots (C:${newClose}, M:${newMid}, L:${newLong})`); // 残す
+
+
+    if (newClose > currentSlots.maxClose ||
+      newMid > currentSlots.maxMid ||
+      newLong > currentSlots.maxLong) {
+      console.warn("Slot capacity insufficient based on calculation!"); // 残す
+      alert("スロット容量が不足しています。");
+      return;
+    }
+
     if (part.name === "駆動系強化機構" || part.name === "コンポジットモーター") {
       const conflictingPart = selectedParts.find(p =>
         (p.speed > 0 || p.turnPerformanceGround > 0 || p.turnPerformanceSpace > 0) &&
@@ -365,20 +354,8 @@ export const useAppData = () => {
       return;
     }
 
-    const currentSlots = calculateSlotUsage(selectedMs, selectedParts);
-    const newClose = (currentSlots.close || 0) + (part.close || 0);
-    const newMid = (currentSlots.mid || 0) + (part.mid || 0);
-    const newLong = (currentSlots.long || 0) + (part.long || 0);
-
-    if (newClose > (Number(selectedMs["近スロット"]) || 0) ||
-      newMid > (Number(selectedMs["中スロット"]) || 0) ||
-      newLong > (Number(selectedMs["遠スロット"]) || 0)) {
-      alert("スロット容量が不足しています。");
-      return;
-    }
-
     setSelectedParts(prevParts => [...prevParts, part]);
-  }, [selectedMs, selectedParts, calculateSlotUsage, handlePartRemove]);
+  }, [selectedMs, selectedParts, calculateSlotUsage, handlePartRemove, isFullStrengthened, fullStrengtheningEffects]);
 
 
   const handleClearAllParts = useCallback(() => {
@@ -398,9 +375,8 @@ export const useAppData = () => {
     allCategoryName,
     expansionOptions,
     expansionDescriptions,
-    // ★★★ ここを修正 ★★★
-    currentStats: calculateMSStatsLogic(selectedMs, selectedParts, isFullStrengthened, expansionType, allPartsCache.current), // allPartsCache.current を渡す
-    slotUsage: calculateSlotUsage(selectedMs, selectedParts),
+    currentStats,
+    slotUsage,
     usageWithPreview: getUsageWithPreview(),
     setHoveredPart,
     setFilterCategory,
