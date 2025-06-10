@@ -1,57 +1,139 @@
-// src/components/SlotGauge.jsx
 import React from 'react';
+// renderSlotBar はこのファイル内に定義されているため、import は不要
 
-const SlotGauge = ({ type = '近', max = 10, used = 0, hoveredOccupiedAmount = 0 }) => {
-  const totalBars = 30;
-  const usedBars = Math.round((used / max) * totalBars);
+const SlotSelector = ({ usage, maxUsage, baseUsage, currentStats, hoveredOccupiedSlots }) => {
+  const safeMaxUsage = maxUsage || {};
+  const safeUsage = usage || {};
+  const safeBaseUsage = baseUsage || {};
 
-  const filledColor =
-    type === '近' ? 'bg-red-500' : type === '中' ? 'bg-yellow-500' : 'bg-blue-500';
+  const fullStrengthenCloseBonus = currentStats?.fullStrengthenSlotBonus?.close || 0;
+  const fullStrengthenMediumBonus = currentStats?.fullStrengthenSlotBonus?.medium || 0;
+  const fullStrengthenLongBonus = currentStats?.fullStrengthenSlotBonus?.long || 0;
+
+  const closeMax = (safeMaxUsage.close ?? 0) + fullStrengthenCloseBonus;
+  const midMax = (safeMaxUsage.mid ?? 0) + fullStrengthenMediumBonus;
+  const longMax = (safeMaxUsage.long ?? 0) + fullStrengthenLongBonus;
+
+  const closeCurrent = safeUsage.close ?? 0;
+  const midCurrent = safeUsage.mid ?? 0;
+  const longCurrent = safeUsage.long ?? 0;
+
+  const closeBase = safeBaseUsage.close ?? 0;
+  const midBase = safeBaseUsage.mid ?? 0;
+  const longBase = safeBaseUsage.long ?? 0;
+
+  const originalCloseMax = safeMaxUsage.close ?? 0;
+  const originalMidMax = safeMaxUsage.mid ?? 0;
+  const originalLongMax = safeMaxUsage.long ?? 0;
+
+  const renderSlotBar = (current, totalMax, base, originalMax, slotName, hoveredOccupiedAmount = 0) => {
+    const cells = [];
+    const maxRenderLimit = 40;
+
+    const displayableSlots = Math.max(totalMax, current);
+    const actualDisplayBars = Math.min(displayableSlots, maxRenderLimit);
+
+    for (let i = 0; i < actualDisplayBars; i++) {
+      // 変更点: rounded-sm を削除
+      let cellClass = `flex-none w-1 h-2.5 mr-0.5`;
+
+      const isCurrentlyUsed = (i + 1) <= current;
+      const isBaseUsed = (i + 1) <= base;
+      const isFullStrengthenedBonusSlot = (i + 1) > originalMax && (i + 1) <= totalMax;
+      const isOverflow = (i + 1) > totalMax && (i + 1) <= current;
+      const isHoveredOccupied = hoveredOccupiedAmount > 0 &&
+                                (i + 1) > (current - hoveredOccupiedAmount) &&
+                                (i + 1) <= current;
+
+      // 初期色設定
+      if (isCurrentlyUsed) {
+        if (isBaseUsed) {
+          cellClass += " bg-blue-500"; // MSの基本スロット（青）
+        } else {
+          cellClass += " bg-green-500 animate-fast-pulse"; // カスタムパーツ（緑点滅）
+        }
+      } else {
+        cellClass += " bg-gray-500"; // 未使用（グレー）
+      }
+
+      // フル強化スロットのボーダーを適用
+      if (isFullStrengthenedBonusSlot) {
+          cellClass += " border-2 border-lime-400";
+      }
+
+      // スロットオーバー分を赤で表示（最優先）
+      if (isOverflow) {
+          // 変更点: rounded-sm を削除
+          cellClass = `flex-none w-1 h-2.5 mr-0.5 bg-red-500 animate-pulse border-2 border-red-500`;
+      }
+
+      // ホバー時に黄色点滅のクラスを最優先で適用
+      if (isHoveredOccupied) {
+          // 変更点: rounded-sm を削除
+          cellClass = `flex-none w-1 h-2.5 mr-0.5 bg-yellow-400 border-yellow-300 animate-ping-once`;
+      }
+
+      cells.push(<div key={i} className={cellClass}></div>);
+    }
+
+    return (
+      <div className="flex flex-row overflow-x-auto overflow-y-hidden items-center">
+        {cells}
+      </div>
+    );
+  };
+
+  // これらの変数は、もし `currentStats` に追加スロットのプロパティがある場合にのみ使用されます。
+  // 現在の `App.js` の `currentStats` には含まれていないため、必要であれば追加してください。
+  const closeMaxWithBonus = closeMax; // currentStats?.additionalCloseSlots || 0;
+  const midMaxWithBonus = midMax;     // currentStats?.additionalMidSlots || 0;
+  const longMaxWithBonus = longMax;   // currentStats?.additionalLongSlots || 0;
+
 
   return (
-    <div className="flex flex-col items-start w-full gap-1">
-      <div className="text-xs font-semibold">
-        {type}スロット {used}/{max}
-      </div>
-      <div className="flex w-full h-3">
-        {[...Array(totalBars)].map((_, i) => {
-          const isFilled = i < usedBars;
-          
-          const hoveredOccupiedBarsStart = usedBars - Math.round((hoveredOccupiedAmount / max) * totalBars);
-          const isHoveredOccupied = hoveredOccupiedAmount > 0 && 
-                                    i >= hoveredOccupiedBarsStart &&
-                                    i < usedBars;
+    <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
+      <div className="space-y-3">
+        {/* 近距離スロット */}
+        <div className="flex items-center text-sm font-medium">
+          <span className="text-gray-300 mr-2 whitespace-nowrap">近距離スロット</span>
+          <span
+            className={`text-base font-bold w-[60px] flex-shrink-0 ${
+              closeCurrent > closeMaxWithBonus ? 'text-red-500' : 'text-white'
+            }`}
+          >
+            {closeCurrent} / {closeMaxWithBonus}
+          </span>
+          {renderSlotBar(closeCurrent, closeMaxWithBonus, closeBase, originalCloseMax, 'Close', hoveredOccupiedSlots?.close || 0)}
+        </div>
 
-          // ★★★ デバッグ用 console.log を追加 ★★★
-          // ホバー中に開発者コンソールを確認
-          // `type`, `i` (バーのインデックス), `isFilled`, `isHoveredOccupied`, `hoveredOccupiedAmount` を確認
-          // console.log(`Type: ${type}, Bar Index: ${i}, isFilled: ${isFilled}, isHoveredOccupied: ${isHoveredOccupied}, hoveredOccupiedAmount: ${hoveredOccupiedAmount}`);
+        {/* 中距離スロット */}
+        <div className="flex items-center text-sm font-medium">
+          <span className="text-gray-300 mr-2 whitespace-nowrap">中距離スロット</span>
+          <span
+            className={`text-base font-bold w-[60px] flex-shrink-0 ${
+              midCurrent > midMaxWithBonus ? 'text-red-500' : 'text-white'
+            }`}
+          >
+            {midCurrent} / {midMaxWithBonus}
+          </span>
+          {renderSlotBar(midCurrent, midMaxWithBonus, midBase, originalMidMax, 'Mid', hoveredOccupiedSlots?.mid || 0)}
+        </div>
 
-
-          let segmentColorClass = 'bg-gray-700 border-gray-600';
-
-          if (isFilled) {
-            segmentColorClass = `${filledColor} border-gray-300`;
-          }
-
-          if (isHoveredOccupied) {
-            segmentColorClass = 'bg-yellow-400 border-yellow-300 animate-ping-once';
-          }
-
-          return (
-            <div
-              key={i}
-              className={`flex-1 mx-[0.5px] h-full rounded-sm ${segmentColorClass}`}
-              style={{ minWidth: '1px' }}
-            />
-          );
-        })}
-        {used > max && (
-            <span className="text-red-400 text-xs ml-2">OVER!</span>
-        )}
+        {/* 遠距離スロット */}
+        <div className="flex items-center text-sm font-medium">
+          <span className="text-gray-300 mr-2 whitespace-nowrap">遠距離スロット</span>
+          <span
+            className={`text-base font-bold w-[60px] flex-shrink-0 ${
+              longCurrent > longMaxWithBonus ? 'text-red-500' : 'text-white'
+            }`}
+          >
+            {longCurrent} / {longMaxWithBonus}
+          </span>
+          {renderSlotBar(longCurrent, longMaxWithBonus, longBase, originalLongMax, 'Long', hoveredOccupiedSlots?.long || 0)}
+        </div>
       </div>
     </div>
   );
 };
 
-export default SlotGauge;
+export default SlotSelector;

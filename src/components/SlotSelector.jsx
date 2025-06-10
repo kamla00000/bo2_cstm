@@ -60,7 +60,7 @@ const renderSlotBar = (current, totalMax, base, originalMax, slotName, hoveredOc
 
 
   for (let i = 0; i < actualDisplayBars; i++) {
-    let cellClass = "flex-none w-3 h-5 mr-0.5 rounded-sm"; 
+    let cellClass = "flex-none w-1.5 h-5 mr-0.5"; 
 
     // 各バーの状態を判定するフラグ
     // i は 0 から始まるインデックス、スロット数は 1 から始まるため、i+1 で比較する
@@ -98,12 +98,12 @@ const renderSlotBar = (current, totalMax, base, originalMax, slotName, hoveredOc
     
     // スロットオーバー分を赤で表示（最優先）
     if (isOverflow) {
-        cellClass = `flex-none w-3 h-5 mr-0.5 rounded-sm bg-red-500 animate-pulse border-2 border-red-500`;
+        cellClass = `flex-none w-1.5 h-5 mr-0.5 bg-red-500 animate-pulse border-2 border-red-500`;
     }
 
     // ホバー時に黄色点滅のクラスを最優先で適用
     if (isHoveredOccupied) {
-        cellClass = `flex-none w-3 h-5 mr-0.5 rounded-sm bg-yellow-400 border-yellow-300 animate-ping-once`;
+        cellClass = `flex-none w-1.5 h-5 mr-0.5 bg-yellow-400 border-yellow-300 animate-ping-once`;
     }
     
     cells.push(<div key={i} className={cellClass}></div>);
