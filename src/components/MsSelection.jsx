@@ -1,8 +1,8 @@
-// src/components/MsSelection.jsx (修正点のみ)
+// src/components/MsSelection.jsx
 import React from 'react';
 import MSSelector from './MSSelector';
 import StatusDisplay from './StatusDisplay';
-import SlotSelector from './SlotSelector'; // ★ import
+import SlotSelector from './SlotSelector';
 import SelectedPartDisplay from './SelectedPartDisplay';
 import MsInfoDisplay from './MsInfoDisplay';
 
@@ -15,16 +15,17 @@ const MsSelection = ({
     expansionType,
     expansionOptions,
     expansionDescriptions,
-    currentStats, // ★ このプロップはSlotSelectorに渡されます
+    currentStats,
     slotUsage,
     usageWithPreview,
+    hoveredOccupiedSlots, // ★★★ ここで hoveredOccupiedSlots を受け取る ★★★
     setHoveredPart,
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
     handlePartRemove,
     handleClearAllParts,
-    className // ★ className prop を追加
+    className
 }) => {
     const baseName = selectedMs
         ? selectedMs["MS名"]
@@ -49,7 +50,7 @@ const MsSelection = ({
 
     return (
         <div className={`grid grid-cols-1 md:grid-cols-5 gap-4 w-full items-start
-                         bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 relative z-10 ${className}`}>
+             bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 relative z-10 ${className}`}>
 
             <div className="space-y-2 md:col-span-3 flex flex-col">
                 <MSSelector
@@ -75,16 +76,14 @@ const MsSelection = ({
                         <div>
                             <SlotSelector
                                 usage={usageWithPreview}
-                                // ★ ここを変更: maxUsageにcurrentStatsを渡すのではなく、
-                                // ★ currentStatsからフル強化スロットボーナスをSlotSelector内部で加算するように変更
-                                maxUsage={{ // このオブジェクト自体は現状維持でOK。SlotSelector内で使う。
-                                  close: Number(selectedMs.近スロット ?? 0), // MSの基本スロット情報
-                                  mid: Number(selectedMs.中スロット ?? 0),
-                                  long: Number(selectedMs.遠スロット ?? 0),
+                                maxUsage={{
+                                    close: Number(selectedMs.近スロット ?? 0),
+                                    mid: Number(selectedMs.中スロット ?? 0),
+                                    long: Number(selectedMs.遠スロット ?? 0),
                                 }}
-                                baseUsage={slotUsage}
-                                // ★ currentStats を SlotSelector に渡す
+                                baseUsage={slotUsage} // useAppDataから取得したslotUsageをそのまま渡す
                                 currentStats={currentStats}
+                                hoveredOccupiedSlots={hoveredOccupiedSlots} // ★★★ ここで SlotSelector に渡す ★★★
                             />
                         </div>
 

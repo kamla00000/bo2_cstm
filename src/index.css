@@ -6,31 +6,71 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-  }
-  
-  h1, h2, h3 {
+}
+
+h1, h2, h3 {
     color: #333;
-  }
-  
-  button {
+}
+
+button {
     padding: 8px 16px;
     margin: 5px;
     border: none;
     background-color: #4CAF50;
     color: white;
     cursor: pointer;
-  }
-  
-  button:hover {
+}
+
+button:hover {
     background-color: #45a049;
-  }
-  
-  ul {
+}
+
+ul {
     list-style-type: none;
     padding: 0;
-  }
-  
-  li {
+}
+
+li {
     margin: 5px 0;
+}
+
+/* ★★★ ここから修正 ★★★ */
+/* animate-ping-once を animate-fast-pulse と同じ挙動にする */
+@keyframes ping-once { /* 名前は ping-once のままでも、挙動は fast-pulse に寄せる */
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1); /* サイズ変化もなしに */
   }
-  
+  50% {
+    opacity: .5;
+    transform: scale(1); /* サイズ変化もなしに */
+  }
+}
+
+.animate-ping-once {
+  animation: ping-once 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; /* fast-pulse と同じアニメーション設定 */
+}
+
+/* 緑の点滅 (animate-fast-pulse) はこのままでOK */
+@keyframes fast-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-fast-pulse {
+  animation: fast-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+/* ★★★ ここまで修正 ★★★ */
+
+/* src/index.css */
+
+/* 既存のCSSの下に追加 */
+
+/* スクロールバーが必要ない場合でもスペースを予約し、レイアウトのガタつきを防ぐ */
+.overflow-x-auto {
+    scrollbar-gutter: stable;
+}

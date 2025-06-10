@@ -1,11 +1,9 @@
+// src/components/SlotGauge.jsx
 import React from 'react';
 
-const SlotGauge = ({ type = '近', max = 10, used = 0 }) => {
-  // ここでmaxとusedを確認
-  console.log(`Max: ${max}, Used: ${used}`); // 親から渡された値を表示
-
-  const totalBars = 30; // 最大30バー
-  const usedBars = Math.round((used / max) * totalBars); // 使用バーの計算
+const SlotGauge = ({ type = '近', max = 10, used = 0, hoveredOccupiedAmount = 0 }) => {
+  const totalBars = 30;
+  const usedBars = Math.round((used / max) * totalBars);
 
   const filledColor =
     type === '近' ? 'bg-red-500' : type === '中' ? 'bg-yellow-500' : 'bg-blue-500';
@@ -17,21 +15,40 @@ const SlotGauge = ({ type = '近', max = 10, used = 0 }) => {
       </div>
       <div className="flex w-full h-3">
         {[...Array(totalBars)].map((_, i) => {
-          const isActive = i < totalBars; // 常に30個のバー
-          const isFilled = i < usedBars; // 使用バーの計算（maxに基づく）
+          const isFilled = i < usedBars;
+          
+          const hoveredOccupiedBarsStart = usedBars - Math.round((hoveredOccupiedAmount / max) * totalBars);
+          const isHoveredOccupied = hoveredOccupiedAmount > 0 && 
+                                    i >= hoveredOccupiedBarsStart &&
+                                    i < usedBars;
+
+          // ★★★ デバッグ用 console.log を追加 ★★★
+          // ホバー中に開発者コンソールを確認
+          // `type`, `i` (バーのインデックス), `isFilled`, `isHoveredOccupied`, `hoveredOccupiedAmount` を確認
+          // console.log(`Type: ${type}, Bar Index: ${i}, isFilled: ${isFilled}, isHoveredOccupied: ${isHoveredOccupied}, hoveredOccupiedAmount: ${hoveredOccupiedAmount}`);
+
+
+          let segmentColorClass = 'bg-gray-700 border-gray-600';
+
+          if (isFilled) {
+            segmentColorClass = `${filledColor} border-gray-300`;
+          }
+
+          if (isHoveredOccupied) {
+            segmentColorClass = 'bg-yellow-400 border-yellow-300 animate-ping-once';
+          }
+
           return (
             <div
               key={i}
-              className={`flex-1 mx-[0.5px] h-full border ${
-                isActive
-                  ? isFilled
-                    ? `${filledColor} border-gray-300`
-                    : 'bg-white border-gray-300'
-                  : 'bg-gray-300 border-gray-300'
-              }`}
+              className={`flex-1 mx-[0.5px] h-full rounded-sm ${segmentColorClass}`}
+              style={{ minWidth: '1px' }}
             />
           );
         })}
+        {used > max && (
+            <span className="text-red-400 text-xs ml-2">OVER!</span>
+        )}
       </div>
     </div>
   );
