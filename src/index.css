@@ -5,9 +5,7 @@
 @tailwind utilities;
 
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+  font-family: 'noto-sans', sans-serif; /* Noto Sans JP を適用 */
 }
 
 h1, h2, h3 {
@@ -35,38 +33,6 @@ ul {
 li {
     margin: 5px 0;
 }
-
-/* ★★★ この部分を削除 ★★★ */
-/*
-@keyframes ping-once {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: .5;
-    transform: scale(1);
-  }
-}
-
-.animate-ping-once {
-  animation: ping-once 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes fast-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
-
-.animate-fast-pulse {
-  animation: fast-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-*/
-/* ★★★ ここまで削除 ★★★ */
 
 /* スクロールバーが必要ない場合でもスペースを予約し、レイアウトのガタつきを防ぐ */
 .overflow-x-auto {

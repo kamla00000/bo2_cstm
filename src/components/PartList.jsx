@@ -1,4 +1,5 @@
 // src/components/PartList.jsx
+
 import React, { useState } from 'react';
 
 // 画像パスを生成する関数をコンポーネントの外に定義
@@ -6,21 +7,21 @@ const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partN
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp']; // 試す拡張子の優先順位
 
 // PartList.jsx の中に ImageWithFallback を定義する
-const ImageWithFallback = ({ partName }) => {
+const ImageWithFallback = ({ partName, level }) => {
     const [currentExtIndex, setCurrentExtIndex] = useState(0);
-    const [hasLoaded, setHasLoaded] = useState(false); // 画像が正常にロードされたかを示すフラグ
+    const [hasLoaded, setHasLoaded] = useState(false);
 
     const handleError = () => {
         const nextExtIndex = currentExtIndex + 1;
         if (nextExtIndex < IMAGE_EXTENSIONS.length) {
             setCurrentExtIndex(nextExtIndex);
         } else {
-            setCurrentExtIndex(IMAGE_EXTENSIONS.length); // すべて試したことを示す
+            setCurrentExtIndex(IMAGE_EXTENSIONS.length);
         }
     };
 
     const handleLoad = () => {
-        setHasLoaded(true); // 正常にロードされたらフラグを立てる
+        setHasLoaded(true);
     };
 
     let src;
@@ -32,13 +33,20 @@ const ImageWithFallback = ({ partName }) => {
     }
 
     return (
-        <img
-            src={src}
-            alt={partName}
-            className="w-full h-full object-cover"
-            onError={hasLoaded ? null : handleError} // 既にロード済みの場合はonErrorを無効化
-            onLoad={handleLoad} // 正常ロード時にフラグを立てる
-        />
+        <div className="relative w-full h-full">
+            <img
+                src={src}
+                alt={partName}
+                className="w-full h-full object-cover"
+                onError={hasLoaded ? null : handleError}
+                onLoad={handleLoad}
+            />
+            {level !== undefined && level !== null && (
+                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-white text-xs font-bold px-1 py-0.5 rounded-tl-lg z-10">
+                    LV{level}
+                </div>
+            )}
+        </div>
     );
 };
 
@@ -49,29 +57,6 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
     }
 
     const [hoveredPartName, setHoveredPartName] = useState(null);
-
-    const renderStat = (label, value, isSlot = false) => {
-        if (value === 0 || value === undefined || value === null) {
-            return null;
-        }
-        const displayValue = value > 0 ? `+${value}` : value;
-        const textColor = isSlot ? 'text-blue-400' : (value > 0 ? 'text-green-400' : 'text-red-400');
-
-        let displayLabel = label;
-        if (!isSlot) {
-            if (label === '耐実弾' || label === '耐ビーム' || label === '耐格闘') {
-                displayLabel = label;
-            } else {
-                displayLabel = label.replace('補正', '').replace('力', '').replace('修正','');
-            }
-        }
-
-        return (
-            <span className={`text-xs ${textColor} whitespace-nowrap`}>
-                {displayLabel}: {displayValue}
-            </span>
-        );
-    };
 
     const willCauseSlotOverflow = (part) => {
         if (!selectedMs || !currentSlotUsage) {
@@ -103,88 +88,76 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
             {parts.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">選択されたカテゴリのパーツはありません。</p>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-16 gap-0">
                     {parts.map((part, index) => {
                         const isSelected = selectedParts.some(p => p.name === part.name);
-                        const isPartHovered = hoveredPartName === part.name; // このコンポーネント内でのホバー状態
+                        const isPartHovered = hoveredPartName === part.name;
 
                         const isOverflowing = (selectedMs && currentSlotUsage) ? willCauseSlotOverflow(part) : false;
                         const isPartLimitReached = selectedParts.length >= 8;
-                        const isGrayedOut = (isOverflowing || isPartLimitReached) && !isSelected;
+                        const isNotSelectable = (isOverflowing || isPartLimitReached) && !isSelected; // 選択中の場合は「不可」としない
 
-                        // ホバー時の黄色枠を表示するかどうかの条件を調整
-                        // 装着済みではないパーツがホバーされている場合 (プレビュー)
-                        // または、装着済みパーツがホバーされており、かつ selectedPartsDisplay ではなく PartList からホバーされた場合
-                        // つまり、この PartList コンポーネント内でホバーされた全てのパーツに対して黄色枠を表示する
-                        const showYellowOnHover = isPartHovered; 
+                        const levelMatch = part.name.match(/_LV(\d+)/);
+                        const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
                         return (
                             <button
                                 key={`${part.name}-${index}`}
-                                onClick={() => {
-                                    if (!isGrayedOut || isSelected) {
-                                        onSelect(part);
-                                    }
-                                }}
-                                onMouseEnter={() => {
-                                    setHoveredPartName(part.name);
-                                    // ★★★ ここを修正: ホバー中のパーツが選択済みかどうかに応じて source を渡す ★★★
-                                    if (isSelected) {
-                                        // 装着済みパーツにホバーした場合は 'selectedParts' と見なす
-                                        onHover?.(part, 'selectedParts'); 
-                                    } else {
-                                        // 未装着パーツにホバーした場合は 'partList' と見なす
-                                        onHover?.(part, 'partList');
-                                    }
-                                }}
-                                onMouseLeave={() => {
-                                    setHoveredPartName(null);
-                                    onHover?.(null, null);
-                                }}
-                                className={`relative w-full text-left flex items-center p-2 rounded-xl border transition-all duration-200 shadow-sm
-                                    ${isSelected
-                                        ? 'bg-green-700 text-white border-green-400 cursor-pointer'
-                                        : isGrayedOut
-                                            ? 'bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
-                                            : `bg-gray-800 text-gray-100 border-gray-600 hover:border-blue-400 cursor-pointer ${showYellowOnHover ? 'border-yellow-400' : ''}` // ★★★ ここも修正！ホバー時の黄色枠を追加 ★★★
-                                    }`}
+                                className={`relative transition-all duration-200 p-0 rounded-lg overflow-hidden
+                                    w-16 h-16 aspect-square
+                                    ${isSelected ? 'bg-green-700' : 'bg-gray-800'}
+                                    outline outline-1 outline-gray-900
+                                `}
+                                // ホバー時のアウトラインは、このボタン要素自体に適用
+                                // オーバーレイの下に隠れないように、z-indexはボタンに直接適用しない
                             >
-                                {isSelected && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-400 rounded-l-xl"></div>
-                                )}
+                                <div
+                                    className={`relative w-full h-full flex-shrink-0 cursor-pointer
+                                        ${isNotSelectable ? 'cursor-not-allowed' : ''}
+                                        // ホバー時のアウトラインスタイルをここに移動し、z-indexも考慮
+                                        ${isSelected ? 'outline outline-green-400 outline-2 z-30' // 選択中、常に緑のアウトライン、z-index高め
+                                            : isPartHovered
+                                                ? 'outline outline-yellow-400 outline-2 z-30' // ホバー時、黄色のアウトライン、z-index高め
+                                                : 'hover:outline hover:outline-blue-400 hover:outline-2' // 通常時のホバーは青色アウトライン
+                                        }
+                                    `}
+                                    onClick={() => {
+                                        if (!isNotSelectable || isSelected) {
+                                            onSelect(part);
+                                        }
+                                    }}
+                                    onMouseEnter={() => {
+                                        setHoveredPartName(part.name);
+                                        // ホバーイベントは常に発火させる
+                                        if (isSelected) {
+                                            onHover?.(part, 'selectedParts');
+                                        } else if (isNotSelectable) { // 不可パーツの場合もホバー情報を送る
+                                            onHover?.(part, 'partListOverflow');
+                                        }
+                                        else {
+                                            onHover?.(part, 'partList');
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        setHoveredPartName(null);
+                                        onHover?.(null, null); // ホバー解除時に情報をリセット
+                                    }}
+                                >
+                                    <ImageWithFallback partName={part.name} level={partLevel} />
 
-                                <div className="mr-2 w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                                    <ImageWithFallback partName={part.name} />
-                                </div>
-
-                                <div className="flex flex-col flex-grow min-w-0">
-                                    <div className="font-semibold text-sm flex items-center gap-1 leading-tight">
-                                        {isSelected && <span className="text-green-300">✔</span>}
-                                        <span className="break-words">{part.name}</span>
-                                    </div>
-
-                                    {part.description && (
-                                        <p className={`text-xs text-gray-300 mt-0.5 leading-tight whitespace-normal break-words ${isPartHovered ? '' : 'line-clamp-2'}`}>
-                                            {part.description}
-                                        </p>
+                                    {/* 「装備」表示 (縦書き) とグレーアウト */}
+                                    {isSelected && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl">
+                                            装<br/>備
+                                        </div>
                                     )}
 
-                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-gray-400 mt-1">
-                                        {renderStat('HP', part.hp)}
-                                        {renderStat('耐実弾', part.armor_range)}
-                                        {renderStat('耐ビーム', part.armor_beam)}
-                                        {renderStat('耐格闘', part.armor_melee)}
-                                        {renderStat('射撃', part.shoot)}
-                                        {renderStat('格闘', part.melee)}
-                                        {renderStat('速度', part.speed)}
-                                        {renderStat('高速移動', part.highSpeedMovement)}
-                                        {renderStat('スラ', part.thruster)}
-                                        {renderStat('旋回(地)', part.turnPerformanceGround)}
-                                        {renderStat('旋回(宇)', part.turnPerformanceSpace)}
-                                        {renderStat('近ス', part.close, true)}
-                                        {renderStat('中ス', part.mid, true)}
-                                        {renderStat('遠ス', part.long, true)}
-                                    </div>
+                                    {/* 「不可」表示 (縦書き) とグレーアウト */}
+                                    {isNotSelectable && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl">
+                                            不<br/>可
+                                        </div>
+                                    )}
                                 </div>
                             </button>
                         );
