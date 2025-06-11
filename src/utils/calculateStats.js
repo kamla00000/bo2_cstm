@@ -2,7 +2,7 @@
 
 // デフォルトの上限値定義
 const defaultLimits = {
-    hp: Infinity,
+    hp: Infinity, // HP上限がInfinityの場合、パーツで具体的な数値に設定できるか確認
     armorRange: 50,
     armorBeam: 50,
     armorMelee: 50,
@@ -13,8 +13,6 @@ const defaultLimits = {
     thruster: 100,
     turnPerformanceGround: Infinity,
     turnPerformanceSpace: Infinity,
-    // weaponMelee: Infinity, // 削除
-    // weaponShoot: Infinity, // 削除
 };
 
 export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionType, allPartsCacheForExpansion, fullStrengtheningEffectsData) => {
@@ -28,7 +26,6 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             hp: 0, armorRange: 0, armorBeam: 0, armorMelee: 0,
             shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0,
             turnPerformanceGround: 0, turnPerformanceSpace: 0,
-            // weaponMelee: 0, weaponShoot: 0 // 削除
         };
         console.log("[calculateMSStatsLogic] No MS selected, returning default empty stats.");
         return {
@@ -52,17 +49,13 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         thruster: Number(ms.スラスター || 0),
         turnPerformanceGround: Number(ms["旋回_地上_通常時"] || 0),
         turnPerformanceSpace: Number(ms["旋回_宇宙_通常時"] || 0),
-        // weaponMelee: Number(ms.格闘武器補正 || 0), // 削除
-        // weaponShoot: Number(ms.射撃武器補正 || 0) // 削除
     };
     console.log("[calculateMSStatsLogic] Base Stats (from MS data):", JSON.parse(JSON.stringify(baseStats)));
 
-    // bonusオブジェクトのキーも表示キーと一致させる
     const bonusInitialState = {
         hp: 0, armorRange: 0, armorBeam: 0, armorMelee: 0,
         shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0,
         turnPerformanceGround: 0, turnPerformanceSpace: 0,
-        // weaponMelee: 0, weaponShoot: 0 // 削除
     };
 
     const partBonus = { ...bonusInitialState };
@@ -72,14 +65,13 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
 
     const fullStrengthenSlotBonus = { close: 0, medium: 0, long: 0 };
 
-    const currentLimits = { ...defaultLimits };
+    // currentLimits を defaultLimits のディープコピーとして初期化
+    const currentLimits = JSON.parse(JSON.stringify(defaultLimits));
     const limitChangedFlags = {};
-    // displayStatKeys も表示キーと一致させる
     const displayStatKeys = [
         'hp', 'armorRange', 'armorBeam', 'armorMelee',
         'shoot', 'meleeCorrection', 'speed', 'highSpeedMovement', 'thruster',
         'turnPerformanceGround', 'turnPerformanceSpace',
-        // 'weaponMelee', 'weaponShoot' // 削除
     ];
 
     // 1. MS固有の上限値を適用
@@ -97,14 +89,14 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             case 'thruster': msLimitKey = 'スラスター上限'; break;
             case 'turnPerformanceGround': msLimitKey = '旋回_地上_通常時上限'; break;
             case 'turnPerformanceSpace': msLimitKey = '旋回_宇宙_通常時上限'; break;
-            // case 'weaponMelee': msLimitKey = '格闘武器補正上限'; break; // 削除
-            // case 'weaponShoot': msLimitKey = '射撃武器補正上限'; break; // 削除
             default: msLimitKey = null; break;
         }
 
         if (msLimitKey && ms[msLimitKey] !== undefined && ms[msLimitKey] !== null) {
             const parsedMsLimitValue = Number(ms[msLimitKey]);
             if (!isNaN(parsedMsLimitValue)) {
+                // MS固有の上限は、デフォルトやそれまでの計算結果に関わらず常に適用される
+                // ここでInfinityを上書きする場合もある
                 currentLimits[key] = parsedMsLimitValue;
                 limitChangedFlags[key] = true;
                 console.log(`[calculateMSStatsLogic] MS has specific limit for ${key}: ${parsedMsLimitValue}. Applying.`);
@@ -135,8 +127,6 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         if (typeof part.thruster === 'number') partBonus.thruster += part.thruster;
         if (typeof part.turnPerformanceGround === 'number') partBonus.turnPerformanceGround += part.turnPerformanceGround;
         if (typeof part.turnPerformanceSpace === 'number') partBonus.turnPerformanceSpace += part.turnPerformanceSpace;
-        // if (typeof part.weaponMelee === 'number') partBonus.weaponMelee += part.weaponMelee; // 削除
-        // if (typeof part.weaponShoot === 'number') partBonus.weaponShoot += part.weaponShoot; // 削除
 
         console.log(`Current partBonus after processing ${part.name}:`, JSON.parse(JSON.stringify(partBonus)));
 
@@ -161,13 +151,14 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
     // 3. カスタムパーツによる上限引き上げを適用
     displayStatKeys.forEach(key => {
         if (partLimitsIncrease[key] > 0) {
-            if (currentLimits[key] !== Infinity) {
-                currentLimits[key] += partLimitsIncrease[key];
-                limitChangedFlags[key] = true;
-                console.log(`[calculateMSStatsLogic] Applied partLimitsIncrease for ${key}: +${partLimitsIncrease[key]}. New limit: ${currentLimits[key]}`);
-            } else {
-                console.log(`[calculateMSStatsLogic] Limit for ${key} is Infinity, not adding part increase from parts.`);
-            }
+            // ここで `Infinity` チェックを削除します。
+            // パーツによる引き上げは、現在の限界値（Infinityを含む）に直接加算されると仮定。
+            // もしInfinityに加算されてもInfinityのままであるべきなら、
+            // そのルールは最終的なMath.minで適用されます。
+            // もしInfinityから具体的な値に引き下げるパーツがあるなら、それは別途ロジックが必要です。
+            currentLimits[key] += partLimitsIncrease[key];
+            limitChangedFlags[key] = true;
+            console.log(`[calculateMSStatsLogic] Applied partLimitsIncrease for ${key}: +${partLimitsIncrease[key]}. New limit: ${currentLimits[key]}`);
         }
     });
     console.log("[calculateMSStatsLogic] currentLimits after MS & Part limit applications (before Expansion):", JSON.parse(JSON.stringify(currentLimits)));
@@ -220,8 +211,6 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
                                 case "thruster": internalStatKey = 'thruster'; break;
                                 case "turnPerformanceGround": internalStatKey = 'turnPerformanceGround'; break;
                                 case "turnPerformanceSpace": internalStatKey = 'turnPerformanceSpace'; break;
-                                // case "weaponMelee": internalStatKey = 'weaponMelee'; break; // 削除
-                                // case "weaponShoot": internalStatKey = 'weaponShoot'; break; // 削除
                                 case "近スロット":
                                     fullStrengthenSlotBonus.close += value;
                                     isSlotEffect = true;
@@ -257,7 +246,8 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
                         for (const statKey in foundFsEffectLevel.effects.limitIncreases) {
                             if (foundFsEffectLevel.effects.limitIncreases.hasOwnProperty(statKey) && currentLimits.hasOwnProperty(statKey)) {
                                 const value = foundFsEffectLevel.effects.limitIncreases[statKey];
-                                if (typeof value === 'number' && !isNaN(value) && currentLimits[statKey] !== Infinity) {
+                                if (typeof value === 'number' && !isNaN(value)) {
+                                    // ここもInfinityチェックを削除し、常に加算するように変更
                                     currentLimits[statKey] += value;
                                     limitChangedFlags[statKey] = true;
                                     console.log(`    Full strengthen part increased limit for ${statKey} by ${value}. New limit: ${currentLimits[statKey]}`);
@@ -287,27 +277,29 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
     switch (expansionType) {
         case "射撃補正拡張":
             expansionBonus.shoot += 8;
-            if (currentLimits.shoot !== Infinity) currentLimits.shoot += 8;
+            currentLimits.shoot += 8; // Infinityチェックは削除
             limitChangedFlags.shoot = true; break;
         case "格闘補正拡張":
             expansionBonus.meleeCorrection += 8;
-            if (currentLimits.meleeCorrection !== Infinity) currentLimits.meleeCorrection += 8;
+            currentLimits.meleeCorrection += 8; // Infinityチェックは削除
             limitChangedFlags.meleeCorrection = true; break;
         case "耐実弾補正拡張":
             expansionBonus.armorRange += 10;
-            if (currentLimits.armorRange !== Infinity) currentLimits.armorRange += 10;
+            currentLimits.armorRange += 10; // Infinityチェックは削除
             limitChangedFlags.armorRange = true; break;
         case "耐ビーム補正拡張":
             expansionBonus.armorBeam += 10;
-            if (currentLimits.armorBeam !== Infinity) currentLimits.armorBeam += 10;
+            currentLimits.armorBeam += 10; // Infinityチェックは削除
             limitChangedFlags.armorBeam = true; break;
         case "耐格闘補正拡張":
             expansionBonus.armorMelee += 10;
-            if (currentLimits.armorMelee !== Infinity) currentLimits.armorMelee += 10;
+            currentLimits.armorMelee += 10; // Infinityチェックは削除
             limitChangedFlags.armorMelee = true; break;
         case "スラスター拡張":
             expansionBonus.thruster += 10;
-            if (currentLimits.thruster !== Infinity) currentLimits.thruster += 20;
+            // 「スラスター拡張」が現在のスラスター上限を20ポイント引き上げることを意図している場合
+            // ここもInfinityチェックを削除。加算量として扱う
+            currentLimits.thruster += 20; 
             limitChangedFlags.thruster = true; break;
         case "カスタムパーツ拡張[HP]":
             const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
@@ -361,10 +353,14 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         let calculatedValue = (baseStats[key] || 0) + (partBonus[key] || 0) + (fullStrengthenBonus[key] || 0) + (expansionBonus[key] || 0);
         rawTotalStats[key] = calculatedValue;
 
-        let finalLimit = currentLimits[key];
-        if (key === 'hp' && ms['HP上限'] !== undefined && ms['HP上限'] !== null) {
-            finalLimit = Number(ms['HP上限']);
-        }
+        let finalLimit = currentLimits[key]; 
+        
+        // HPの上限がMS固有で設定されている場合、それを優先的に使用するロジックは削除します。
+        // MS固有上限はすでにステップ1でcurrentLimitsに適用されているため、この重複は不要です。
+        // currentLimitsがすべての種類の引き上げを考慮した最終的な上限であるべきです。
+        // if (key === 'hp' && ms['HP上限'] !== undefined && ms['HP上限'] !== null) {
+        //     finalLimit = Number(ms['HP上限']);
+        // }
 
         if (finalLimit !== Infinity) {
             totalStats[key] = Math.min(calculatedValue, finalLimit);

@@ -98,7 +98,7 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
             <div className="text-right whitespace-nowrap">初期値</div>
             <div className="text-right whitespace-nowrap">補正値</div>
             <div className="text-right whitespace-nowrap">フル強化</div>
-            <div className="text-right whitespace-nowrap">拡張</div>
+            <div className="text-right whitespace-nowrap">上限増</div>
             <div className="text-right whitespace-nowrap">合計値</div>
             <div className="text-right whitespace-nowrap">上限</div>
           </div>

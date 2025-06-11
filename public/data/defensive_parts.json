@@ -356,7 +356,7 @@
   "mid": 1,
   "long": 5,
   "limitIncreases": {
-    "armor": 20
+    "armorRange": 20
   }
 },
   {
@@ -368,7 +368,7 @@
   "mid": 5,
   "long": 9,
   "limitIncreases": {
-    "beam": 20
+    "armorBeam": 20
   }
 },
   {
@@ -380,7 +380,7 @@
   "mid": 7,
   "long": 3,
   "limitIncreases": {
-    "melee": 20
+    "armorMelee": 20
   }
 },
   {
