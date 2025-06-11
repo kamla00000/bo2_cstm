@@ -1,260 +1,275 @@
-// src/hooks/useAppData.js
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
-import { calculateSlotUsage } from '../utils/calculateSlots'; // 新しく分離した関数をインポート
-import { useDataLoading } from './useDataLoading'; // 新しく分離したカスタムフックをインポート
+import { calculateSlotUsage } from '../utils/calculateSlots';
+import { useDataLoading } from './useDataLoading';
 import {
-  CATEGORIES, // `categories` を `CATEGORIES` に変更
-  ALL_CATEGORY_NAME,
-  EXPANSION_OPTIONS,
-  EXPANSION_DESCRIPTIONS
-} from '../constants/appConstants'; // 定数をインポート
+    CATEGORIES,
+    ALL_CATEGORY_NAME,
+    EXPANSION_OPTIONS,
+    EXPANSION_DESCRIPTIONS
+} from '../constants/appConstants';
 
 export const useAppData = () => {
-  // useDataLoading から必要なデータを取得
-  const { msData, fullStrengtheningEffects, allPartsCache, isDataLoaded } = useDataLoading();
+    const { msData, fullStrengtheningEffects, allPartsCache, isDataLoaded } = useDataLoading();
 
-  const [partData, setPartData] = useState([]); // 表示中のパーツデータ
-  const [selectedMs, setSelectedMs] = useState(null);
-  const [selectedParts, setSelectedParts] = useState([]);
-  const [hoveredPart, setHoveredPart] = useState(null);
-  const [filterCategory, setFilterCategory] = useState(ALL_CATEGORY_NAME); // 定数を使用
-  const [isFullStrengthened, setIsFullStrengthened] = useState(false);
-  const [expansionType, setExpansionType] = useState('無し');
+    const [partData, setPartData] = useState([]);
+    const [selectedMs, setSelectedMs] = useState(null);
+    const [selectedParts, setSelectedParts] = useState([]);
+    const [hoveredPart, setHoveredPart] = useState(null);
+    const [hoverSource, setHoverSource] = useState(null); // 'partList' または 'selectedParts'
+    const [filterCategory, setFilterCategory] = useState(ALL_CATEGORY_NAME);
+    const [isFullStrengthened, setIsFullStrengthened] = useState(false);
+    const [expansionType, setExpansionType] = useState('無し');
 
-
-  // カテゴリに基づいて表示パーツを更新 (useCallback でメモ化)
-  // allPartsCache がuseRefから返されるため、依存配列に追加
-  const updateDisplayedParts = useCallback((category) => {
-    let loadedParts = [];
-    if (category === ALL_CATEGORY_NAME) { // 定数を使用
-      for (const cat of CATEGORIES) { // 定数を使用
-        if (allPartsCache[cat.name]) { // ref.current ではなく直接アクセス
-          loadedParts.push(...allPartsCache[cat.name]);
+    const updateDisplayedParts = useCallback((category) => {
+        let loadedParts = [];
+        if (category === ALL_CATEGORY_NAME) {
+            for (const cat of CATEGORIES) {
+                if (allPartsCache[cat.name]) {
+                    loadedParts.push(...allPartsCache[cat.name]);
+                }
+            }
+        } else {
+            const targetCategory = CATEGORIES.find(cat => cat.name === category);
+            if (targetCategory && allPartsCache[targetCategory.name]) {
+                loadedParts = allPartsCache[targetCategory.name];
+            }
         }
-      }
-    } else {
-      const targetCategory = CATEGORIES.find(cat => cat.name === category); // 定数を使用
-      if (targetCategory && allPartsCache[targetCategory.name]) {
-        loadedParts = allPartsCache[targetCategory.name];
-      }
-    }
-    setPartData(loadedParts);
-  }, [allPartsCache]); // allPartsCache を依存配列に追加
+        setPartData(loadedParts);
+    }, [allPartsCache]);
 
-
-  // 全データロード完了後に初期表示パーツをセット
-  useEffect(() => {
-    if (isDataLoaded) {
-      updateDisplayedParts(ALL_CATEGORY_NAME);
-    }
-  }, [isDataLoaded, updateDisplayedParts]); // isDataLoaded と updateDisplayedParts に依存
-
-  // MS選択後やカテゴリ変更時にパーツリストを更新する
-  useEffect(() => {
-    if (selectedMs || (filterCategory === ALL_CATEGORY_NAME && isDataLoaded)) {
-      updateDisplayedParts(filterCategory);
-    }
-  }, [filterCategory, selectedMs, updateDisplayedParts, isDataLoaded]); // isDataLoaded を依存配列に追加
-
-
-  // useMemo を使用して currentStats をキャッシュ
-  const currentStats = useMemo(() => {
-    return calculateMSStatsLogic(
-      selectedMs,
-      selectedParts,
-      isFullStrengthened,
-      expansionType,
-      allPartsCache, // ref.current ではなく直接アクセス
-      fullStrengtheningEffects
-    );
-  }, [selectedMs, selectedParts, isFullStrengthened, expansionType, allPartsCache, fullStrengtheningEffects]);
-
-  // ★★★ カスタムパーツによる補正値を計算する useMemo を追加 ★★★
-  const partBonuses = useMemo(() => {
-    if (!selectedParts || selectedParts.length === 0) {
-      return {};
-    }
-
-    const bonuses = {};
-    selectedParts.forEach(part => {
-      // 数値として扱えるプロパティのみを対象とする
-      for (const key in part) {
-        // null, undefined, NaN を除外し、数値型または数値に変換可能な文字列のみを考慮
-        if (typeof part[key] === 'number' || (typeof part[key] === 'string' && !isNaN(parseFloat(part[key])))) {
-          const value = Number(part[key]);
-          if (isFinite(value)) { // 無限大の値を避ける
-            bonuses[key] = (bonuses[key] || 0) + value;
-          }
+    useEffect(() => {
+        if (isDataLoaded) {
+            updateDisplayedParts(filterCategory);
         }
-      }
-    });
-    return bonuses;
-  }, [selectedParts]);
+    }, [isDataLoaded, filterCategory, updateDisplayedParts]);
+
+    const currentStats = useMemo(() => {
+        return calculateMSStatsLogic(
+            selectedMs,
+            selectedParts,
+            isFullStrengthened,
+            expansionType,
+            allPartsCache,
+            fullStrengtheningEffects
+        );
+    }, [selectedMs, selectedParts, isFullStrengthened, expansionType, allPartsCache, fullStrengtheningEffects]);
+
+    const partBonuses = useMemo(() => {
+        if (!selectedParts || selectedParts.length === 0) {
+            return {};
+        }
+        const bonuses = {};
+        selectedParts.forEach(part => {
+            for (const key in part) {
+                if (typeof part[key] === 'number' || (typeof part[key] === 'string' && !isNaN(parseFloat(part[key])))) {
+                    const value = Number(part[key]);
+                    if (isFinite(value)) {
+                        bonuses[key] = (bonuses[key] || 0) + value;
+                    }
+                }
+            }
+        });
+        return bonuses;
+    }, [selectedParts]);
+
+    const slotUsage = useMemo(() => {
+        if (!selectedMs) {
+            return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
+        }
+        return calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
+    }, [selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects]);
+
+    // ホバーされた「装着済みパーツ」が占めるスロット量を計算
+    // この値はSlotSelectorに渡され、スロットゲージ上の黄色点滅部分を表示するために使われる
+     const hoveredOccupiedSlots = useMemo(() => {
+        // ホバー中のパーツがなく、または hoverSource が設定されていない場合は空のオブジェクトを返す
+        if (!hoveredPart || !hoverSource) {
+            return { close: 0, mid: 0, long: 0 };
+        }
+
+        // ホバー元が 'selectedParts' であるか、
+        // またはホバー元が 'partList' であり、かつホバー中のパーツが実際に selectedParts に含まれる場合
+        const isHoveredPartAnOccupiedSlot = 
+            hoverSource === 'selectedParts' ||
+            (hoverSource === 'partList' && selectedParts.some(p => p.name === hoveredPart.name));
+
+        if (isHoveredPartAnOccupiedSlot) {
+            return {
+                close: Number(hoveredPart.close || 0),
+                mid: Number(hoveredPart.mid || 0),
+                long: Number(hoveredPart.long || 0)
+            };
+        }
+        return { close: 0, mid: 0, long: 0 };
+    }, [hoveredPart, hoverSource, selectedParts]); // 依存配列に selectedParts を追加
 
 
-  // useMemo を使用して slotUsage をキャッシュ
-  const slotUsage = useMemo(() => {
-    if (!selectedMs) {
-      return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
-    }
-    // 分離した calculateSlotUsage を使用
-    return calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
-  }, [selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects]); // calculateSlotUsage はもはや依存配列に不要（純粋関数になったため）
+    // スロットゲージのプレビュー表示用に使用する現在のスロット使用量
+    // (未装着パーツをホバーした場合に、そのパーツのスロット量を追加した仮の値)
+    const calculateUsageWithPreview = useCallback(() => {
+        if (!selectedMs) {
+            return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
+        }
+        const current = slotUsage; // 現在の確定スロット使用量と最大スロット量
 
-  // ★★★ 追加: ホバー中のパーツが装着済みの場合、そのスロット情報を取得 ★★★
-  const hoveredOccupiedSlots = useMemo(() => {
-    if (!hoveredPart || !selectedMs) return null; // MSが選択されていない場合もnull
-    const isAlreadySelected = selectedParts.some(p => p.name === hoveredPart.name);
+        const newUsed = {
+            close: current.close,
+            mid: current.mid,
+            long: current.long,
+        };
 
-    if (isAlreadySelected) {
-      return {
-        close: Number(hoveredPart.close || 0),
-        mid: Number(hoveredPart.mid || 0),
-        long: Number(hoveredPart.long || 0)
-      };
-    }
-    return null; // 装着済みではない場合はnull
-  }, [hoveredPart, selectedParts, selectedMs]);
+        // hoveredPartが存在し、かつそれが選択済みパーツリストに含まれていない（未装着）パーツであり、
+        // かつホバー元が'partList'である場合にプレビューを適用
+        const isHoveringUnselectedPartFromPartList = hoveredPart &&
+            hoverSource === 'partList' &&
+            !selectedParts.some(p => p.name === hoveredPart.name);
+
+        if (isHoveringUnselectedPartFromPartList) {
+            newUsed.close += Number(hoveredPart.close || 0);
+            newUsed.mid += Number(hoveredPart.mid || 0);
+            newUsed.long += Number(hoveredPart.long || 0);
+        }
+
+        return {
+            close: newUsed.close,
+            mid: newUsed.mid,
+            long: newUsed.long,
+            // 最大スロット数は current (slotUsage) から引き継ぐ
+            maxClose: current.maxClose,
+            maxMid: current.maxMid,
+            maxLong: current.maxLong,
+        };
+    }, [selectedMs, hoveredPart, selectedParts, slotUsage, hoverSource]);
+
+    // calculateUsageWithPreview の結果を useMemo でメモ化する
+    const usageWithPreview = useMemo(() => {
+        return calculateUsageWithPreview();
+    }, [calculateUsageWithPreview]);
 
 
-  // ホバー時のスロット使用状況プレビュー
-  const getUsageWithPreview = useCallback(() => {
-    if (!selectedMs) return null;
-    const current = slotUsage; // 現在の確定したスロット使用量
+    // --- イベントハンドラ ---
+    const handleMsSelect = useCallback((ms) => {
+        setSelectedMs(ms);
+        setSelectedParts([]);
+        setHoveredPart(null);
+        setHoverSource(null);
+        setIsFullStrengthened(false);
+        setExpansionType('無し');
+        setFilterCategory(ALL_CATEGORY_NAME);
+    }, []);
 
-    const newUsed = {
-      close: current.close,
-      mid: current.mid,
-      long: current.long,
-    };
+    const handlePartRemove = useCallback((partToRemove) => {
+        setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
+        setHoveredPart(null); // ホバー状態をクリア
+        setHoverSource(null); // ホバー元をクリア
+    }, []);
 
-    if (hoveredPart && !selectedParts.some(p => p.name === hoveredPart.name)) {
-      newUsed.close += Number(hoveredPart.close || 0);
-      newUsed.mid += Number(hoveredPart.mid || 0);
-      newUsed.long += Number(hoveredPart.long || 0);
-    }
+    const handlePartSelect = useCallback((part) => {
+        if (!selectedMs) {
+            alert("先にモビルスーツを選択してください。");
+            return;
+        }
 
-    const canAddResult = (newUsed.close <= current.maxClose &&
-                          newUsed.mid <= current.maxMid &&
-                          newUsed.long <= current.maxLong);
+        if (selectedParts.some(p => p.name === part.name)) {
+            handlePartRemove(part);
+            return;
+        }
+
+        if (selectedParts.length >= 8) {
+            alert("カスタムパーツは最大8つまでしか装着できません。");
+            return;
+        }
+
+        if (part.name.startsWith("高性能走行制御機構") && selectedParts.some(p => p.name.startsWith("高性能走行制御機構"))) {
+            alert("「高性能走行制御機構」系パーツは複数装備できません。");
+            return;
+        }
+
+        const partsWithNew = [...selectedParts, part];
+        const projectedSlots = calculateSlotUsage(selectedMs, partsWithNew, isFullStrengthened, fullStrengtheningEffects);
+
+        if (projectedSlots.close > projectedSlots.maxClose ||
+            projectedSlots.mid > projectedSlots.maxMid ||
+            projectedSlots.long > projectedSlots.maxLong) {
+            alert("スロット容量が不足しています。");
+            return;
+        }
+
+        // 駆動系強化機構/コンポジットモーター と他のスピード/旋回パーツの同時装備制限
+        const isSpeedOrTurnPart = (p) => (p.speed > 0 || p.turnPerformanceGround > 0 || p.turnPerformanceSpace > 0);
+        const isDriveOrComposite = (p) => p.name === "駆動系強化機構" || p.name === "コンポジットモーター";
+
+        if (isDriveOrComposite(part) && selectedParts.some(p => isSpeedOrTurnPart(p) && !isDriveOrComposite(p))) {
+            alert("「駆動系強化機構」または「コンポジットモーター」は、スピードまたは旋回性能が上昇する他のパーツと同時装備できません。");
+            return;
+        }
+        if (isSpeedOrTurnPart(part) && selectedParts.some(p => isDriveOrComposite(p))) {
+            alert("スピードまたは旋回性能が上昇するパーツは、「駆動系強化機構」または「コンポジットモーター」と同時装備できません。");
+            return;
+        }
+
+
+        setSelectedParts(prevParts => {
+            // 同じ名前のパーツがすでに存在する場合は削除してから追加 (更新の意図)
+            const filteredPrevParts = prevParts.filter(p => p.name !== part.name);
+            return [...filteredPrevParts, part];
+        });
+
+    }, [selectedMs, selectedParts, handlePartRemove, isFullStrengthened, fullStrengtheningEffects]);
+
+    const handleClearAllParts = useCallback(() => {
+        setSelectedParts([]);
+        setHoveredPart(null);
+        setHoverSource(null);
+    }, []);
+
+    const setFullStrengthenedWrapper = useCallback((newValue) => {
+        // フル強化を解除する際にパーツが装着されている場合、全パーツ解除を促す
+        if (!newValue && selectedParts.length > 0) {
+            if (window.confirm("フル強化を解除すると、装着中のカスタムパーツは全て外されます。続行しますか？")) {
+                handleClearAllParts();
+            } else {
+                // ユーザーがキャンセルした場合、状態を元に戻す
+                setIsFullStrengthened(true); // 元の状態に戻す
+                return; // 処理を中断
+            }
+        }
+        setIsFullStrengthened(newValue);
+    }, [selectedParts, handleClearAllParts]);
+
+
+    const handlePartHover = useCallback((part, source) => {
+        setHoveredPart(part);
+        setHoverSource(source);
+    }, []);
+
 
     return {
-      close: newUsed.close,
-      mid: newUsed.mid,
-      long: newUsed.long,
-      maxClose: current.maxClose,
-      maxMid: current.maxMid,
-      maxLong: current.maxLong,
-      canAdd: canAddResult
+        msData,
+        partData,
+        selectedMs,
+        selectedParts,
+        hoveredPart,
+        hoveredOccupiedSlots,
+        filterCategory,
+        setFilterCategory,
+        isFullStrengthened,
+        expansionType,
+        categories: CATEGORIES,
+        allCategoryName: ALL_CATEGORY_NAME,
+        expansionOptions: EXPANSION_OPTIONS,
+        expansionDescriptions: EXPANSION_DESCRIPTIONS,
+        currentStats,
+        slotUsage,
+        usageWithPreview,
+        handlePartHover,
+        setIsFullStrengthened: setFullStrengthenedWrapper,
+        setExpansionType,
+        handleMsSelect,
+        handlePartRemove,
+        handlePartSelect,
+        handleClearAllParts,
+        partBonuses,
     };
-  }, [selectedMs, hoveredPart, selectedParts, slotUsage]);
-
-
-  // --- イベントハンドラ ---
-  const handleMsSelect = useCallback((ms) => {
-    setSelectedMs(ms);
-    setSelectedParts([]);
-    setHoveredPart(null);
-    setIsFullStrengthened(false);
-    setExpansionType('無し');
-    setFilterCategory(ALL_CATEGORY_NAME); // 定数を使用
-  }, []);
-
-  const handlePartRemove = useCallback((partToRemove) => {
-    setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
-  }, []);
-
-  const handlePartSelect = useCallback((part) => {
-    if (!selectedMs) {
-      alert("先にモビルスーツを選択してください。");
-      return;
-    }
-
-    if (selectedParts.some(p => p.name === part.name)) {
-      handlePartRemove(part); // 既に選択されている場合は解除
-      return;
-    }
-
-    if (selectedParts.length >= 8) {
-      alert("カスタムパーツは最大8つまでしか装着できません。");
-      return;
-    }
-
-    // 「高性能走行制御機構」系パーツの重複チェック
-    if (part.name.startsWith("高性能走行制御機構") && selectedParts.some(p => p.name.startsWith("高性能走行制御機構"))) {
-      alert("「高性能走行制御機構」系パーツは複数装備できません。");
-      return;
-    }
-
-    const partsWithNew = [...selectedParts, part];
-    // 分離した calculateSlotUsage を使用
-    const projectedSlots = calculateSlotUsage(selectedMs, partsWithNew, isFullStrengthened, fullStrengtheningEffects);
-
-    if (projectedSlots.close > projectedSlots.maxClose ||
-        projectedSlots.mid > projectedSlots.maxMid ||
-        projectedSlots.long > projectedSlots.maxLong) {
-      alert("スロット容量が不足しています。");
-      return;
-    }
-
-    // 特定のパーツ組み合わせ制限 (変更なし)
-    if (part.name === "駆動系強化機構" || part.name === "コンポジットモーター") {
-      const conflictingPart = selectedParts.find(p =>
-        (p.speed > 0 || p.turnPerformanceGround > 0 || p.turnPerformanceSpace > 0) &&
-        p.name !== "駆動系強化機構" && p.name !== "コンポジットモーター"
-      );
-      if (conflictingPart) {
-        alert("「駆動系強化機構」または「コンポジットモーター」は、スピードまたは旋回性能が上昇する他のパーツと同時装備できません。");
-        return;
-      }
-    }
-    if ((part.speed > 0 || part.turnPerformanceGround > 0 || part.turnPerformanceSpace > 0) &&
-      selectedParts.some(p => p.name === "駆動系強化機構" || p.name === "コンポジットモーター")) {
-      alert("スピードまたは旋回性能が上昇するパーツは、「駆動系強化機構」または「コンポジットモーター」と同時装備できません。");
-      return;
-    }
-
-    setSelectedParts(prevParts => [...prevParts, part]);
-  }, [selectedMs, selectedParts, handlePartRemove, isFullStrengthened, fullStrengtheningEffects, calculateSlotUsage]); // calculateSlotUsage は依存配列に不要
-
-  const handleClearAllParts = useCallback(() => {
-    setSelectedParts([]);
-  }, []);
-
-  // `setIsFullStrengthened` のラッパー関数を定義
-  const setFullStrengthenedWrapper = useCallback((newValue) => {
-    if (!newValue && selectedParts.length > 0) {
-      handleClearAllParts();
-    }
-    setIsFullStrengthened(newValue);
-  }, [selectedParts, handleClearAllParts]);
-
-  return {
-    msData,
-    partData,
-    selectedMs,
-    selectedParts,
-    hoveredPart,
-    filterCategory,
-    isFullStrengthened,
-    expansionType,
-    categories: CATEGORIES, // 定数を公開
-    allCategoryName: ALL_CATEGORY_NAME, // 定数を公開
-    expansionOptions: EXPANSION_OPTIONS, // 定数を公開
-    expansionDescriptions: EXPANSION_DESCRIPTIONS, // 定数を公開
-    currentStats,
-    slotUsage,
-    usageWithPreview: getUsageWithPreview(),
-    setHoveredPart,
-    setFilterCategory,
-    setIsFullStrengthened: setFullStrengthenedWrapper,
-    setExpansionType,
-    handleMsSelect,
-    handlePartRemove,
-    handlePartSelect,
-    handleClearAllParts,
-    partBonuses, // ★★★ 追加: 計算した補正値を公開 ★★★
-    hoveredOccupiedSlots, // ★★★ 追加: ホバー中のパーツが占有するスロット情報を公開 ★★★
-  };
 };

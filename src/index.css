@@ -1,3 +1,5 @@
+/* src/index.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,24 +36,23 @@ li {
     margin: 5px 0;
 }
 
-/* ★★★ ここから修正 ★★★ */
-/* animate-ping-once を animate-fast-pulse と同じ挙動にする */
-@keyframes ping-once { /* 名前は ping-once のままでも、挙動は fast-pulse に寄せる */
+/* ★★★ この部分を削除 ★★★ */
+/*
+@keyframes ping-once {
   0%, 100% {
     opacity: 1;
-    transform: scale(1); /* サイズ変化もなしに */
+    transform: scale(1);
   }
   50% {
     opacity: .5;
-    transform: scale(1); /* サイズ変化もなしに */
+    transform: scale(1);
   }
 }
 
 .animate-ping-once {
-  animation: ping-once 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; /* fast-pulse と同じアニメーション設定 */
+  animation: ping-once 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 緑の点滅 (animate-fast-pulse) はこのままでOK */
 @keyframes fast-pulse {
   0%, 100% {
     opacity: 1;
@@ -64,11 +65,8 @@ li {
 .animate-fast-pulse {
   animation: fast-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-/* ★★★ ここまで修正 ★★★ */
-
-/* src/index.css */
-
-/* 既存のCSSの下に追加 */
+*/
+/* ★★★ ここまで削除 ★★★ */
 
 /* スクロールバーが必要ない場合でもスペースを予約し、レイアウトのガタつきを防ぐ */
 .overflow-x-auto {

@@ -1,10 +1,12 @@
 // src/components/MsSelection.jsx
+
 import React from 'react';
 import MSSelector from './MSSelector';
 import StatusDisplay from './StatusDisplay';
-import SlotSelector from './SlotSelector';
+import SlotSelector from './SlotSelector'; // SlotBar ではなく SlotSelector が使われていますね
 import SelectedPartDisplay from './SelectedPartDisplay';
 import MsInfoDisplay from './MsInfoDisplay';
+import { EXPANSION_OPTIONS, EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
 
 const MsSelection = ({
     msData,
@@ -13,19 +15,19 @@ const MsSelection = ({
     hoveredPart,
     isFullStrengthened,
     expansionType,
-    expansionOptions,
-    expansionDescriptions,
     currentStats,
     slotUsage,
-    usageWithPreview,
-    hoveredOccupiedSlots, // ★★★ ここで hoveredOccupiedSlots を受け取る ★★★
-    setHoveredPart,
+    usageWithPreview, // useAppDataから渡された usageWithPreview を受け取る
+    hoveredOccupiedSlots,
+    // setHoveredPart, // App.jsxでhandlePartHoverに集約されたので不要
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
     handlePartRemove,
     handleClearAllParts,
-    className
+    className,
+    onSelectedPartDisplayHover, // App.js から渡されるホバーイベントハンドラ
+    onSelectedPartDisplayLeave, // App.js から渡されるホバーイベントハンドラ
 }) => {
     const baseName = selectedMs
         ? selectedMs["MS名"]
@@ -68,30 +70,33 @@ const MsSelection = ({
                             setIsFullStrengthened={setIsFullStrengthened}
                             expansionType={expansionType}
                             setExpansionType={setExpansionType}
-                            expansionOptions={expansionOptions}
-                            expansionDescriptions={expansionDescriptions}
+                            expansionOptions={EXPANSION_OPTIONS}
+                            expansionDescriptions={EXPANSION_DESCRIPTIONS}
                             getTypeColor={getTypeColor}
                         />
 
-                        <div>
-                            <SlotSelector
-                                usage={usageWithPreview}
-                                maxUsage={{
-                                    close: Number(selectedMs.近スロット ?? 0),
-                                    mid: Number(selectedMs.中スロット ?? 0),
-                                    long: Number(selectedMs.遠スロット ?? 0),
-                                }}
-                                baseUsage={slotUsage} // useAppDataから取得したslotUsageをそのまま渡す
-                                currentStats={currentStats}
-                                hoveredOccupiedSlots={hoveredOccupiedSlots} // ★★★ ここで SlotSelector に渡す ★★★
-                            />
+                        {/* MSステータス下のメインスロットゲージ (赤オーバーフロー、黄色点滅用) */}
+                        <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
+                            <div className="space-y-3">
+                                <SlotSelector
+                                    usage={usageWithPreview} // ★★★ ここを修正！ usageWithPreview を直接渡す ★★★
+                                    // maxUsage は usageWithPreview に含まれているため不要
+                                    baseUsage={slotUsage} // 赤オーバーフローの基準
+                                    currentStats={currentStats}
+                                    hoveredOccupiedSlots={hoveredOccupiedSlots} // ★★★ ここも追加！ ★★★
+                                />
+                            </div>
                         </div>
 
-                        <div>
+                        <div className="mt-4">
+                            <h3 className="text-xl font-bold text-white mb-2">装着済みパーツ一覧</h3>
                             <SelectedPartDisplay
                                 parts={selectedParts}
                                 onRemove={handlePartRemove}
                                 onClearAllParts={handleClearAllParts}
+                                // ★★★ 新しく追加するプロップをSelectedPartDisplayに渡す ★★★
+                                onHoverPart={onSelectedPartDisplayHover}
+                                onLeavePart={onSelectedPartDisplayLeave}
                             />
                         </div>
                     </>

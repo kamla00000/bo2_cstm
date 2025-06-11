@@ -1,8 +1,10 @@
-// src/App.js
+// src/App.jsx
+
 import React from 'react';
 import MsSelection from './components/MsSelection';
 import PartSelectionSection from './components/PartSelectionSection';
 import { useAppData } from './hooks/useAppData';
+import { CATEGORIES, ALL_CATEGORY_NAME } from './constants/appConstants';
 
 function App() {
   const {
@@ -11,19 +13,18 @@ function App() {
     selectedMs,
     selectedParts,
     hoveredPart,
+    hoveredOccupiedSlots,
     filterCategory,
     setFilterCategory,
     isFullStrengthened,
     expansionType,
-    categories,
-    allCategoryName,
     expansionOptions,
     expansionDescriptions,
     currentStats,
     slotUsage,
     usageWithPreview,
-    hoveredOccupiedSlots, // ★★★ ここで hoveredOccupiedSlots を取得 ★★★
-    setHoveredPart,
+    // setHoveredPart, // この行を削除
+    handlePartHover, // この行を追加
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
@@ -32,7 +33,7 @@ function App() {
     handleClearAllParts,
   } = useAppData();
 
-  if (msData.length === 0) {
+  if (!msData || msData.length === 0) {
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center justify-center">
         <p className="text-xl">データを読み込み中...</p>
@@ -51,7 +52,7 @@ function App() {
           msData={msData}
           selectedMs={selectedMs}
           selectedParts={selectedParts}
-          hoveredPart={hoveredPart}
+          hoveredPart={hoveredPart} 
           isFullStrengthened={isFullStrengthened}
           expansionType={expansionType}
           expansionOptions={expansionOptions}
@@ -59,14 +60,15 @@ function App() {
           currentStats={currentStats}
           slotUsage={slotUsage}
           usageWithPreview={usageWithPreview}
-          hoveredOccupiedSlots={hoveredOccupiedSlots} // ★★★ ここで MsSelection に渡す ★★★
-          setHoveredPart={setHoveredPart}
+          hoveredOccupiedSlots={hoveredOccupiedSlots}
           setIsFullStrengthened={setIsFullStrengthened}
           setExpansionType={setExpansionType}
           handleMsSelect={handleMsSelect}
           handlePartRemove={handlePartRemove}
           handleClearAllParts={handleClearAllParts}
           className="flex-shrink-0 mb-6"
+          onSelectedPartDisplayHover={(part) => handlePartHover(part, 'selectedParts')} // hoverSourceを指定
+          onSelectedPartDisplayLeave={() => handlePartHover(null, null)} // hoverSourceをnullに
         />
 
         <div className="md:col-span-full flex-grow">
@@ -75,13 +77,14 @@ function App() {
             selectedParts={selectedParts}
             onSelectPart={handlePartSelect}
             onRemovePart={handlePartRemove}
-            onHoverPart={setHoveredPart}
+            onHoverPart={(part) => handlePartHover(part, 'partList')} // hoverSourceを指定
             selectedMs={selectedMs}
             currentSlotUsage={slotUsage}
+            usageWithPreview={usageWithPreview}
             filterCategory={filterCategory}
             setFilterCategory={setFilterCategory}
-            categories={categories}
-            allCategoryName={allCategoryName}
+            categories={CATEGORIES}
+            allCategoryName={ALL_CATEGORY_NAME}
           />
         </div>
       </div>

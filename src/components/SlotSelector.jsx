@@ -1,165 +1,110 @@
+// src/components/SlotSelector.jsx
+
 import React from 'react';
+import SlotBar from './SlotBar'; // SlotBar コンポーネントをインポート
 
-const SlotSelector = ({ usage, maxUsage, baseUsage, currentStats, hoveredOccupiedSlots }) => {
-  const safeMaxUsage = maxUsage || {};
-  const safeUsage = usage || {};
-  const safeBaseUsage = baseUsage || {};
+const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) => {
+    // usage は usageWithPreview オブジェクト全体を指す
+    // baseUsage は slotUsage オブジェクト全体を指す
+    // currentStats は currentStats オブジェクト全体を指す
+    // hoveredOccupiedSlots は hoveredOccupiedSlots オブジェクト全体を指す
 
-  const fullStrengthenCloseBonus = currentStats?.fullStrengthenSlotBonus?.close || 0;
-  const fullStrengthenMediumBonus = currentStats?.fullStrengthenSlotBonus?.medium || 0;
-  const fullStrengthenLongBonus = currentStats?.fullStrengthenSlotBonus?.long || 0;
-
-  const closeMax = (safeMaxUsage.close ?? 0) + fullStrengthenCloseBonus;
-  const midMax = (safeMaxUsage.mid ?? 0) + fullStrengthenMediumBonus;
-  const longMax = (safeMaxUsage.long ?? 0) + fullStrengthenLongBonus;
-
-  const closeCurrent = safeUsage.close ?? 0;
-  const midCurrent = safeUsage.mid ?? 0;
-  const longCurrent = safeUsage.long ?? 0;
-
-  const closeBase = safeBaseUsage.close ?? 0;
-  const midBase = safeBaseUsage.mid ?? 0;
-  const longBase = safeBaseUsage.long ?? 0;
-
-  const originalCloseMax = safeMaxUsage.close ?? 0;
-  const originalMidMax = safeMaxUsage.mid ?? 0;
-  const originalLongMax = safeMaxUsage.long ?? 0;
-
-  // src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-// src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-// src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-// src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-// src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-// src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-// src/components/SlotSelector.jsx の renderSlotBar 関数内
-
-const renderSlotBar = (current, totalMax, base, originalMax, slotName, hoveredOccupiedAmount) => {
-  const cells = [];
-  const maxRenderLimit = 40;
-
-  // 表示されるバーの総数。
-  // totalMax と current の大きい方を基準にし、maxRenderLimit を超えないようにする。
-  const displayableSlots = Math.max(totalMax, current); 
-  const actualDisplayBars = Math.min(displayableSlots, maxRenderLimit); 
-  
-  // 比率計算は使わず、直接インデックスを決定するアプローチに変更
-  // current, base, originalMax, totalMax はそのままスロット数として扱う
-
-  // ★★★ デバッグ用ログは一旦削除するか、必要なら維持 ★★★
-  // console.log(`--- ${slotName} Slot Debug ---`);
-  // console.log(`current: ${current}, totalMax: ${totalMax}`);
-  // console.log(`base: ${base}, originalMax: ${originalMax}`);
-  // console.log(`displayableSlots: ${displayableSlots}, actualDisplayBars: ${actualDisplayBars}`);
-  // console.log(`-----------------------------`);
+    // 安全なデフォルト値を設定
+    const safeUsage = usage || {};
+    const safeBaseUsage = baseUsage || {};
+    const safeHoveredOccupiedSlots = hoveredOccupiedSlots || {};
 
 
-  for (let i = 0; i < actualDisplayBars; i++) {
-    let cellClass = "flex-none w-1.5 h-5 mr-0.5"; 
+    // スロットの最大値は usageWithPreview (App.jsx -> useAppData -> calculateUsageWithPreview) から取得
+    // または currentStats.msBaseSlots と fullStrengtheningEffects から計算することも可能だが、
+    // usageWithPreview が既にこの値を計算しているため、それを利用するのがシンプル
+    const closeMax = safeUsage.maxClose ?? 0;
+    const midMax = safeUsage.maxMid ?? 0;
+    const longMax = safeUsage.maxLong ?? 0;
 
-    // 各バーの状態を判定するフラグ
-    // i は 0 から始まるインデックス、スロット数は 1 から始まるため、i+1 で比較する
-    const isCurrentlyUsed = (i + 1) <= current; // i番目のバーが current の範囲内にあるか
-    const isBaseUsed = (i + 1) <= base;         // i番目のバーが base の範囲内にあるか
-    
-    // フル強化スロットのボーダーを適用する条件:
-    // バーのインデックスが originalMax を超えて totalMax までの間
-    const isFullStrengthenedBonusSlot = (i + 1) > originalMax && (i + 1) <= totalMax;
-    
-    // ★★★ オーバーフローの判定ロジックを再々々修正 ★★★
-    // このバーが totalMax のスロット数を超えていて、かつ current の範囲内であればオーバーフロー
-    const isOverflow = (i + 1) > totalMax && (i + 1) <= current; 
-    
-    // ホバーされたパーツが占めるスロットの判定
-    const isHoveredOccupied = hoveredOccupiedAmount > 0 && 
-                              (i + 1) > (current - hoveredOccupiedAmount) && 
-                              (i + 1) <= current;
+    // 現在の確定使用量 (緑色のバーの終点) は baseUsage から取得
+    const closeCurrent = safeBaseUsage.close ?? 0;
+    const midCurrent = safeBaseUsage.mid ?? 0;
+    const longCurrent = safeBaseUsage.long ?? 0;
 
-    // 初期色設定
-    if (isCurrentlyUsed) {
-      if (isBaseUsed) {
-        cellClass += " bg-blue-500"; // MSの基本スロット（青）
-      } else {
-        cellClass += " bg-green-500 animate-fast-pulse"; // カスタムパーツ（緑点滅）
-      }
-    } else {
-      cellClass += " bg-gray-500"; // 未使用（グレー）
-    }
+    // baseUsageAmount (SlotBar の赤いバーの基準) は baseUsage から取得
+    const closeBase = safeBaseUsage.close ?? 0;
+    const midBase = safeBaseUsage.mid ?? 0;
+    const longBase = safeBaseUsage.long ?? 0; // ここは前回修正済み
 
-    // フル強化スロットのボーダーを適用
-    if (isFullStrengthenedBonusSlot) {
-        cellClass += " border-2 border-lime-400";
-    }
-    
-    // スロットオーバー分を赤で表示（最優先）
-    if (isOverflow) {
-        cellClass = `flex-none w-1.5 h-5 mr-0.5 bg-red-500 animate-pulse border-2 border-red-500`;
-    }
+    // originalMax (SlotBar の濃い背景の基準) は baseUsage の max 値から取得
+    const originalCloseMax = safeBaseUsage.maxClose ?? 0;
+    const originalMidMax = safeBaseUsage.maxMid ?? 0; // ★ここを修正しました: safeBaseBase -> safeBaseUsage
+    const originalLongMax = safeBaseUsage.maxLong ?? 0;
 
-    // ホバー時に黄色点滅のクラスを最優先で適用
-    if (isHoveredOccupied) {
-        cellClass = `flex-none w-1.5 h-5 mr-0.5 bg-yellow-400 border-yellow-300 animate-ping-once`;
-    }
-    
-    cells.push(<div key={i} className={cellClass}></div>);
-  }
+    return (
+        <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
+            <div className="space-y-3">
+                {/* 近距離スロット */}
+                <div className="flex items-center text-sm font-medium">
+                    <span className="text-gray-300 mr-2 whitespace-nowrap">近距離スロット</span>
+                    <span
+                        className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                            (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-white'
+                        }`}
+                    >
+                        {safeUsage.close ?? 0} / {closeMax}
+                    </span>
+                    <SlotBar
+                        slotType="Close"
+                        currentConfirmedUsage={closeCurrent} // 緑色の確定使用量
+                        totalMax={closeMax} // バー全体の最大値
+                        baseUsageAmount={closeBase} // 赤いバーの基準 (現在の確定使用量)
+                        originalMax={originalCloseMax} // 濃い背景の基準 (フル強化前の最大値)
+                        hoveredOccupiedAmount={safeHoveredOccupiedSlots.close || 0} // ホバー中のパーツが占めるスロット量 (黄色のバー)
+                        previewedUsageAmount={safeUsage.close || 0} // ホバー中のパーツを含めた合計使用量 (緑色のバーのプレビュー値)
+                    />
+                </div>
 
-  return (
-    <div className="flex flex-row overflow-x-auto overflow-y-hidden items-center"> 
-      {cells}
-    </div>
-  );
-};
+                {/* 中距離スロット */}
+                <div className="flex items-center text-sm font-medium">
+                    <span className="text-gray-300 mr-2 whitespace-nowrap">中距離スロット</span>
+                    <span
+                        className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                            (safeUsage.mid ?? 0) > midMax ? 'text-red-500' : 'text-white'
+                        }`}
+                    >
+                        {safeUsage.mid ?? 0} / {midMax}
+                    </span>
+                    <SlotBar
+                        slotType="Mid"
+                        currentConfirmedUsage={midCurrent}
+                        totalMax={midMax}
+                        baseUsageAmount={midBase}
+                        originalMax={originalMidMax}
+                        hoveredOccupiedAmount={safeHoveredOccupiedSlots.mid || 0}
+                        previewedUsageAmount={safeUsage.mid || 0}
+                    />
+                </div>
 
-  return (
-    <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
-      <div className="space-y-3">
-        {/* 近距離スロット */}
-        <div className="flex items-center text-sm font-medium">
-          <span className="text-gray-300 mr-2 whitespace-nowrap">近距離スロット</span>
-          <span
-            className={`text-base font-bold w-[60px] flex-shrink-0 ${
-              closeCurrent > closeMax ? 'text-red-500' : 'text-white'
-            }`}
-          >
-            {closeCurrent} / {closeMax}
-          </span>
-          {renderSlotBar(closeCurrent, closeMax, closeBase, originalCloseMax, 'Close', hoveredOccupiedSlots?.close || 0)}
+                {/* 遠距離スロット */}
+                <div className="flex items-center text-sm font-medium">
+                    <span className="text-gray-300 mr-2 whitespace-nowrap">遠距離スロット</span>
+                    <span
+                        className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                            (safeUsage.long ?? 0) > longMax ? 'text-red-500' : 'text-white'
+                        }`}
+                    >
+                        {safeUsage.long ?? 0} / {longMax}
+                    </span>
+                    <SlotBar
+                        slotType="Long"
+                        currentConfirmedUsage={longCurrent}
+                        totalMax={longMax}
+                        baseUsageAmount={longBase}
+                        originalMax={originalLongMax}
+                        hoveredOccupiedAmount={safeHoveredOccupiedSlots.long || 0}
+                        previewedUsageAmount={safeUsage.long || 0}
+                    />
+                </div>
+            </div>
         </div>
-
-        {/* 中距離スロット */}
-        <div className="flex items-center text-sm font-medium">
-          <span className="text-gray-300 mr-2 whitespace-nowrap">中距離スロット</span>
-          <span
-            className={`text-base font-bold w-[60px] flex-shrink-0 ${
-              midCurrent > midMax ? 'text-red-500' : 'text-white'
-            }`}
-          >
-            {midCurrent} / {midMax}
-          </span>
-          {renderSlotBar(midCurrent, midMax, midBase, originalMidMax, 'Mid', hoveredOccupiedSlots?.mid || 0)}
-        </div>
-
-        {/* 遠距離スロット */}
-        <div className="flex items-center text-sm font-medium">
-          <span className="text-gray-300 mr-2 whitespace-nowrap">遠距離スロット</span>
-          <span
-            className={`text-base font-bold w-[60px] flex-shrink-0 ${
-              longCurrent > longMax ? 'text-red-500' : 'text-white'
-            }`}
-          >
-            {longCurrent} / {longMax}
-          </span>
-          {renderSlotBar(longCurrent, longMax, longBase, originalLongMax, 'Long', hoveredOccupiedSlots?.long || 0)}
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default SlotSelector;
