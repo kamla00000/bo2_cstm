@@ -3,7 +3,7 @@
 import React from 'react';
 import MSSelector from './MSSelector';
 import StatusDisplay from './StatusDisplay';
-import SlotSelector from './SlotSelector'; // SlotBar ではなく SlotSelector が使われていますね
+import SlotSelector from './SlotSelector';
 import SelectedPartDisplay from './SelectedPartDisplay';
 import MsInfoDisplay from './MsInfoDisplay';
 import { EXPANSION_OPTIONS, EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
@@ -17,17 +17,16 @@ const MsSelection = ({
     expansionType,
     currentStats,
     slotUsage,
-    usageWithPreview, // useAppDataから渡された usageWithPreview を受け取る
+    usageWithPreview,
     hoveredOccupiedSlots,
-    // setHoveredPart, // App.jsxでhandlePartHoverに集約されたので不要
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
     handlePartRemove,
     handleClearAllParts,
     className,
-    onSelectedPartDisplayHover, // App.js から渡されるホバーイベントハンドラ
-    onSelectedPartDisplayLeave, // App.js から渡されるホバーイベントハンドラ
+    onSelectedPartDisplayHover,
+    onSelectedPartDisplayLeave,
 }) => {
     const baseName = selectedMs
         ? selectedMs["MS名"]
@@ -79,11 +78,10 @@ const MsSelection = ({
                         <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
                             <div className="space-y-3">
                                 <SlotSelector
-                                    usage={usageWithPreview} // ★★★ ここを修正！ usageWithPreview を直接渡す ★★★
-                                    // maxUsage は usageWithPreview に含まれているため不要
-                                    baseUsage={slotUsage} // 赤オーバーフローの基準
+                                    usage={usageWithPreview}
+                                    baseUsage={slotUsage}
                                     currentStats={currentStats}
-                                    hoveredOccupiedSlots={hoveredOccupiedSlots} // ★★★ ここも追加！ ★★★
+                                    hoveredOccupiedSlots={hoveredOccupiedSlots}
                                 />
                             </div>
                         </div>
@@ -94,7 +92,6 @@ const MsSelection = ({
                                 parts={selectedParts}
                                 onRemove={handlePartRemove}
                                 onClearAllParts={handleClearAllParts}
-                                // ★★★ 新しく追加するプロップをSelectedPartDisplayに渡す ★★★
                                 onHoverPart={onSelectedPartDisplayHover}
                                 onLeavePart={onSelectedPartDisplayLeave}
                             />
@@ -110,6 +107,8 @@ const MsSelection = ({
                         selectedMs={selectedMs}
                         hoveredPart={hoveredPart}
                         isFullStrengthened={isFullStrengthened}
+                        // ★★★ ここを追加！ currentStats.isModified を StatusDisplay に渡す ★★★
+                        isModifiedStats={currentStats.isModified}
                     />
                 </div>
             )}

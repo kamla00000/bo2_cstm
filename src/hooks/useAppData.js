@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
-import { calculateSlotUsage } from '../utils/calculateSlots';
+import { calculateSlotUsage } from '../utils/calculateSlots_temp';
 import { useDataLoading } from './useDataLoading';
 import {
     CATEGORIES,
@@ -77,6 +77,11 @@ export const useAppData = () => {
         if (!selectedMs) {
             return { close: 0, mid: 0, long: 0, maxClose: 0, maxMid: 0, maxLong: 0 };
         }
+        console.log('DEBUG: slotUsage useMemo is calculating. selectedMs content:', selectedMs);
+    console.log('DEBUG: slotUsage useMemo - MS近スロット:', selectedMs?.["近スロット"]);
+    console.log('DEBUG: slotUsage useMemo - MS中スロット:', selectedMs?.["中スロット"]);
+    console.log('DEBUG: slotUsage useMemo - MS遠スロット:', selectedMs?.["遠スロット"]);
+
         return calculateSlotUsage(selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects);
     }, [selectedMs, selectedParts, isFullStrengthened, fullStrengtheningEffects]);
 
@@ -150,6 +155,11 @@ export const useAppData = () => {
 
     // --- イベントハンドラ ---
     const handleMsSelect = useCallback((ms) => {
+         console.log('DEBUG: handleMsSelect called with MS object:', ms);
+    console.log('DEBUG: MS近スロット (handleMsSelect):', ms?.["近スロット"]);
+    console.log('DEBUG: MS中スロット (handleMsSelect):', ms?.["中スロット"]);
+    console.log('DEBUG: MS遠スロット (handleMsSelect):', ms?.["遠スロット"]);
+
         setSelectedMs(ms);
         setSelectedParts([]);
         setHoveredPart(null);

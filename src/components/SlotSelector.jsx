@@ -4,8 +4,8 @@ import React from 'react';
 import SlotBar from './SlotBar'; // SlotBar コンポーネントをインポート
 
 const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) => {
-    // usage は usageWithPreview オブジェクト全体を指す
-    // baseUsage は slotUsage オブジェクト全体を指す
+    // usage は usageWithPreview オブジェクト全体を指す (プレビュー含む使用量と最大値)
+    // baseUsage は slotUsage オブジェクト全体を指す (確定使用量とフル強化後の最大値、そして「追加した baseClose/Mid/Long」)
     // currentStats は currentStats オブジェクト全体を指す
     // hoveredOccupiedSlots は hoveredOccupiedSlots オブジェクト全体を指す
 
@@ -15,27 +15,28 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
     const safeHoveredOccupiedSlots = hoveredOccupiedSlots || {};
 
 
-    // スロットの最大値は usageWithPreview (App.jsx -> useAppData -> calculateUsageWithPreview) から取得
-    // または currentStats.msBaseSlots と fullStrengtheningEffects から計算することも可能だが、
-    // usageWithPreview が既にこの値を計算しているため、それを利用するのがシンプル
+    // totalMax (バー全体の最大値) は usageWithPreview の max から取得
+    // usageWithPreview と slotUsage の max プロパティは、フル強化後の最大スロット数を指します。
     const closeMax = safeUsage.maxClose ?? 0;
     const midMax = safeUsage.maxMid ?? 0;
     const longMax = safeUsage.maxLong ?? 0;
 
-    // 現在の確定使用量 (緑色のバーの終点) は baseUsage から取得
-    const closeCurrent = safeBaseUsage.close ?? 0;
-    const midCurrent = safeBaseUsage.mid ?? 0;
-    const longCurrent = safeBaseUsage.long ?? 0;
+    // currentConfirmedUsage (緑色の確定使用量) は baseUsage (slotUsage) から取得
+    const closeCurrentConfirmedUsage = safeBaseUsage.close ?? 0;
+    const midCurrentConfirmedUsage = safeBaseUsage.mid ?? 0;
+    const longCurrentConfirmedUsage = safeBaseUsage.long ?? 0;
 
-    // baseUsageAmount (SlotBar の赤いバーの基準) は baseUsage から取得
-    const closeBase = safeBaseUsage.close ?? 0;
-    const midBase = safeBaseUsage.mid ?? 0;
-    const longBase = safeBaseUsage.long ?? 0; // ここは前回修正済み
+    // baseUsageAmount (SlotBar の「MSの初期スロット数」を示すグレーのバーの基準) は
+    // calculateSlotUsage で新しく追加した baseClose/Mid/Long から取得
+    const baseAmountClose = safeBaseUsage.baseClose ?? 0; // 修正！
+    const baseAmountMid = safeBaseUsage.baseMid ?? 0;   // 修正！
+    const baseAmountLong = safeBaseUsage.baseLong ?? 0;  // 修正！
 
-    // originalMax (SlotBar の濃い背景の基準) は baseUsage の max 値から取得
-    const originalCloseMax = safeBaseUsage.maxClose ?? 0;
-    const originalMidMax = safeBaseUsage.maxMid ?? 0; // ★ここを修正しました: safeBaseBase -> safeBaseUsage
-    const originalLongMax = safeBaseUsage.maxLong ?? 0;
+    // originalMax (SlotBar の「フル強化前の最大スロット数」を示す濃い背景の基準) は
+    // calculateSlotUsage で新しく追加した baseClose/Mid/Long から取得
+    const originalMaxClose = safeBaseUsage.baseClose ?? 0; // 修正！
+    const originalMaxMid = safeBaseUsage.baseMid ?? 0;   // 修正！
+    const originalMaxLong = safeBaseUsage.baseLong ?? 0;  // 修正！
 
     return (
         <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
@@ -52,10 +53,10 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                     </span>
                     <SlotBar
                         slotType="Close"
-                        currentConfirmedUsage={closeCurrent} // 緑色の確定使用量
-                        totalMax={closeMax} // バー全体の最大値
-                        baseUsageAmount={closeBase} // 赤いバーの基準 (現在の確定使用量)
-                        originalMax={originalCloseMax} // 濃い背景の基準 (フル強化前の最大値)
+                        currentConfirmedUsage={closeCurrentConfirmedUsage} // 緑色の確定使用量
+                        totalMax={closeMax} // バー全体の最大値 (フル強化後)
+                        baseUsageAmount={baseAmountClose} // MSの初期スロット数 (フル強化前)
+                        originalMax={originalMaxClose} // フル強化前の最大スロット数 (baseUsageAmountと同じ意味合いと仮定)
                         hoveredOccupiedAmount={safeHoveredOccupiedSlots.close || 0} // ホバー中のパーツが占めるスロット量 (黄色のバー)
                         previewedUsageAmount={safeUsage.close || 0} // ホバー中のパーツを含めた合計使用量 (緑色のバーのプレビュー値)
                     />
@@ -73,10 +74,10 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                     </span>
                     <SlotBar
                         slotType="Mid"
-                        currentConfirmedUsage={midCurrent}
+                        currentConfirmedUsage={midCurrentConfirmedUsage}
                         totalMax={midMax}
-                        baseUsageAmount={midBase}
-                        originalMax={originalMidMax}
+                        baseUsageAmount={baseAmountMid}
+                        originalMax={originalMaxMid}
                         hoveredOccupiedAmount={safeHoveredOccupiedSlots.mid || 0}
                         previewedUsageAmount={safeUsage.mid || 0}
                     />
@@ -94,10 +95,10 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                     </span>
                     <SlotBar
                         slotType="Long"
-                        currentConfirmedUsage={longCurrent}
+                        currentConfirmedUsage={longCurrentConfirmedUsage}
                         totalMax={longMax}
-                        baseUsageAmount={longBase}
-                        originalMax={originalLongMax}
+                        baseUsageAmount={baseAmountLong}
+                        originalMax={originalMaxLong}
                         hoveredOccupiedAmount={safeHoveredOccupiedSlots.long || 0}
                         previewedUsageAmount={safeUsage.long || 0}
                     />
