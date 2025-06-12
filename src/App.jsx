@@ -23,8 +23,7 @@ function App() {
     currentStats,
     slotUsage,
     usageWithPreview,
-    // setHoveredPart, // この行を削除
-    handlePartHover, // この行を追加
+    handlePartHover,
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
@@ -45,39 +44,41 @@ function App() {
     <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center">
       <h1 className="text-4xl font-bold tracking-wide text-white drop-shadow-lg flex-shrink-0 mb-6">bo2-cstm</h1>
 
-      <div className="flex flex-col flex-grow w-full max-w-screen-xl"> 
+      <div className="flex flex-col max-w-screen-xl w-full items-start">
 
-        {/* MsSelection コンポーネント */}
-        <MsSelection
-          msData={msData}
-          selectedMs={selectedMs}
-          selectedParts={selectedParts}
-          hoveredPart={hoveredPart} 
-          isFullStrengthened={isFullStrengthened}
-          expansionType={expansionType}
-          expansionOptions={expansionOptions}
-          expansionDescriptions={expansionDescriptions}
-          currentStats={currentStats}
-          slotUsage={slotUsage}
-          usageWithPreview={usageWithPreview}
-          hoveredOccupiedSlots={hoveredOccupiedSlots}
-          setIsFullStrengthened={setIsFullStrengthened}
-          setExpansionType={setExpansionType}
-          handleMsSelect={handleMsSelect}
-          handlePartRemove={handlePartRemove}
-          handleClearAllParts={handleClearAllParts}
-          className="flex-shrink-0 mb-6"
-          onSelectedPartDisplayHover={(part) => handlePartHover(part, 'selectedParts')} // hoverSourceを指定
-          onSelectedPartDisplayLeave={() => handlePartHover(null, null)} // hoverSourceをnullに
-        />
+        {/* MsSelection を囲む div: ここで mb-6 を削除する */}
+        <div className="flex-shrink-0 w-full"> {/* mb-6 を削除 */}
+          <MsSelection
+            msData={msData}
+            selectedMs={selectedMs}
+            selectedParts={selectedParts}
+            hoveredPart={hoveredPart} 
+            isFullStrengthened={isFullStrengthened}
+            expansionType={expansionType}
+            expansionOptions={expansionOptions}
+            expansionDescriptions={expansionDescriptions}
+            currentStats={currentStats}
+            slotUsage={slotUsage}
+            usageWithPreview={usageWithPreview}
+            hoveredOccupiedSlots={hoveredOccupiedSlots}
+            setIsFullStrengthened={setIsFullStrengthened}
+            setExpansionType={setExpansionType}
+            handleMsSelect={handleMsSelect}
+            handlePartRemove={handlePartRemove}
+            handleClearAllParts={handleClearAllParts}
+            onSelectedPartDisplayHover={(part) => handlePartHover(part, 'selectedParts')}
+            onSelectedPartDisplayLeave={() => handlePartHover(null, null)}
+          />
+        </div>
 
-        <div className="md:col-span-full flex-grow">
+        {/* PartSelectionSection */}
+        <div className="flex-grow w-full">
           <PartSelectionSection
             partData={partData}
             selectedParts={selectedParts}
             onSelectPart={handlePartSelect}
             onRemovePart={handlePartRemove}
-            onHoverPart={(part) => handlePartHover(part, 'partList')} // hoverSourceを指定
+            onHoverPart={(part) => handlePartHover(part, 'partList')}
             selectedMs={selectedMs}
             currentSlotUsage={slotUsage}
             usageWithPreview={usageWithPreview}

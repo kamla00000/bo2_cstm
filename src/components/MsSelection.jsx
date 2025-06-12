@@ -50,10 +50,12 @@ const MsSelection = ({
     };
 
     return (
-        <div className={`grid grid-cols-1 md:grid-cols-5 gap-4 w-full items-start
+        <div className={`flex flex-col md:flex-row gap-4 items-start min-w-0
              bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 relative z-10 ${className}`}>
 
-            <div className="space-y-2 md:col-span-3 flex flex-col">
+            {/* 左側のカラム: MSSelector, MsInfoDisplay, SlotSelector, SelectedPartDisplay */}
+            {/* md:w-3/5 で左側を広め */}
+            <div className="space-y-2 flex flex-col flex-shrink-0 w-full md:w-3/5">
                 <MSSelector
                     msData={msData}
                     onSelect={handleMsSelect}
@@ -74,8 +76,8 @@ const MsSelection = ({
                             getTypeColor={getTypeColor}
                         />
 
-                        {/* MSステータス下のメインスロットゲージ (赤オーバーフロー、黄色点滅用) */}
-                        <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
+                        {/* MSステータス下のメインスロットゲージ (SlotSelector を囲む div) */}
+                        <div className="p-4 bg-gray-700 rounded-lg shadow-inner w-fit mx-auto">
                             <div className="space-y-3">
                                 <SlotSelector
                                     usage={usageWithPreview}
@@ -100,14 +102,15 @@ const MsSelection = ({
                 )}
             </div>
 
+            {/* 右側のカラム: StatusDisplay (ステータス一覧) */}
+            {/* flex-grow と md:w-2/5 で右側も広め */}
             {selectedMs && (
-                <div className="space-y-4 md:col-span-2 flex flex-col">
+                <div className="space-y-4 flex flex-col flex-grow w-full md:w-2/5">
                     <StatusDisplay
                         stats={currentStats}
                         selectedMs={selectedMs}
                         hoveredPart={hoveredPart}
                         isFullStrengthened={isFullStrengthened}
-                        // ★★★ ここを追加！ currentStats.isModified を StatusDisplay に渡す ★★★
                         isModifiedStats={currentStats.isModified}
                     />
                 </div>

@@ -1,5 +1,3 @@
-// src/components/SlotSelector.jsx
-
 import React from 'react';
 import SlotBar from './SlotBar'; // SlotBar コンポーネントをインポート
 
@@ -28,27 +26,27 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
     // baseUsageAmount (SlotBar の「MSの初期スロット数」を示すグレーのバーの基準) は
     // calculateSlotUsage で新しく追加した baseClose/Mid/Long から取得
-    const baseAmountClose = safeBaseUsage.baseClose ?? 0; // 修正！
-    const baseAmountMid = safeBaseUsage.baseMid ?? 0;   // 修正！
-    const baseAmountLong = safeBaseUsage.baseLong ?? 0;  // 修正！
+    const baseAmountClose = safeBaseUsage.baseClose ?? 0;
+    const baseAmountMid = safeBaseUsage.baseMid ?? 0;
+    const baseAmountLong = safeBaseUsage.baseLong ?? 0;
 
     // originalMax (SlotBar の「フル強化前の最大スロット数」を示す濃い背景の基準) は
     // calculateSlotUsage で新しく追加した baseClose/Mid/Long から取得
-    const originalMaxClose = safeBaseUsage.baseClose ?? 0; // 修正！
-    const originalMaxMid = safeBaseUsage.baseMid ?? 0;   // 修正！
-    const originalMaxLong = safeBaseUsage.baseLong ?? 0;  // 修正！
+    const originalMaxClose = safeBaseUsage.baseClose ?? 0;
+    const originalMaxMid = safeBaseUsage.baseMid ?? 0;
+    const originalMaxLong = safeBaseUsage.baseLong ?? 0;
 
     return (
-        <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
-            <div className="space-y-3">
+        // flexコンテナとしての設定と、パディングをなくすための調整
+        // inline-flex に変更し、内容に応じた幅にする
+        <div className="bg-gray-700 rounded-lg shadow-inner inline-flex flex-col"> 
+            <div className="space-y-3 p-4"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
                 <div className="flex items-center text-sm font-medium">
                     <span className="text-gray-300 mr-2 whitespace-nowrap">近距離スロット</span>
-                    <span
-                        className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                    <span className={`text-base font-bold w-[60px] flex-shrink-0 ${
                             (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-white'
-                        }`}
-                    >
+                        }`}>
                         {safeUsage.close ?? 0} / {closeMax}
                     </span>
                     <SlotBar
@@ -59,7 +57,9 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                         originalMax={originalMaxClose} // フル強化前の最大スロット数 (baseUsageAmountと同じ意味合いと仮定)
                         hoveredOccupiedAmount={safeHoveredOccupiedSlots.close || 0} // ホバー中のパーツが占めるスロット量 (黄色のバー)
                         previewedUsageAmount={safeUsage.close || 0} // ホバー中のパーツを含めた合計使用量 (緑色のバーのプレビュー値)
+                        className="flex-grow-0 flex-shrink-0" // ここに flex-grow-0 と flex-shrink-0 を追加
                     />
+                    <div className="flex-grow"></div> {/* SlotBar の右側に残りのスペースを埋めるための要素を追加 */}
                 </div>
 
                 {/* 中距離スロット */}
@@ -80,7 +80,9 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                         originalMax={originalMaxMid}
                         hoveredOccupiedAmount={safeHoveredOccupiedSlots.mid || 0}
                         previewedUsageAmount={safeUsage.mid || 0}
+                        className="flex-grow-0 flex-shrink-0" // ここに flex-grow-0 と flex-shrink-0 を追加
                     />
+                    <div className="flex-grow"></div> {/* SlotBar の右側に残りのスペースを埋めるための要素を追加 */}
                 </div>
 
                 {/* 遠距離スロット */}
@@ -101,7 +103,9 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                         originalMax={originalMaxLong}
                         hoveredOccupiedAmount={safeHoveredOccupiedSlots.long || 0}
                         previewedUsageAmount={safeUsage.long || 0}
+                        className="flex-grow-0 flex-shrink-0" // ここに flex-grow-0 と flex-shrink-0 を追加
                     />
+                    <div className="flex-grow"></div> {/* SlotBar の右側に残りのスペースを埋めるための要素を追加 */}
                 </div>
             </div>
         </div>
