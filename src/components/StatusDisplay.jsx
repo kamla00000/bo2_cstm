@@ -2,24 +2,32 @@
 
 import React from 'react';
 
-// statsオブジェクトに base, partBonus, fullStrengthenBonus, expansionBonus, currentLimits, total, rawTotal が含まれていることを前提とします
-// ★★★ isModifiedStats をプロップとして追加 ★★★
 const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isModifiedStats }) => {
-  // statsから必要な値を分解して取得
   const { base, partBonus, fullStrengthenBonus, expansionBonus, currentLimits, total, rawTotal } = stats;
 
-  if (!selectedMs || !stats) { // selectedMs もチェックして早期リターン
+  if (!selectedMs || !stats) {
+    console.log("[StatusDisplay] No selected MS or stats data available.");
     return <div className="bg-gray-800 p-4 rounded-xl shadow-md">ステータス情報なし</div>;
   }
 
-  // ステータス表示用の共通関数
   const renderStatRow = (label, statKey) => {
+    // 値を数値として確実に取得
     const baseValue = Number(base[statKey] || 0);
     const partBonusValue = Number(partBonus[statKey] || 0);
     const fullStrengthenBonusValue = Number(fullStrengthenBonus[statKey] || 0);
     const expansionBonusValue = Number(expansionBonus[statKey] || 0);
-    const rawTotalValue = Number(rawTotal[statKey] || 0); // クリップ前の合計値
+    const rawTotalValue = Number(rawTotal[statKey] || 0);
     const totalValue = Number(total[statKey] || 0);
+
+    // ★★★ デバッグログを追加 ★★★
+    console.groupCollapsed(`[StatusDisplay] renderStatRow for ${label} (${statKey})`);
+    console.log(`  baseValue: ${baseValue} (typeof: ${typeof baseValue})`);
+    console.log(`  partBonusValue: ${partBonusValue} (typeof: ${typeof partBonusValue})`);
+    console.log(`  fullStrengthenBonusValue: ${fullStrengthenBonusValue} (typeof: ${typeof fullStrengthenBonusValue})`);
+    console.log(`  expansionBonusValue: ${expansionBonusValue} (typeof: ${typeof expansionBonusValue})`);
+    console.log(`  rawTotalValue: ${rawTotalValue} (typeof: ${typeof rawTotalValue})`);
+    console.log(`  totalValue: ${totalValue} (typeof: ${typeof totalValue})`);
+    console.groupEnd();
 
     // ボーナス値の表示形式 (0の場合は'-', 正の場合は'+')
     const formatBonus = (value) => {
@@ -27,26 +35,31 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
       return value > 0 ? `+${value}` : `${value}`;
     };
 
-    // 数値をそのまま表示する関数
-    const displayValue = (value) => {
-      return value;
+    // 数値を強制的に文字列として返すように変更
+    const displayNumericValue = (value) => {
+      console.log(`[StatusDisplay] displayNumericValue called with value: ${value}, typeof: ${typeof value}`); // ★★★ デバッグログ
+      if (value === null || value === undefined || isNaN(value)) {
+        console.log(`[StatusDisplay] displayNumericValue returning '0' for invalid value.`); // ★★★ デバッグログ
+        return '0';
+      }
+      const stringValue = String(value);
+      console.log(`[StatusDisplay] displayNumericValue returning string: '${stringValue}'`); // ★★★ デバッグログ
+      return stringValue;
     };
 
-    // 上限値の表示と色
+
     let limitDisplay = '-';
     let limitColorClass = 'text-gray-400';
 
     if (statKey === 'hp' || currentLimits[statKey] === Infinity) {
       limitDisplay = '-';
     } else if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
-      limitDisplay = displayValue(currentLimits[statKey]);
+      limitDisplay = displayNumericValue(currentLimits[statKey]); // ここも displayNumericValue を使用
       if (currentLimits.flags && currentLimits.flags[statKey]) {
         limitColorClass = 'text-green-400';
       }
     }
 
-    // ★★★ ここを修正！ isModifiedStats を使って合計値の色を決定する ★★★
-    // isModifiedStats が undefined でないことを確認し、該当するキーが true なら緑色を適用
     const isStatModified = isModifiedStats && isModifiedStats[statKey];
     const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-white';
 
@@ -54,7 +67,8 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     return (
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
         <div className="text-gray-300 text-sm font-semibold whitespace-nowrap">{label}</div>
-        <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayValue(baseValue)}</div>
+        {/* displayNumericValue から返されるのは文字列になる */}
+        <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div> 
         <div className={`text-sm text-right whitespace-nowrap ${partBonusValue > 0 ? 'text-green-400' : (partBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(partBonusValue)}
         </div>
@@ -65,13 +79,11 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           {formatBonus(expansionBonusValue)}
         </div>
 
-        {/* 合計値の表示とオーバー分 (上限値の前に移動) */}
         <div className="text-sm text-right font-bold flex flex-col items-end justify-center">
           <span className={
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
             ? 'text-red-500' : totalValueColorClass
-          }>{displayValue(totalValue)}</span>
-          {/* オーバー分の表示 */}
+          }>{displayNumericValue(totalValue)}</span> {/* ここも displayNumericValue を使用 */}
           {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
             <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
               +{rawTotalValue - currentLimits[statKey]} OVER
@@ -79,14 +91,12 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           )}
         </div>
 
-        {/* 上限値の表示と色 (合計値の後に移動し、太文字に) */}
         <div className="text-sm text-right whitespace-nowrap font-bold">
           <span className={limitColorClass}>{limitDisplay}</span>
         </div>
       </div>
     );
   };
-
 
   return (
     <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 flex-grow">
@@ -114,11 +124,6 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           {renderStatRow('スラスター', 'thruster')}
           {renderStatRow('旋回(地上)', 'turnPerformanceGround')}
           {renderStatRow('旋回(宇宙)', 'turnPerformanceSpace')}
-
-          {/* 以下の2行を削除します */}
-          {/* {renderStatRow('格闘武器補正', 'weaponMelee')} */}
-          {/* {renderStatRow('射撃武器補正', 'weaponShoot')} */}
-
 
           <div className="grid grid-cols-7 gap-2 py-1 items-center border-b border-gray-700 last:border-b-0">
             <div className="col-span-full text-sm text-right text-white pr-2">

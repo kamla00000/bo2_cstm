@@ -2,7 +2,7 @@
 
 // デフォルトの上限値定義
 const defaultLimits = {
-    hp: Infinity, // HP上限がInfinityの場合、パーツで具体的な数値に設定できるか確認
+    hp: Infinity,
     armorRange: 50,
     armorBeam: 50,
     armorMelee: 50,
@@ -16,10 +16,19 @@ const defaultLimits = {
 };
 
 export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionType, allPartsCacheForExpansion, fullStrengtheningEffectsData) => {
-    console.log("--- calculateMSStatsLogic 実行開始 ---");
-    console.log("[calculateMSStatsLogic] Function called with MS:", ms?.MS名, "Parts count:", parts.length, "Full Strengthened:", isFullStrengthened, "Expansion Type:", expansionType);
-    console.log("[calculateMSStatsLogic] Initial defaultLimits:", JSON.parse(JSON.stringify(defaultLimits)));
-    console.log("[calculateMSStatsLogic] fullStrengtheningEffectsData 存在:", !!fullStrengtheningEffectsData);
+    console.group("--- calculateMSStatsLogic 実行開始 ---");
+    console.log("[calculateMSStatsLogic] Function called with:");
+    console.log("   MS Name:", ms?.MS名);
+    console.log("   Raw MS Data (partial for problematic keys):");
+    console.log("     ms.HP:", ms?.HP);
+    console.log("     ms.スピード:", ms?.スピード);
+    console.log("     ms.高速移動:", ms?.高速移動);
+    console.log("     ms['旋回_地上_通常時']:", ms?.["旋回_地上_通常時"]);
+    console.log("     ms['旋回_宇宙_通常時']:", ms?.["旋回_宇宙_通常時"]);
+    console.log("   Parts count:", parts.length);
+    console.log("   Full Strengthened:", isFullStrengthened);
+    console.log("   Expansion Type:", expansionType);
+    console.log("   fullStrengtheningEffectsData exists:", !!fullStrengtheningEffectsData);
 
     if (!ms) {
         const defaultStatsValues = {
@@ -27,7 +36,8 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             shoot: 0, meleeCorrection: 0, speed: 0, highSpeedMovement: 0, thruster: 0,
             turnPerformanceGround: 0, turnPerformanceSpace: 0,
         };
-        console.log("[calculateMSStatsLogic] No MS selected, returning default empty stats.");
+        console.warn("[calculateMSStatsLogic] No MS selected, returning default empty stats.");
+        console.groupEnd();
         return {
             base: defaultStatsValues, partBonus: { ...defaultStatsValues }, fullStrengthenBonus: { ...defaultStatsValues },
             expansionBonus: { ...defaultStatsValues }, total: { ...defaultStatsValues }, rawTotal: { ...defaultStatsValues },
@@ -50,7 +60,7 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         turnPerformanceGround: Number(ms["旋回_地上_通常時"] || 0),
         turnPerformanceSpace: Number(ms["旋回_宇宙_通常時"] || 0),
     };
-    console.log("[calculateMSStatsLogic] Base Stats (from MS data):", JSON.parse(JSON.stringify(baseStats)));
+    console.log("[calculateMSStatsLogic] Base Stats (after Number() conversion from MS data):", JSON.parse(JSON.stringify(baseStats)));
 
     const bonusInitialState = {
         hp: 0, armorRange: 0, armorBeam: 0, armorMelee: 0,
@@ -65,7 +75,6 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
 
     const fullStrengthenSlotBonus = { close: 0, medium: 0, long: 0 };
 
-    // currentLimits を defaultLimits のディープコピーとして初期化
     const currentLimits = JSON.parse(JSON.stringify(defaultLimits));
     const limitChangedFlags = {};
     const displayStatKeys = [
@@ -95,13 +104,11 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         if (msLimitKey && ms[msLimitKey] !== undefined && ms[msLimitKey] !== null) {
             const parsedMsLimitValue = Number(ms[msLimitKey]);
             if (!isNaN(parsedMsLimitValue)) {
-                // MS固有の上限は、デフォルトやそれまでの計算結果に関わらず常に適用される
-                // ここでInfinityを上書きする場合もある
                 currentLimits[key] = parsedMsLimitValue;
                 limitChangedFlags[key] = true;
-                console.log(`[calculateMSStatsLogic] MS has specific limit for ${key}: ${parsedMsLimitValue}. Applying.`);
+                console.log(`[calculateMSStatsLogic] MS has specific limit for ${key} ('${msLimitKey}'): ${parsedMsLimitValue}. Applying.`);
             } else {
-                console.warn(`[calculateMSStatsLogic] MS limit for ${key} is not a valid number: '${ms[msLimitKey]}'`);
+                console.warn(`[calculateMSStatsLogic] MS limit for ${key} ('${msLimitKey}') is not a valid number: '${ms[msLimitKey]}'. Value type: ${typeof ms[msLimitKey]}`);
             }
         }
     });
@@ -109,9 +116,10 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
 
     // 2. カスタムパーツのボーナスと上限引き上げの収集
     parts.forEach(part => {
-        console.group(`[calculateMSStatsLogic] Processing Part: ${part.name}`);
+        console.groupCollapsed(`[calculateMSStatsLogic] Processing Part: ${part.name}`);
         console.log(`Part data for ${part.name}:`, JSON.parse(JSON.stringify(part)));
 
+        // 各ステータスの加算処理
         if (typeof part.hp === 'number') partBonus.hp += part.hp;
         if (typeof part.shootDefense === 'number') partBonus.armorRange += part.shootDefense;
         else if (typeof part.armor_range === 'number') partBonus.armorRange += part.armor_range;
@@ -137,9 +145,11 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
                     if (typeof value === 'number' && !isNaN(value)) {
                         partLimitsIncrease[statKey] += value;
                         console.log(`Part '${part.name}' added ${value} to limitIncrease for '${statKey}'.`);
+                    } else {
+                        console.warn(`[calculateMSStatsLogic] Part '${part.name}' limitIncrease for '${statKey}' is not a valid number: '${value}'`);
                     }
                 } else {
-                    console.warn(`[calculateMSStatsLogic] Part '${part.name}' has unhandled limitIncrease key: '${statKey}'`);
+                    console.warn(`[calculateMSStatsLogic] Part '${part.name}' has unhandled limitIncrease key or not in bonusInitialState: '${statKey}'`);
                 }
             }
         }
@@ -151,11 +161,6 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
     // 3. カスタムパーツによる上限引き上げを適用
     displayStatKeys.forEach(key => {
         if (partLimitsIncrease[key] > 0) {
-            // ここで `Infinity` チェックを削除します。
-            // パーツによる引き上げは、現在の限界値（Infinityを含む）に直接加算されると仮定。
-            // もしInfinityに加算されてもInfinityのままであるべきなら、
-            // そのルールは最終的なMath.minで適用されます。
-            // もしInfinityから具体的な値に引き下げるパーツがあるなら、それは別途ロジックが必要です。
             currentLimits[key] += partLimitsIncrease[key];
             limitChangedFlags[key] = true;
             console.log(`[calculateMSStatsLogic] Applied partLimitsIncrease for ${key}: +${partLimitsIncrease[key]}. New limit: ${currentLimits[key]}`);
@@ -169,7 +174,7 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         console.log("[calculateMSStatsLogic] MS.fullst data:", JSON.parse(JSON.stringify(ms.fullst)));
 
         ms.fullst.forEach(fsEntry => {
-            console.group(`[calculateMSStatsLogic] Processing MS Full Strengthen Entry: ${fsEntry.name} LV${fsEntry.level}`);
+            console.groupCollapsed(`[calculateMSStatsLogic] Processing MS Full Strengthen Entry: ${fsEntry.name} LV${fsEntry.level}`);
 
             const baseFsEffect = fullStrengtheningEffectsData.find(
                 fse => fse.name === fsEntry.name
@@ -181,17 +186,17 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
                 );
 
                 if (foundFsEffectLevel) {
-                    console.log(`    Found matching full strengthening effect: ${baseFsEffect.name} LV${foundFsEffectLevel.level}`);
-                    console.log(`    Effects:`, JSON.parse(JSON.stringify(foundFsEffectLevel.effects)));
+                    console.log(`   Found matching full strengthening effect: ${baseFsEffect.name} LV${foundFsEffectLevel.level}`);
+                    console.log(`   Effects:`, JSON.parse(JSON.stringify(foundFsEffectLevel.effects)));
 
                     for (const statNameInJson in foundFsEffectLevel.effects) {
                         if (foundFsEffectLevel.effects.hasOwnProperty(statNameInJson)) {
                             const value = foundFsEffectLevel.effects[statNameInJson];
 
                             if (typeof value !== 'number' || isNaN(value)) {
-                                console.log(`    Skipping non-numeric or NaN effect for ${statNameInJson}: ${value}`);
+                                console.log(`   Skipping non-numeric or NaN effect for ${statNameInJson}: ${value}`);
                                 if (typeof value === 'string') {
-                                    console.log(`    Special effect (string value) "${statNameInJson}" with value "${value}" will be handled elsewhere or displayed.`);
+                                    console.log(`   Special effect (string value) "${statNameInJson}" with value "${value}" will be handled elsewhere or displayed.`);
                                 }
                                 continue;
                             }
@@ -214,30 +219,30 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
                                 case "近スロット":
                                     fullStrengthenSlotBonus.close += value;
                                     isSlotEffect = true;
-                                    console.log(`    Added ${value} to fullStrengthenSlotBonus.close. Current: ${fullStrengthenSlotBonus.close}`);
+                                    console.log(`   Added ${value} to fullStrengthenSlotBonus.close. Current: ${fullStrengthenSlotBonus.close}`);
                                     break;
                                 case "中スロット":
                                     fullStrengthenSlotBonus.medium += value;
                                     isSlotEffect = true;
-                                    console.log(`    Added ${value} to fullStrengthenSlotBonus.medium. Current: ${fullStrengthenSlotBonus.medium}`);
+                                    console.log(`   Added ${value} to fullStrengthenSlotBonus.medium. Current: ${fullStrengthenSlotBonus.medium}`);
                                     break;
                                 case "遠スロット":
                                     fullStrengthenSlotBonus.long += value;
                                     isSlotEffect = true;
-                                    console.log(`    Added ${value} to fullStrengthenSlotBonus.long. Current: ${fullStrengthenSlotBonus.long}`);
+                                    console.log(`   Added ${value} to fullStrengthenSlotBonus.long. Current: ${fullStrengthenSlotBonus.long}`);
                                     break;
                                 default: internalStatKey = null; break;
                             }
 
                             if (internalStatKey && fullStrengthenBonus.hasOwnProperty(internalStatKey)) {
                                 fullStrengthenBonus[internalStatKey] += value;
-                                console.log(`    Added ${value} to fullStrengthenBonus.${internalStatKey}. Current: ${fullStrengthenBonus[internalStatKey]}`);
+                                console.log(`   Added ${value} to fullStrengthenBonus.${internalStatKey}. Current: ${fullStrengthenBonus[internalStatKey]}`);
                             } else if (isSlotEffect) {
                                 // Do nothing, already handled
                             } else if (statNameInJson.includes("時間短縮") || statNameInJson.includes("ダメージ") || statNameInJson.includes("シールドHP") || statNameInJson.includes("鹵獲時間延長") || statNameInJson.includes("再出撃無視") || statNameInJson.includes("再出撃時HP減少")) {
-                                console.log(`    Special effect (non-slot) "${statNameInJson}" with value "${value}" will be handled elsewhere or displayed.`);
+                                console.log(`   Special effect (non-slot) "${statNameInJson}" with value "${value}" will be handled elsewhere or displayed.`);
                             } else {
-                                console.warn(`    Unknown or unhandled full strengthening effect key: ${statNameInJson}. Value: ${value}. Not added to fullStrengthenBonus.`);
+                                console.warn(`   Unknown or unhandled full strengthening effect key: ${statNameInJson}. Value: ${value}. Not added to fullStrengthenBonus.`);
                             }
                         }
                     }
@@ -247,21 +252,20 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
                             if (foundFsEffectLevel.effects.limitIncreases.hasOwnProperty(statKey) && currentLimits.hasOwnProperty(statKey)) {
                                 const value = foundFsEffectLevel.effects.limitIncreases[statKey];
                                 if (typeof value === 'number' && !isNaN(value)) {
-                                    // ここもInfinityチェックを削除し、常に加算するように変更
                                     currentLimits[statKey] += value;
                                     limitChangedFlags[statKey] = true;
-                                    console.log(`    Full strengthen part increased limit for ${statKey} by ${value}. New limit: ${currentLimits[statKey]}`);
+                                    console.log(`   Full strengthen part increased limit for ${statKey} by ${value}. New limit: ${currentLimits[statKey]}`);
                                 }
                             } else {
-                                console.warn(`[calculateMSStatsLogic] Full strengthen effect has unhandled limitIncrease key: '${statKey}'`);
+                                console.warn(`   Full strengthen effect has unhandled limitIncrease key: '${statKey}'`);
                             }
                         }
                     }
                 } else {
-                    console.warn(`    Full strengthening part "${fsEntry.name}" found, but level ${fsEntry.level} not found in its 'levels' array.`);
+                    console.warn(`   Full strengthening part "${fsEntry.name}" found, but level ${fsEntry.level} not found in its 'levels' array.`);
                 }
             } else {
-                console.warn(`    Full strengthening part "${fsEntry.name}" not found in fullst.json data or it does not have a 'levels' array.`);
+                console.warn(`   Full strengthening part "${fsEntry.name}" not found in fullst.json data or it does not have a 'levels' array.`);
             }
             console.groupEnd();
         });
@@ -277,28 +281,26 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
     switch (expansionType) {
         case "射撃補正拡張":
             expansionBonus.shoot += 8;
-            currentLimits.shoot += 8; // Infinityチェックは削除
+            currentLimits.shoot += 8;
             limitChangedFlags.shoot = true; break;
         case "格闘補正拡張":
             expansionBonus.meleeCorrection += 8;
-            currentLimits.meleeCorrection += 8; // Infinityチェックは削除
+            currentLimits.meleeCorrection += 8;
             limitChangedFlags.meleeCorrection = true; break;
         case "耐実弾補正拡張":
             expansionBonus.armorRange += 10;
-            currentLimits.armorRange += 10; // Infinityチェックは削除
+            currentLimits.armorRange += 10;
             limitChangedFlags.armorRange = true; break;
         case "耐ビーム補正拡張":
             expansionBonus.armorBeam += 10;
-            currentLimits.armorBeam += 10; // Infinityチェックは削除
+            currentLimits.armorBeam += 10;
             limitChangedFlags.armorBeam = true; break;
         case "耐格闘補正拡張":
             expansionBonus.armorMelee += 10;
-            currentLimits.armorMelee += 10; // Infinityチェックは削除
+            currentLimits.armorMelee += 10;
             limitChangedFlags.armorMelee = true; break;
         case "スラスター拡張":
             expansionBonus.thruster += 10;
-            // 「スラスター拡張」が現在のスラスター上限を20ポイント引き上げることを意図している場合
-            // ここもInfinityチェックを削除。加算量として扱う
             currentLimits.thruster += 20; 
             limitChangedFlags.thruster = true; break;
         case "カスタムパーツ拡張[HP]":
@@ -354,22 +356,30 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         rawTotalStats[key] = calculatedValue;
 
         let finalLimit = currentLimits[key]; 
+        // finalLimit が null または undefined の場合、Infinity にフォールバックさせる
+        if (finalLimit === null || finalLimit === undefined) {
+            finalLimit = Infinity;
+        }
         
-        // HPの上限がMS固有で設定されている場合、それを優先的に使用するロジックは削除します。
-        // MS固有上限はすでにステップ1でcurrentLimitsに適用されているため、この重複は不要です。
-        // currentLimitsがすべての種類の引き上げを考慮した最終的な上限であるべきです。
-        // if (key === 'hp' && ms['HP上限'] !== undefined && ms['HP上限'] !== null) {
-        //     finalLimit = Number(ms['HP上限']);
-        // }
-
         if (finalLimit !== Infinity) {
             totalStats[key] = Math.min(calculatedValue, finalLimit);
         } else {
             totalStats[key] = calculatedValue;
         }
-        console.log(`[calculateMSStatsLogic] Final ${key}: rawTotal=${calculatedValue}, finalLimit=${finalLimit}, total=${totalStats[key]}`);
+        console.log(`[calculateMSStatsLogic] Final ${key}: base=${baseStats[key]}, partBonus=${partBonus[key]}, fullStrengthenBonus=${fullStrengthenBonus[key]}, expansionBonus=${expansionBonus[key]}, rawTotal=${calculatedValue}, finalLimit=${finalLimit}, total=${totalStats[key]}`);
 
-        isModified[key] = baseStats[key] !== totalStats[key];
+        // isModified の判定ロジックを改善
+        isModified[key] = (baseStats[key] !== totalStats[key]) ||
+                             (partBonus[key] !== 0) ||
+                             (fullStrengthenBonus[key] !== 0) ||
+                             (expansionBonus[key] !== 0);
+
+        if (totalStats[key] === 0 &&
+            partBonus[key] === 0 &&
+            fullStrengthenBonus[key] === 0 &&
+            expansionBonus[key] === 0) {
+            isModified[key] = false;
+        }
     });
 
     const statsResult = {
@@ -384,6 +394,6 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
         isModified: isModified
     };
     console.log("[calculateMSStatsLogic] Returning final statsResult:", JSON.parse(JSON.stringify(statsResult)));
-    console.log("--- calculateMSStatsLogic 実行終了 ---");
+    console.groupEnd(); // --- calculateMSStatsLogic 実行終了 ---
     return statsResult;
 };
