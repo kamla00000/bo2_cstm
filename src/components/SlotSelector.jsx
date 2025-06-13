@@ -40,7 +40,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
         // flexコンテナとしての設定と、パディングをなくすための調整
         // inline-flex に変更し、内容に応じた幅にする
         <div className="bg-gray-700 rounded-lg shadow-inner inline-flex flex-col"> 
-            <div className="space-y-3 p-4"> {/* SlotBarの行全体にパディングを適用 */}
+            <div className="space-y-3"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
                 <div className="flex items-center text-sm font-medium">
                     <span className="text-gray-300 mr-2 whitespace-nowrap">近距離スロット</span>

@@ -77,7 +77,7 @@ const MsSelection = ({
                         />
 
                         {/* MSステータス下のメインスロットゲージ (SlotSelector を囲む div) */}
-                        <div className="p-4 bg-gray-700 rounded-lg shadow-inner w-fit mx-auto">
+                        <div className="p-4 bg-gray-700 rounded-lg shadow-inner w-fit">
                             <div className="space-y-3">
                                 <SlotSelector
                                     usage={usageWithPreview}
