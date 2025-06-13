@@ -278,6 +278,8 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
 
     // 5. 拡張スキルによるボーナスと上限引き上げ
     console.log(`[calculateMSStatsLogic] Checking Expansion Type: ${expansionType}`);
+    console.log("[calculateMSStatsLogic] Expansion Bonus before switch:", JSON.parse(JSON.stringify(expansionBonus)));
+    console.log("[calculateMSStatsLogic] Current Limits before switch:", JSON.parse(JSON.stringify(currentLimits)));
     switch (expansionType) {
         case "射撃補正拡張":
             expansionBonus.shoot += 8;
@@ -342,6 +344,9 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             console.log("[calculateMSStatsLogic] No specific expansion type applied or handled in switch.");
             break;
     }
+    console.log("[calculateMSStatsLogic] Expansion Bonus AFTER switch:", JSON.parse(JSON.stringify(expansionBonus)));
+    console.log("[calculateMSStatsLogic] Current Limits AFTER switch:", JSON.parse(JSON.stringify(currentLimits)));
+
     currentLimits.flags = limitChangedFlags;
     console.log("[calculateMSStatsLogic] Current Limits (after Expansion application (final currentLimits):", JSON.parse(JSON.stringify(currentLimits)));
     console.log("[calculateMSStatsLogic] Final limitChangedFlags:", JSON.parse(JSON.stringify(limitChangedFlags)));
@@ -370,9 +375,9 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
 
         // isModified の判定ロジックを改善
         isModified[key] = (baseStats[key] !== totalStats[key]) ||
-                             (partBonus[key] !== 0) ||
-                             (fullStrengthenBonus[key] !== 0) ||
-                             (expansionBonus[key] !== 0);
+                          (partBonus[key] !== 0) ||
+                          (fullStrengthenBonus[key] !== 0) ||
+                          (expansionBonus[key] !== 0);
 
         if (totalStats[key] === 0 &&
             partBonus[key] === 0 &&

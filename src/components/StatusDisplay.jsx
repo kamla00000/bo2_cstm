@@ -2,7 +2,8 @@
 
 import React from 'react';
 
-const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isModifiedStats }) => {
+// isModifiedStats の代わりに isModified を受け取るように変更
+const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isModified }) => {
   const { base, partBonus, fullStrengthenBonus, expansionBonus, currentLimits, total, rawTotal } = stats;
 
   if (!selectedMs || !stats) {
@@ -47,6 +48,8 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
       return stringValue;
     };
 
+    // partBonusValueとexpansionBonusValueを合算した新しいボーナス値を定義
+    const combinedBonusValue = partBonusValue + expansionBonusValue;
 
     let limitDisplay = '-';
     let limitColorClass = 'text-gray-400';
@@ -54,13 +57,14 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     if (statKey === 'hp' || currentLimits[statKey] === Infinity) {
       limitDisplay = '-';
     } else if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
-      limitDisplay = displayNumericValue(currentLimits[statKey]); // ここも displayNumericValue を使用
+      limitDisplay = displayNumericValue(currentLimits[statKey]);
       if (currentLimits.flags && currentLimits.flags[statKey]) {
         limitColorClass = 'text-green-400';
       }
     }
 
-    const isStatModified = isModifiedStats && isModifiedStats[statKey];
+    // isModifiedStats の代わりに isModified を使用
+    const isStatModified = isModified && isModified[statKey];
     const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-white';
 
 
@@ -68,9 +72,10 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
         <div className="text-gray-300 text-sm font-semibold whitespace-nowrap">{label}</div>
         {/* displayNumericValue から返されるのは文字列になる */}
-        <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div> 
-        <div className={`text-sm text-right whitespace-nowrap ${partBonusValue > 0 ? 'text-green-400' : (partBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
-          {formatBonus(partBonusValue)}
+        <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
+        {/* 修正箇所: combinedBonusValue を使用 */}
+        <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-green-400' : (combinedBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
+          {formatBonus(combinedBonusValue)}
         </div>
         <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(fullStrengthenBonusValue)}
@@ -83,7 +88,7 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           <span className={
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
             ? 'text-red-500' : totalValueColorClass
-          }>{displayNumericValue(totalValue)}</span> {/* ここも displayNumericValue を使用 */}
+          }>{displayNumericValue(totalValue)}</span>
           {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
             <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
               +{rawTotalValue - currentLimits[statKey]} OVER

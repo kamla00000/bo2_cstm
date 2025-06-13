@@ -2,7 +2,7 @@
 
 import React from 'react';
 import MSSelector from './MSSelector';
-import StatusDisplay from './StatusDisplay';
+import StatusDisplay from './StatusDisplay'; // これ
 import SlotSelector from './SlotSelector';
 import SelectedPartDisplay from './SelectedPartDisplay';
 import MsInfoDisplay from './MsInfoDisplay';
@@ -111,7 +111,8 @@ const MsSelection = ({
                         selectedMs={selectedMs}
                         hoveredPart={hoveredPart}
                         isFullStrengthened={isFullStrengthened}
-                        isModifiedStats={currentStats.isModified}
+                        // ここを修正: isModifiedStats を isModified に変更
+                        isModified={currentStats.isModified} 
                     />
                 </div>
             )}
