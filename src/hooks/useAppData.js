@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
-import { calculateSlotUsage } from '../utils/calculateSlots_temp';
+import { calculateSlotUsage } from '../utils/calculateSlots';
 import { useDataLoading } from './useDataLoading';
 import {
     CATEGORIES,
