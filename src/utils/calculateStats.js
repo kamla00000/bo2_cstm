@@ -345,17 +345,18 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
     });
 
     const statsResult = {
-        base: baseStats,
-        partBonus: partBonus,
-        fullStrengthenBonus: fullStrengthenBonus,
-        fullStrengthenSlotBonus: fullStrengthenSlotBonus,
-        currentLimits: { ...currentLimits, flags: limitChangedFlags }, // 最終的な limitChangedFlags を含める
-        expansionBonus: expansionBonus,
-        rawTotal: rawTotalStats,
-        total: totalStats,
-        isModified: isModified
-    };
-    console.log("[calculateMSStatsLogic] Returning final statsResult:", JSON.parse(JSON.stringify(statsResult)));
-    console.groupEnd(); // --- calculateMSStatsLogic 実行終了 ---
-    return statsResult;
+    base: baseStats,
+    partBonus: partBonus,
+    fullStrengthenBonus: fullStrengthenBonus,
+    fullStrengthenSlotBonus: fullStrengthenSlotBonus,
+    currentLimits: { ...currentLimits, flags: limitChangedFlags }, // 最終的な limitChangedFlags を含める
+    expansionBonus: expansionBonus,
+    rawTotal: rawTotalStats,
+    total: totalStats,
+    isModified: isModified,
+    partLimitBonus: partLimitsIncrease // ←★追加
+};
+console.log("[calculateMSStatsLogic] Returning final statsResult:", JSON.parse(JSON.stringify(statsResult)));
+console.groupEnd(); // --- calculateMSStatsLogic 実行終了 ---
+return statsResult;
 };

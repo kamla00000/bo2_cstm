@@ -1,10 +1,21 @@
-// src/components/StatusDisplay.jsx
-
 import React from 'react';
 
 // isModifiedStats の代わりに isModified を受け取るように変更
 const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isModified }) => {
-  const { base, partBonus, fullStrengthenBonus, expansionBonus, currentLimits, total, rawTotal } = stats;
+  // ログ追加: statsの中身を確認
+  console.log("[StatusDisplay] props.stats:", stats);
+
+  const { base, partBonus, fullStrengthenBonus, expansionBonus, partLimitBonus, currentLimits, total, rawTotal } = stats;
+
+  // ログ追加: 各ボーナスの中身を確認
+  console.log("[StatusDisplay] base:", base);
+  console.log("[StatusDisplay] partBonus:", partBonus);
+  console.log("[StatusDisplay] fullStrengthenBonus:", fullStrengthenBonus);
+  console.log("[StatusDisplay] expansionBonus:", expansionBonus);
+  console.log("[StatusDisplay] partLimitBonus:", partLimitBonus);
+  console.log("[StatusDisplay] currentLimits:", currentLimits);
+  console.log("[StatusDisplay] total:", total);
+  console.log("[StatusDisplay] rawTotal:", rawTotal);
 
   if (!selectedMs || !stats) {
     console.log("[StatusDisplay] No selected MS or stats data available.");
@@ -17,15 +28,17 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     const partBonusValue = Number(partBonus[statKey] || 0);
     const fullStrengthenBonusValue = Number(fullStrengthenBonus[statKey] || 0);
     const expansionBonusValue = Number(expansionBonus[statKey] || 0);
+    const partLimitBonusValue = Number(partLimitBonus?.[statKey] || 0); // 追加
     const rawTotalValue = Number(rawTotal[statKey] || 0);
     const totalValue = Number(total[statKey] || 0);
 
-    // ★★★ デバッグログを追加 ★★★
+    // ログ追加: 各値の確認
     console.groupCollapsed(`[StatusDisplay] renderStatRow for ${label} (${statKey})`);
     console.log(`  baseValue: ${baseValue} (typeof: ${typeof baseValue})`);
     console.log(`  partBonusValue: ${partBonusValue} (typeof: ${typeof partBonusValue})`);
     console.log(`  fullStrengthenBonusValue: ${fullStrengthenBonusValue} (typeof: ${typeof fullStrengthenBonusValue})`);
     console.log(`  expansionBonusValue: ${expansionBonusValue} (typeof: ${typeof expansionBonusValue})`);
+    console.log(`  partLimitBonusValue: ${partLimitBonusValue} (typeof: ${typeof partLimitBonusValue})`);
     console.log(`  rawTotalValue: ${rawTotalValue} (typeof: ${typeof rawTotalValue})`);
     console.log(`  totalValue: ${totalValue} (typeof: ${typeof totalValue})`);
     console.groupEnd();
@@ -38,18 +51,24 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
 
     // 数値を強制的に文字列として返すように変更
     const displayNumericValue = (value) => {
-      console.log(`[StatusDisplay] displayNumericValue called with value: ${value}, typeof: ${typeof value}`); // ★★★ デバッグログ
+      console.log(`[StatusDisplay] displayNumericValue called with value: ${value}, typeof: ${typeof value}`);
       if (value === null || value === undefined || isNaN(value)) {
-        console.log(`[StatusDisplay] displayNumericValue returning '0' for invalid value.`); // ★★★ デバッグログ
+        console.log(`[StatusDisplay] displayNumericValue returning '0' for invalid value.`);
         return '0';
       }
       const stringValue = String(value);
-      console.log(`[StatusDisplay] displayNumericValue returning string: '${stringValue}'`); // ★★★ デバッグログ
+      console.log(`[StatusDisplay] displayNumericValue returning string: '${stringValue}'`);
       return stringValue;
     };
 
     // partBonusValueとexpansionBonusValueを合算した新しいボーナス値を定義
     const combinedBonusValue = partBonusValue + expansionBonusValue;
+
+    // 「上限増」列の値を合算（拡張選択＋カスタムパーツ上限幅）
+    const totalLimitBonusValue = expansionBonusValue + partLimitBonusValue;
+
+    // ログ追加: 上限増の合算値
+    console.log(`[StatusDisplay] totalLimitBonusValue for ${statKey}:`, totalLimitBonusValue);
 
     let limitDisplay = '-';
     let limitColorClass = 'text-gray-400';
@@ -67,7 +86,6 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     const isStatModified = isModified && isModified[statKey];
     const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-white';
 
-
     return (
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
         <div className="text-gray-300 text-sm font-semibold whitespace-nowrap">{label}</div>
@@ -80,14 +98,15 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
         <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(fullStrengthenBonusValue)}
         </div>
-        <div className={`text-sm text-right whitespace-nowrap ${expansionBonusValue > 0 ? 'text-green-400' : (expansionBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
-          {formatBonus(expansionBonusValue)}
+        {/* ここを修正：「上限増」列に拡張選択＋カスタムパーツ上限幅を合算して表示 */}
+        <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-green-400' : (totalLimitBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
+          {formatBonus(totalLimitBonusValue)}
         </div>
 
         <div className="text-sm text-right font-bold flex flex-col items-end justify-center">
           <span className={
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
-            ? 'text-red-500' : totalValueColorClass
+              ? 'text-red-500' : totalValueColorClass
           }>{displayNumericValue(totalValue)}</span>
           {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
             <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
