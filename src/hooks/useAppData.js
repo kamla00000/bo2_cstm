@@ -1,5 +1,3 @@
-// src/hooks/useAppData.js
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
 import { calculateSlotUsage } from '../utils/calculateSlots';
@@ -22,6 +20,8 @@ export const useAppData = () => {
     const [filterCategory, setFilterCategory] = useState(ALL_CATEGORY_NAME);
     const [isFullStrengthened, setIsFullStrengthened] = useState(false);
     const [expansionType, setExpansionType] = useState('無し');
+    // プレビュー固定用
+    const [selectedPreviewPart, setSelectedPreviewPart] = useState(null);
 
     const updateDisplayedParts = useCallback((category) => {
         let loadedParts = [];
@@ -145,12 +145,14 @@ export const useAppData = () => {
         setIsFullStrengthened(false);
         setExpansionType('無し');
         setFilterCategory(ALL_CATEGORY_NAME);
+        setSelectedPreviewPart(null);
     }, []);
 
     const handlePartRemove = useCallback((partToRemove) => {
         setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
         setHoveredPart(null);
         setHoverSource(null);
+        setSelectedPreviewPart(null);
     }, []);
 
     const handlePartSelect = useCallback((part) => {
@@ -207,6 +209,7 @@ export const useAppData = () => {
         setSelectedParts([]);
         setHoveredPart(null);
         setHoverSource(null);
+        setSelectedPreviewPart(null);
     }, []);
 
     const setFullStrengthenedWrapper = useCallback((newValue) => {
@@ -222,8 +225,15 @@ export const useAppData = () => {
     }, [selectedParts, handleClearAllParts]);
 
     const handlePartHover = useCallback((part, source) => {
+        // すでに同じパーツ・同じソースなら何もしない
+        if (hoveredPart === part && hoverSource === source) return;
         setHoveredPart(part);
         setHoverSource(source);
+    }, [hoveredPart, hoverSource]);
+
+    // プレビュー固定用
+    const handlePartPreviewSelect = useCallback((part) => {
+        setSelectedPreviewPart(part);
     }, []);
 
     return {
@@ -252,5 +262,7 @@ export const useAppData = () => {
         handlePartSelect,
         handleClearAllParts,
         partBonuses,
+        selectedPreviewPart,
+        handlePartPreviewSelect,
     };
 };

@@ -1,11 +1,10 @@
-// src/components/MsSelection.jsx
-
 import React from 'react';
 import MSSelector from './MSSelector';
-import StatusDisplay from './StatusDisplay'; // これ
+import StatusDisplay from './StatusDisplay';
 import SlotSelector from './SlotSelector';
 import SelectedPartDisplay from './SelectedPartDisplay';
 import MsInfoDisplay from './MsInfoDisplay';
+import PartPreview from './PartPreview';
 import { EXPANSION_OPTIONS, EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
 
 const MsSelection = ({
@@ -13,6 +12,7 @@ const MsSelection = ({
     selectedMs,
     selectedParts,
     hoveredPart,
+    selectedPreviewPart, // 追加
     isFullStrengthened,
     expansionType,
     currentStats,
@@ -52,9 +52,7 @@ const MsSelection = ({
     return (
         <div className={`flex flex-col md:flex-row gap-4 items-start min-w-0
              bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 relative z-10 ${className}`}>
-
-            {/* 左側のカラム: MSSelector, MsInfoDisplay, SlotSelector, SelectedPartDisplay */}
-            {/* md:w-3/5 で左側を広め */}
+            {/* 左側のカラム */}
             <div className="space-y-2 flex flex-col flex-shrink-0 w-full md:w-3/5">
                 <MSSelector
                     msData={msData}
@@ -76,15 +74,20 @@ const MsSelection = ({
                             getTypeColor={getTypeColor}
                         />
 
-                        {/* MSステータス下のメインスロットゲージ (SlotSelector を囲む div) */}
-                        <div className="p-4 bg-gray-700 rounded-lg shadow-inner w-fit">
-                            <div className="space-y-3">
-                                <SlotSelector
-                                    usage={usageWithPreview}
-                                    baseUsage={slotUsage}
-                                    currentStats={currentStats}
-                                    hoveredOccupiedSlots={hoveredOccupiedSlots}
-                                />
+                        {/* スロットセレクターとプレビューを横並びに */}
+                        <div className="flex flex-row gap-4 items-start">
+                            <div className="p-4 bg-gray-700 rounded-lg shadow-inner w-fit">
+                                <div className="space-y-3">
+                                    <SlotSelector
+                                        usage={usageWithPreview}
+                                        baseUsage={slotUsage}
+                                        currentStats={currentStats}
+                                        hoveredOccupiedSlots={hoveredOccupiedSlots}
+                                    />
+                                </div>
+                            </div>
+                            <div className="w-80">
+                                <PartPreview part={hoveredPart || selectedPreviewPart} />
                             </div>
                         </div>
 
@@ -102,8 +105,7 @@ const MsSelection = ({
                 )}
             </div>
 
-            {/* 右側のカラム: StatusDisplay (ステータス一覧) */}
-            {/* flex-grow と md:w-2/5 で右側も広め */}
+            {/* 右側のカラム: ステータス一覧（プレビューは表示しない） */}
             {selectedMs && (
                 <div className="space-y-4 flex flex-col flex-grow w-full md:w-2/5">
                     <StatusDisplay
@@ -111,8 +113,7 @@ const MsSelection = ({
                         selectedMs={selectedMs}
                         hoveredPart={hoveredPart}
                         isFullStrengthened={isFullStrengthened}
-                        // ここを修正: isModifiedStats を isModified に変更
-                        isModified={currentStats.isModified} 
+                        isModified={currentStats.isModified}
                     />
                 </div>
             )}

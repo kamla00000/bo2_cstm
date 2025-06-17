@@ -1,15 +1,13 @@
-// src/components/PartList.jsx
-
-import React, { useState } from 'react';
+import React from 'react';
 
 // 画像パスを生成する関数をコンポーネントの外に定義
 const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName)}`;
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp']; // 試す拡張子の優先順位
 
 // PartList.jsx の中に ImageWithFallback を定義する
-const ImageWithFallback = ({ partName, level }) => {
-    const [currentExtIndex, setCurrentExtIndex] = useState(0);
-    const [hasLoaded, setHasLoaded] = useState(false);
+const ImageWithFallback = ({ partName, level, className }) => {
+    const [currentExtIndex, setCurrentExtIndex] = React.useState(0);
+    const [hasLoaded, setHasLoaded] = React.useState(false);
 
     const handleError = () => {
         const nextExtIndex = currentExtIndex + 1;
@@ -37,12 +35,12 @@ const ImageWithFallback = ({ partName, level }) => {
             <img
                 src={src}
                 alt={partName}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${className || ''}`}
                 onError={hasLoaded ? null : handleError}
                 onLoad={handleLoad}
             />
             {level !== undefined && level !== null && (
-                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-white text-xs font-bold px-1 py-0.5 rounded-tl-lg z-10">
+                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-white text-xs font-bold px-1 py-0.5 rounded-tl-lg z-10 pointer-events-none">
                     LV{level}
                 </div>
             )}
@@ -50,13 +48,19 @@ const ImageWithFallback = ({ partName, level }) => {
     );
 };
 
-
-const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, currentSlotUsage }) => {
+const PartList = ({
+    selectedParts,
+    onSelect,
+    parts,
+    onHover,
+    hoveredPart,
+    selectedMs,
+    currentSlotUsage,
+    onPreviewSelect
+}) => {
     if (!parts || !Array.isArray(parts)) {
         return <p className="text-gray-400">パーツデータがありません。</p>;
     }
-
-    const [hoveredPartName, setHoveredPartName] = useState(null);
 
     const willCauseSlotOverflow = (part) => {
         if (!selectedMs || !currentSlotUsage) {
@@ -89,9 +93,9 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
                 <p className="text-gray-400 text-center py-4">選択されたカテゴリのパーツはありません。</p>
             ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-16 gap-0">
-                    {parts.map((part, index) => {
+                    {parts.map((part) => {
                         const isSelected = selectedParts.some(p => p.name === part.name);
-                        const isPartHovered = hoveredPartName === part.name;
+                        const isPartHovered = hoveredPart && hoveredPart.name === part.name;
 
                         const isOverflowing = (selectedMs && currentSlotUsage) ? willCauseSlotOverflow(part) : false;
                         const isPartLimitReached = selectedParts.length >= 8;
@@ -102,63 +106,50 @@ const PartList = ({ selectedParts, onSelect, parts, onHover, selectedMs, current
 
                         return (
                             <button
-                                key={`${part.name}-${index}`}
+                                key={part.name}
                                 className={`relative transition-all duration-200 p-0 rounded-lg overflow-hidden
                                     w-16 h-16 aspect-square
                                     ${isSelected ? 'bg-green-700' : 'bg-gray-800'}
                                     outline outline-1 outline-gray-900
+                                    cursor-pointer
+                                    ${isPartHovered ? 'outline-yellow-400 outline-2 z-30' : ''}
                                 `}
-                                // ホバー時のアウトラインは、このボタン要素自体に適用
-                                // オーバーレイの下に隠れないように、z-indexはボタンに直接適用しない
+                                onClick={() => {
+                                    if (!isNotSelectable || isSelected) {
+                                        onSelect(part);
+                                    }
+                                    // プレビュー固定
+                                    onPreviewSelect?.(part);
+                                }}
+                                onMouseEnter={() => {
+                                    if (isSelected) {
+                                        onHover?.(part, 'selectedParts');
+                                    } else if (isNotSelectable) {
+                                        onHover?.(part, 'partListOverflow');
+                                    }
+                                    else {
+                                        onHover?.(part, 'partList');
+                                    }
+                                }}
+                                onMouseLeave={() => {
+                                    onHover?.(null, null);
+                                }}
                             >
-                                <div
-                                    className={`relative w-full h-full flex-shrink-0 cursor-pointer
-                                        ${isNotSelectable ? 'cursor-not-allowed' : ''}
-                                        // ホバー時のアウトラインスタイルをここに移動し、z-indexも考慮
-                                        ${isSelected ? 'outline outline-green-400 outline-2 z-30' // 選択中、常に緑のアウトライン、z-index高め
-                                            : isPartHovered
-                                                ? 'outline outline-yellow-400 outline-2 z-30' // ホバー時、黄色のアウトライン、z-index高め
-                                                : 'hover:outline hover:outline-blue-400 hover:outline-2' // 通常時のホバーは青色アウトライン
-                                        }
-                                    `}
-                                    onClick={() => {
-                                        if (!isNotSelectable || isSelected) {
-                                            onSelect(part);
-                                        }
-                                    }}
-                                    onMouseEnter={() => {
-                                        setHoveredPartName(part.name);
-                                        // ホバーイベントは常に発火させる
-                                        if (isSelected) {
-                                            onHover?.(part, 'selectedParts');
-                                        } else if (isNotSelectable) { // 不可パーツの場合もホバー情報を送る
-                                            onHover?.(part, 'partListOverflow');
-                                        }
-                                        else {
-                                            onHover?.(part, 'partList');
-                                        }
-                                    }}
-                                    onMouseLeave={() => {
-                                        setHoveredPartName(null);
-                                        onHover?.(null, null); // ホバー解除時に情報をリセット
-                                    }}
-                                >
-                                    <ImageWithFallback partName={part.name} level={partLevel} />
+                                <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                                    {/* 「装備」表示 (縦書き) とグレーアウト */}
-                                    {isSelected && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl">
-                                            装<br/>備
-                                        </div>
-                                    )}
+                                {/* 「装備」表示 (縦書き) とグレーアウト */}
+                                {isSelected && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
+                                        装<br />備
+                                    </div>
+                                )}
 
-                                    {/* 「不可」表示 (縦書き) とグレーアウト */}
-                                    {isNotSelectable && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl">
-                                            不<br/>可
-                                        </div>
-                                    )}
-                                </div>
+                                {/* 「不可」表示 (縦書き) とグレーアウト */}
+                                {isNotSelectable && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl pointer-events-none">
+                                        不<br />可
+                                    </div>
+                                )}
                             </button>
                         );
                     })}

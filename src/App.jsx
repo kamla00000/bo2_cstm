@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import React from 'react';
 import MsSelection from './components/MsSelection';
 import PartSelectionSection from './components/PartSelectionSection';
@@ -13,6 +11,7 @@ function App() {
     selectedMs,
     selectedParts,
     hoveredPart,
+    selectedPreviewPart, // 追加
     hoveredOccupiedSlots,
     filterCategory,
     setFilterCategory,
@@ -24,6 +23,7 @@ function App() {
     slotUsage,
     usageWithPreview,
     handlePartHover,
+    handlePartPreviewSelect, // 追加
     setIsFullStrengthened,
     setExpansionType,
     handleMsSelect,
@@ -43,16 +43,14 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-4 flex flex-col items-center">
       <h1 className="text-4xl font-bold tracking-wide text-white drop-shadow-lg flex-shrink-0 mb-6">bo2-cstm</h1>
-
       <div className="flex flex-col max-w-screen-xl w-full items-start">
-
-        {/* MsSelection を囲む div: ここで mb-6 を削除する */}
-        <div className="flex-shrink-0 w-full"> {/* mb-6 を削除 */}
+        <div className="flex-shrink-0 w-full">
           <MsSelection
             msData={msData}
             selectedMs={selectedMs}
             selectedParts={selectedParts}
-            hoveredPart={hoveredPart} 
+            hoveredPart={hoveredPart}
+            selectedPreviewPart={selectedPreviewPart} // 追加
             isFullStrengthened={isFullStrengthened}
             expansionType={expansionType}
             expansionOptions={expansionOptions}
@@ -70,8 +68,6 @@ function App() {
             onSelectedPartDisplayLeave={() => handlePartHover(null, null)}
           />
         </div>
-
-        {/* PartSelectionSection */}
         <div className="flex-grow w-full">
           <PartSelectionSection
             partData={partData}
@@ -86,6 +82,8 @@ function App() {
             setFilterCategory={setFilterCategory}
             categories={CATEGORIES}
             allCategoryName={ALL_CATEGORY_NAME}
+            onPreviewSelect={handlePartPreviewSelect} // 追加
+            hoveredPart={hoveredPart} // 追加
           />
         </div>
       </div>
