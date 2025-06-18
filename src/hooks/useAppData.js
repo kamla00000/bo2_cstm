@@ -225,12 +225,12 @@ export const useAppData = () => {
     }, [selectedParts, handleClearAllParts]);
 
     const handlePartHover = useCallback((part, source) => {
-        // すでに同じパーツ・同じソースなら何もしない
-        if (hoveredPart === part && hoverSource === source) return;
-        setHoveredPart(part);
-        setHoverSource(source);
-    }, [hoveredPart, hoverSource]);
-
+    setHoveredPart(part);
+    setHoverSource(source);
+    if (!part) {
+        setSelectedPreviewPart(null); // ホバーを外したらプレビューも消す
+    }
+}, []);
     // プレビュー固定用
     const handlePartPreviewSelect = useCallback((part) => {
         setSelectedPreviewPart(part);

@@ -40,7 +40,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
                 onLoad={handleLoad}
             />
             {level !== undefined && level !== null && (
-                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-white text-xs font-bold px-1 py-0.5 rounded-tl-lg z-10 pointer-events-none">
+                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-white text-xs font-bold px-1 py-0.5 z-10 pointer-events-none">
                     LV{level}
                 </div>
             )}
@@ -88,69 +88,79 @@ const PartList = ({
     };
 
     return (
-        <div className="overflow-y-auto pr-2 custom-scrollbar h-[500px]">
+        <div className="overflow-y-auto pr-2">
             {parts.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">選択されたカテゴリのパーツはありません。</p>
             ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-16 gap-0">
+                <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
                     {parts.map((part) => {
                         const isSelected = selectedParts.some(p => p.name === part.name);
                         const isPartHovered = hoveredPart && hoveredPart.name === part.name;
 
                         const isOverflowing = (selectedMs && currentSlotUsage) ? willCauseSlotOverflow(part) : false;
                         const isPartLimitReached = selectedParts.length >= 8;
-                        const isNotSelectable = (isOverflowing || isPartLimitReached) && !isSelected; // 選択中の場合は「不可」としない
+
+                        // kind重複チェック
+                        const hasSameKind = part.kind
+                            ? selectedParts.some(p => p.kind && p.kind === part.kind && p.name !== part.name)
+                            : false;
+
+                        // 「不可」判定にkind重複も追加
+                        const isNotSelectable = ((isOverflowing || isPartLimitReached || hasSameKind) && !isSelected);
 
                         const levelMatch = part.name.match(/_LV(\d+)/);
                         const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
                         return (
                             <button
-                                key={part.name}
-                                className={`relative transition-all duration-200 p-0 rounded-lg overflow-hidden
-                                    w-16 h-16 aspect-square
-                                    ${isSelected ? 'bg-green-700' : 'bg-gray-800'}
-                                    outline outline-1 outline-gray-900
-                                    cursor-pointer
-                                    ${isPartHovered ? 'outline-yellow-400 outline-2 z-30' : ''}
-                                `}
-                                onClick={() => {
-                                    if (!isNotSelectable || isSelected) {
-                                        onSelect(part);
-                                    }
-                                    // プレビュー固定
-                                    onPreviewSelect?.(part);
-                                }}
-                                onMouseEnter={() => {
-                                    if (isSelected) {
-                                        onHover?.(part, 'selectedParts');
-                                    } else if (isNotSelectable) {
-                                        onHover?.(part, 'partListOverflow');
-                                    }
-                                    else {
-                                        onHover?.(part, 'partList');
-                                    }
-                                }}
-                                onMouseLeave={() => {
-                                    onHover?.(null, null);
-                                }}
-                            >
-                                <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
+  key={part.name}
+  className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
+    w-16 h-16 aspect-square
+    ${isSelected ? 'bg-green-700' : 'bg-gray-800'}
+    cursor-pointer
+  `}
+  onClick={() => {
+    if (!isNotSelectable || isSelected) {
+      onSelect(part);
+    }
+    onPreviewSelect?.(part);
+  }}
+  onMouseEnter={() => {
+    if (isSelected) {
+      onHover?.(part, 'selectedParts');
+    } else if (isNotSelectable) {
+      onHover?.(part, 'partListOverflow');
+    } else {
+      onHover?.(part, 'partList');
+    }
+  }}
+  onMouseLeave={() => {
+    onHover?.(null, null);
+  }}
+>
+  <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                                {/* 「装備」表示 (縦書き) とグレーアウト */}
-                                {isSelected && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
-                                        装<br />備
-                                    </div>
-                                )}
+  {/* ホバー時のオレンジ半透明レイヤー */}
+  {isPartHovered && !isSelected && (
+    <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-white font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
+      装<br />備
+    </div>
+  )}
 
-                                {/* 「不可」表示 (縦書き) とグレーアウト */}
-                                {isNotSelectable && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl pointer-events-none">
-                                        不<br />可
-                                    </div>
-                                )}
-                            </button>
+  {/* 装備中の表示 */}
+  {isSelected && (
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
+      装<br />備
+    </div>
+  )}
+
+  {/* 不可の表示 */}
+  {isNotSelectable && (
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl pointer-events-none">
+      不<br />可
+    </div>
+  )}
+</button>
                         );
                     })}
                 </div>
