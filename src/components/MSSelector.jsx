@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+// コストフィルターの降順配列（750～100まで100刻み）
+const COSTS = ['すべて', 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100];
+
 const MSSelector = ({
   msData,
   onSelect,
@@ -7,7 +10,6 @@ const MSSelector = ({
 }) => {
   const [filterType, setFilterType] = useState('すべて');
   const [filterCost, setFilterCost] = useState('すべて');
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [filteredMs, setFilteredMs] = useState([]);
 
   useEffect(() => {
@@ -20,11 +22,7 @@ const MSSelector = ({
       const matchesType = filterType === 'すべて' || ms.属性 === filterType;
       const costValue = ms.コスト;
       const matchesCost =
-        filterCost === 'すべて' ||
-        (filterCost === '750' && costValue === 750) ||
-        (filterCost === '700' && costValue === 700) ||
-        (filterCost === '650' && costValue === 650) ||
-        (filterCost === '600' && costValue === 600);
+        filterCost === 'すべて' || Number(filterCost) === costValue;
       return matchesType && matchesCost;
     });
     setFilteredMs(results);
@@ -44,117 +42,97 @@ const MSSelector = ({
     }
   };
 
-  const toggleSelector = () => {
-    setIsSelectorOpen(!isSelectorOpen);
-  };
-
   const handleMsSelect = (ms) => {
-    console.log("MSSelector: MS selected (passing to App):", ms);
     onSelect(ms);
-    setIsSelectorOpen(false);
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-xl shadow-inner space-y-4">
-      {!isSelectorOpen && (
-        <div
-          className="cursor-pointer p-3 rounded bg-gray-900 border border-gray-700"
-          onClick={toggleSelector}
-        >
-          <h2 className="text-xl font-semibold text-white">モビルスーツを選択</h2>
-        </div>
-      )}
-
-      {isSelectorOpen && (
-        <div className="space-y-2">
+    <div className="w-full h-full flex flex-col items-center justify-start px-0 py-8">
+      <div className="w-full max-w-5xl mx-auto bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 flex flex-col gap-8">
+        {/* フィルター */}
+        <div className="flex flex-col md:flex-row gap-6 w-full">
           <div className="flex flex-wrap gap-2">
             {['すべて', '強襲', '汎用', '支援'].map((type) => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`px-3 py-1 rounded-full text-sm ${
+                className={`px-4 py-1 rounded-full font-bold transition ${
                   filterType === type
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-600 text-gray-100 hover:bg-blue-600'
+                    ? 'bg-blue-500 text-white shadow'
+                    : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
                 }`}
               >
                 {type}
               </button>
             ))}
           </div>
-
           <div className="flex flex-wrap gap-2">
-            {['すべて', '750', '700', '650', '600'].map((cost) => (
+            {COSTS.map((cost) => (
               <button
                 key={cost}
-                onClick={() => setFilterCost(cost)}
-                className={`px-3 py-1 rounded-full text-sm ${
-                  filterCost === cost
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-600 text-gray-100 hover:bg-green-600'
+                onClick={() => setFilterCost(String(cost))}
+                className={`px-4 py-1 rounded-full font-bold transition ${
+                  filterCost === String(cost)
+                    ? 'bg-green-500 text-white shadow'
+                    : 'bg-gray-700 text-gray-200 hover:bg-green-600'
                 }`}
               >
-                コスト: {cost}
+                {cost === 'すべて' ? 'コスト:すべて' : `コスト:${cost}`}
               </button>
             ))}
           </div>
-
-          <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-            {filteredMs.length > 0 ? (
-              filteredMs.map((ms) => {
-                const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
-                // ★全角括弧の変換処理を削除
-                const baseName = ms["MS名"]
-                  .replace(/_LV\d+$/, '')    // 末尾の"_LV数字" を削除
-                  .trim(); // 余分な空白を削除
-
-                console.log(`MSSelector: List item "${ms["MS名"]}" -> Generated baseName: "${baseName}"`);
-
-                return (
-                  <div
-                    key={ms["MS名"]}
-                    className={`cursor-pointer p-3 rounded transition-colors ${
-                      isSelected ? 'bg-blue-800' : 'hover:bg-gray-700'
-                    }`}
-                    onClick={() => handleMsSelect(ms)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-700 rounded overflow-hidden flex-shrink-0">
-                        <img
-                          src={`/images/ms/${baseName}.jpg`}
-                          alt={ms["MS名"]}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error(`MSSelector: Image load error for list item: /images/ms/${baseName}.jpg`);
-                            e.target.src = '/images/ms/default.jpg';
-                            e.target.onerror = null;
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex-grow min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm ${getTypeColor(ms.属性)} flex-shrink-0`}
-                          >
-                            {ms.属性}
-                          </span>
-                          <span className="text-sm text-gray-400 whitespace-nowrap">
-                            コスト: {ms.コスト}
-                          </span>
-                        </div>
-                        <span className="block font-medium truncate text-white">{ms["MS名"]}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-gray-400">該当するMSが見つかりません。</p>
-            )}
-          </div>
         </div>
-      )}
+        {/* MSリスト */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          {filteredMs.length > 0 ? (
+            filteredMs.map((ms) => {
+              const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
+              const baseName = ms["MS名"]
+                .replace(/_LV\d+$/, '')
+                .trim();
+
+              return (
+                <div
+                  key={ms["MS名"]}
+                  className={`cursor-pointer p-4 rounded-lg flex items-center gap-6 transition-all ${
+                    isSelected
+                      ? 'bg-blue-800 shadow-lg scale-105'
+                      : 'hover:bg-gray-700 hover:shadow-md'
+                  }`}
+                  onClick={() => handleMsSelect(ms)}
+                >
+                  <div className="w-20 h-20 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-700 group-hover:border-blue-400 transition">
+                    <img
+                      src={`/images/ms/${baseName}.jpg`}
+                      alt={ms["MS名"]}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/images/ms/default.jpg';
+                        e.target.onerror = null;
+                      }}
+                    />
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${getTypeColor(ms.属性)} flex-shrink-0`}
+                      >
+                        {ms.属性}
+                      </span>
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                        コスト: {ms.コスト}
+                      </span>
+                    </div>
+                    <span className="block font-semibold truncate text-white text-lg">{ms["MS名"]}</span>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-gray-400 text-center py-8 col-span-2">該当するMSが見つかりません。</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
