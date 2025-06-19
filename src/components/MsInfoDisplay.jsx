@@ -3,17 +3,17 @@ import React from 'react';
 
 const MsInfoDisplay = ({
   selectedMs,
-  baseName, // App.jsで生成したbaseNameを受け取る
+  baseName,
   isFullStrengthened,
   setIsFullStrengthened,
   expansionType,
   setExpansionType,
   expansionOptions,
   expansionDescriptions,
-  getTypeColor // App.jsから渡す
+  getTypeColor
 }) => {
   if (!selectedMs) {
-    return null; // MSが選択されていない場合は何も表示しない
+    return null;
   }
 
   return (
@@ -71,7 +71,10 @@ const MsInfoDisplay = ({
         </div>
       </div>
       <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 text-white text-base text-center">
-        {expansionDescriptions[expansionType] || "説明がありません"}
+        {/* max-w-sm を max-w-md に変更 */}
+        <p className="text-md text-white text-center mx-auto max-w-md">
+          {expansionDescriptions[expansionType] || "説明がありません"}
+        </p>
       </div>
     </>
   );

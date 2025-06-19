@@ -5,7 +5,9 @@
 @tailwind utilities;
 
 body {
-  font-family: 'noto-sans', sans-serif; /* Noto Sans JP を適用 */
+  font-family: 'Zen Old Mincho', serif;
+  /* font-family: 'Noto Sans JP', serif; */
+  font-weight: 900;
 }
 
 h1, h2, h3 {

@@ -262,7 +262,7 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             expansionBonus.thruster += 10;
             currentLimits.thruster += 20; 
             limitChangedFlags.thruster = true; break;
-        case "カスタムパーツ拡張[HP]":
+        case "拡張[HP]":
             const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
             const offensivePartsCountHP = parts.filter(p =>
                 offensiveParts.some(op => op.name === p.name)
@@ -270,7 +270,7 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             expansionBonus.hp += offensivePartsCountHP * 400;
             console.log(`[calculateMSStatsLogic] Custom Part Expansion [HP]: ${offensivePartsCountHP} offensive parts found. HP bonus: ${offensivePartsCountHP * 400}`);
             break;
-        case "カスタムパーツ拡張[攻撃]":
+        case "拡張[攻撃]":
             const movingParts = allPartsCacheForExpansion?.['移動'] || [];
             const movingPartsCountAttack = parts.filter(p =>
                 movingParts.some(mp => mp.name === p.name)
@@ -279,7 +279,7 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             expansionBonus.shoot += movingPartsCountAttack * 3;
             console.log(`[calculateMSStatsLogic] Custom Part Expansion [Attack]: ${movingPartsCountAttack} moving parts found. Melee/Shoot bonus: ${movingPartsCountAttack * 3}`);
             break;
-        case "カスタムパーツ拡張[装甲]":
+        case "拡張[装甲]":
             const supportParts = allPartsCacheForExpansion?.['補助'] || [];
             const supportPartsCountArmor = parts.filter(p =>
                 supportParts.some(sp => sp.name === p.name)
@@ -289,7 +289,7 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
             expansionBonus.armorMelee += supportPartsCountArmor * 3;
             console.log(`[calculateMSStatsLogic] Custom Part Expansion [Armor]: ${supportPartsCountArmor} support parts found. Armor/Beam/Melee bonus: ${supportPartsCountArmor * 3}`);
             break;
-        case "カスタムパーツ拡張[スラスター]":
+        case "拡張[スラスター]":
             const specialParts = allPartsCacheForExpansion?.['特殊'] || [];
             const specialPartsCountThruster = parts.filter(p =>
                 specialParts.some(spp => spp.name === p.name)

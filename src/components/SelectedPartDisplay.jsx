@@ -4,33 +4,38 @@ import ImageWithFallback from './ImageWithFallback';
 
 const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, onLeavePart }) => {
     const maxParts = 8;
-    const emptySlots = Array(Math.max(0, maxParts - parts.length)).fill(null);
+    const allSlots = [...parts]; // 装着済みパーツをコピー
 
-    return (
-        <div className="bg-gray-700 p-3 rounded-xl shadow-inner max-h-24 overflow-hidden flex flex-row gap-2 relative">
-            {parts.map(part => {
-                const levelMatch = part.name.match(/_LV(\d+)$/);
-                const levelDisplay = levelMatch ? `LV${levelMatch[1]}` : '';
+    // 空きスロットを追加して合計8つにする
+    for (let i = allSlots.length; i < maxParts; i++) {
+        allSlots.push(null); // null を空きスロットとして追加
+    }
 
-                return (
-                    <div
-                        key={part.name}
-                        className="w-16 h-16 bg-gray-500 rounded overflow-hidden relative cursor-pointer flex-shrink-0"
-                        onClick={() => onRemove(part)}
-                        title={`「${part.name}」を外す`}
-                        onMouseEnter={() => {
-                            if (onHoverPart) {
-                                // ★★★ ここを修正: hoverSource として 'selectedParts' を渡す ★★★
-                                onHoverPart(part, 'selectedParts');
-                            }
-                        }}
-                        onMouseLeave={() => {
-                            if (onLeavePart) {
-                                // ★★★ ここを修正: hoverSource として null を渡す ★★★
-                                onLeavePart(null, null); // PartCardが存在しないので引数は不要ですが、一貫性のためにnullを渡す
-                            }
-                        }}
-                    >
+    // 各スロットをレンダリングするヘルパー関数
+    const renderSlot = (part, index) => {
+        const levelMatch = part ? part.name.match(/_LV(\d+)$/) : null;
+        const levelDisplay = levelMatch ? `LV${levelMatch[1]}` : '';
+
+        return (
+            <div
+                key={part ? part.name : `empty-${index}`} // partがあればpart.name、なければempty-index
+                className={`w-16 h-16 bg-gray-900 rounded overflow-hidden relative flex-shrink-0
+                            ${part ? 'border border-blue-500 cursor-pointer' : 'border border-gray-600 flex items-center justify-center text-gray-600'}`}
+                onClick={() => part && onRemove(part)} // partがある場合のみクリック可能
+                title={part ? `「${part.name}」を外す` : '空きスロット'}
+                onMouseEnter={() => {
+                    if (onHoverPart) {
+                        onHoverPart(part, 'selectedParts');
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (onLeavePart) {
+                        onLeavePart(null, null);
+                    }
+                }}
+            >
+                {part ? (
+                    <>
                         <ImageWithFallback
                             partName={part.name}
                             className="w-full h-full object-cover"
@@ -45,27 +50,43 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                                 {levelDisplay}
                             </div>
                         )}
-                    </div>
-                );
-            })}
-            {emptySlots.map((_, index) => (
-                <div
-                    key={`empty-${index}`}
-                    className="w-16 h-16 bg-gray-800 rounded overflow-hidden flex items-center justify-center text-gray-600 flex-shrink-0"
-                    title="空きスロット"
-                >
-                    <span className="text-2xl">+</span>
-                </div>
-            ))}
+                    </>
+                ) : (
+                    <span className="text-2xl">+</span> // 空きスロットのアイコン
+                )}
+            </div>
+        );
+    };
 
-            <div className="absolute right-3 top-3 bottom-3 flex items-center">
+    return (
+        // ルート要素を flex-row にし、ボタンを absolute 配置するために relative を追加
+        <div className="bg-gray-700 p-3 rounded-xl shadow-inner flex flex-row gap-2 relative">
+            {/* パーツ表示エリア（縦に2行） */}
+            <div className="flex flex-col gap-2">
+                {/* 1行目のパーツ（4つ） */}
+                <div className="flex flex-row gap-2 justify-start">
+                    {allSlots.slice(0, 4).map((part, index) => renderSlot(part, index))}
+                </div>
+
+                {/* 2行目のパーツ（4つ） */}
+                <div className="flex flex-row gap-2 justify-start">
+                    {allSlots.slice(4, 8).map((part, index) => renderSlot(part, index + 4))}
+                </div>
+            </div>
+
+            {/* 全パーツ解除ボタンを absolute 配置で右下に */}
+            <div className="absolute bottom-3 right-3">
                 <button
                     onClick={onClearAllParts}
-                    className="p-2 bg-gray-600 hover:bg-red-700 rounded-lg text-white text-xs flex flex-col items-center justify-center transition-colors duration-200"
+                    // サイズ調整: h-32 は約128px (w-16のパーツ2つ分+gap分)
+                    // w-16 はパーツ1つ分の幅
+                    className="h-32 w-16 bg-red-600 hover:bg-red-700 rounded-lg text-white text-lg flex flex-col items-center justify-center transition-colors duration-200 whitespace-nowrap"
                     title="全てのカスタムパーツを解除"
                 >
-                    <span role="img" aria-label="ゴミ箱" className="text-3xl">🗑️</span>
-                    <span>全解除</span>
+                    {/* "全 解 除" を一行ずつ表示するために span を分割 */}
+                    <span>全</span>
+                    <span>解</span>
+                    <span>除</span>
                 </button>
             </div>
         </div>

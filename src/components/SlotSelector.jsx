@@ -43,7 +43,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
             <div className="space-y-3"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-300 mr-2 whitespace-nowrap">近距離スロット</span>
+                    <span className="text-gray-300 mr-2 whitespace-nowrap">近</span>
                     <span className={`text-base font-bold w-[60px] flex-shrink-0 ${
                             (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-white'
                         }`}>
@@ -64,7 +64,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
                 {/* 中距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-300 mr-2 whitespace-nowrap">中距離スロット</span>
+                    <span className="text-gray-300 mr-2 whitespace-nowrap">中</span>
                     <span
                         className={`text-base font-bold w-[60px] flex-shrink-0 ${
                             (safeUsage.mid ?? 0) > midMax ? 'text-red-500' : 'text-white'
@@ -87,7 +87,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
                 {/* 遠距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-300 mr-2 whitespace-nowrap">遠距離スロット</span>
+                    <span className="text-gray-300 mr-2 whitespace-nowrap">遠</span>
                     <span
                         className={`text-base font-bold w-[60px] flex-shrink-0 ${
                             (safeUsage.long ?? 0) > longMax ? 'text-red-500' : 'text-white'
