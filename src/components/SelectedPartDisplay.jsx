@@ -80,7 +80,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                     onClick={onClearAllParts}
                     // サイズ調整: h-32 は約128px (w-16のパーツ2つ分+gap分)
                     // w-16 はパーツ1つ分の幅
-                    className="h-32 w-16 bg-red-600 hover:bg-red-700 rounded-lg text-white text-lg flex flex-col items-center justify-center transition-colors duration-200 whitespace-nowrap"
+                    className="h-32 w-16 bg-red-600 hover:bg-red-700 rounded-lg text-white text-4xl flex flex-col items-center justify-center transition-colors duration-200 whitespace-nowrap"
                     title="全てのカスタムパーツを解除"
                 >
                     {/* "全 解 除" を一行ずつ表示するために span を分割 */}

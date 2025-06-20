@@ -60,22 +60,11 @@ const MsSelection = ({
         setShowSelector(false);
     };
 
-    // MS再選択ボタン
-    const renderMsSelectButton = () => (
-        <button
-            className="px-4 py-2 bg-blue-600 text-white font-bold rounded shadow hover:bg-blue-700 transition"
-            onClick={handleOpenSelector}
-        >
-            MS選択
-        </button>
-    );
-
     // 左カラムの幅をshowSelectorで切り替え
     const leftColClass = `space-y-4 flex flex-col flex-shrink-0 ${showSelector ? 'w-full' : ''}`;
-    // 左カラム全体の最大幅を調整。StatusDisplayの幅と合わせて調整が必要です。
     const leftColStyle = showSelector
         ? {}
-        : { width: '60%', minWidth: 320, maxWidth: 900 }; // 左カラムの幅を少し狭める (70% -> 60%)
+        : { width: '60%', minWidth: 320, maxWidth: 900 };
 
     return (
         <div
@@ -84,15 +73,13 @@ const MsSelection = ({
         >
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
-                {/* MSSelector or MS選択ボタン */}
-                {showSelector ? (
+                {/* MSSelectorのみ表示 */}
+                {showSelector && (
                     <MSSelector
                         msData={msData}
                         onSelect={handleSelectMs}
                         selectedMs={selectedMs}
                     />
-                ) : (
-                    renderMsSelectButton()
                 )}
 
                 {/* MS詳細表示・パーツ一覧などは「selectedMs && !showSelector」の時だけ表示 */}
@@ -113,8 +100,7 @@ const MsSelection = ({
                         {/* スロットバー、装着済みパーツ一覧、装備選択を配置するメインの横並びコンテナ */}
                         <div className="flex flex-row gap-6 items-start w-full">
                             {/* 左サブカラム: スロットバーと装着済みパーツ一覧 (縦並び) */}
-                            {/* flex-grow を残しつつ、このコンテナの最大幅も考慮 */}
-                            <div className="flex flex-col gap-6 flex-grow" style={{ maxWidth: '400px' }}> {/* ここに maxWidth を追加して、左サブカラムの最大幅を制限 */}
+                            <div className="flex flex-col gap-6 flex-grow" style={{ maxWidth: '400px' }}>
                                 {/* スロットバー */}
                                 <div className="flex flex-col gap-2">
                                     <div className="p-4 bg-gray-700 rounded-lg shadow-inner w-fit">
@@ -128,7 +114,7 @@ const MsSelection = ({
                                 </div>
 
                                 {/* 装着済みパーツ一覧 */}
-                                <div className="flex flex-col gap-2 w-full"> {/* w-full を追加して親のmaxWidthを使うようにする */}
+                                <div className="flex flex-col gap-2 w-full">
                                     <SelectedPartDisplay
                                         parts={selectedParts}
                                         onRemove={handlePartRemove}
@@ -140,7 +126,7 @@ const MsSelection = ({
                             </div>
 
                             {/* 右サブカラム: 装備選択 (PartPreview) */}
-                            <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '220px' }}> {/* PartPreviewの幅を少し広げた例 */}
+                            <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '220px' }}>
                                 <PartPreview part={hoveredPart || selectedPreviewPart} />
                             </div>
                         </div>
@@ -151,7 +137,7 @@ const MsSelection = ({
             {/* 右側のカラム: ステータス一覧（MS詳細時のみ表示、幅を広く使う） */}
             {selectedMs && !showSelector && (
                 <div className="space-y-4 flex flex-col flex-grow w-full"
-                    style={{ width: '40%' }}> {/* 右カラムの幅を広げる (30% -> 40%) */}
+                    style={{ width: '40%' }}>
                     <StatusDisplay
                         stats={currentStats}
                         selectedMs={selectedMs}

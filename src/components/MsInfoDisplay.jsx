@@ -72,9 +72,12 @@ const MsInfoDisplay = ({
       </div>
       <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 text-white text-base text-center">
         {/* max-w-sm を max-w-md に変更 */}
-        <p className="text-md text-white text-center mx-auto max-w-md">
-          {expansionDescriptions[expansionType] || "説明がありません"}
-        </p>
+        <div
+          className="text-md text-white text-center mx-auto max-w-md"
+          dangerouslySetInnerHTML={{
+            __html: expansionDescriptions[expansionType] || "説明がありません"
+          }}
+        />
       </div>
     </>
   );

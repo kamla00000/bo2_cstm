@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'; // useRef をインポート
+import React, { useState, useEffect, useRef } from 'react';
 import MsSelection from './components/MsSelection';
 import PartSelectionSection from './components/PartSelectionSection';
 import { useAppData } from './hooks/useAppData';
@@ -33,30 +33,23 @@ function App() {
   } = useAppData();
 
   const [showSelector, setShowSelector] = useState(!selectedMs);
-  const msSelectionRef = useRef(null); // MsSelectionコンポーネントを参照するためのref
-  const [msSelectionHeight, setMsSelectionHeight] = useState(0); // MsSelectionの動的な高さを保持するstate
+  const msSelectionRef = useRef(null);
+  const [msSelectionHeight, setMsSelectionHeight] = useState(0);
 
   useEffect(() => {
     if (!selectedMs) setShowSelector(true);
   }, [selectedMs]);
 
-  // MsSelectionコンポーネントの高さが変更されたときにそれを取得し、stateを更新
   useEffect(() => {
     const updateHeight = () => {
       if (msSelectionRef.current) {
         setMsSelectionHeight(msSelectionRef.current.offsetHeight);
       }
     };
-
-    // 初回ロード時と、 selectedMs/showSelector などの状態変化時に高さを取得
     updateHeight();
-
-    // ウィンドウのリサイズ時にも高さを更新
     window.addEventListener('resize', updateHeight);
-
-    // クリーンアップ関数
     return () => window.removeEventListener('resize', updateHeight);
-  }, [selectedMs, showSelector, msSelectionRef]); // 依存配列に msSelectionRef を追加
+  }, [selectedMs, showSelector, msSelectionRef]);
 
   if (!msData || msData.length === 0) {
     return (
@@ -68,11 +61,28 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-800 flex flex-col items-center pt-12">
-      <h1 className="text-5xl font-extrabold tracking-wide text-white drop-shadow-lg mb-8 font-zenoldmincho">GBO2-CSTM</h1>
+      {showSelector && (
+        <h1 className="text-5xl font-extrabold tracking-wide text-white drop-shadow-lg mb-4 font-zenoldmincho">
+          GBO2-CSTM
+        </h1>
+      )}
+      {/* MS選択ボタンをmax-w-screen-xlで中央寄せ＆横一杯に */}
+      {!showSelector && (
+        <div className="w-full flex justify-center">
+          <button
+            className="w-full h-14 bg-blue-600 text-white rounded-none font-bold text-4xl"
+            style={{ maxWidth: '1280px', borderRadius: 0, marginBottom: 0 }}
+            onClick={() => setShowSelector(true)}
+          >
+            MS選択
+          </button>
+        </div>
+      )}
+      {/* 下のコンテンツもmax-w-screen-xlで合わせる */}
       <div className="flex flex-col max-w-screen-xl w-full items-start sticky top-0 z-20 bg-gray-900">
         <div className="flex-shrink-0 w-full">
           <MsSelection
-            ref={msSelectionRef} // MsSelection に ref を渡す
+            ref={msSelectionRef}
             msData={msData}
             selectedMs={selectedMs}
             selectedParts={selectedParts}
