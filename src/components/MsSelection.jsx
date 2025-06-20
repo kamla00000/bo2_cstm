@@ -69,7 +69,7 @@ const MsSelection = ({
     return (
         <div
             className={`flex flex-row gap-6 items-start min-w-0
-                bg-gray-800 p-6 rounded-2xl shadow-2xl border border-gray-700 relative z-10 w-full max-w-screen-xl ${className}`}
+                bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 relative z-10 w-full max-w-screen-xl ${className}`}
         >
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
