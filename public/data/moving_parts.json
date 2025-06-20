@@ -6,8 +6,7 @@
     "mid": 1,
     "long": 0,
     "speed": 5,
-    "description": "スピードが5増加。なお高性能走行制御機構系パーツは複数装備することは不可。",
-    "image": "高性能走行制御機構_LV1.jpg"
+    "description": "スピードが5増加。なお高性能走行制御機構系パーツは複数装備することは不可。"
   },
   {
     "name": "噴射制御装置_LV1",
@@ -16,8 +15,7 @@
     "mid": 0,
     "long": 0,
     "thruster": 5,
-    "description": "スラスターが5増加。",
-    "image": "噴射制御装置_LV1.jpg"
+    "description": "スラスターが5増加。"
   },
   {
     "name": "噴射制御装置_LV2",
@@ -26,8 +24,7 @@
     "mid": 0,
     "long": 0,
     "thruster": 7,
-    "description": "スラスターが7増加。",
-    "image": "噴射制御装置_LV2.jpg"
+    "description": "スラスターが7増加。"
   },
   {
     "name": "噴射制御装置_LV3",
@@ -36,8 +33,7 @@
     "mid": 0,
     "long": 4,
     "thruster": 10,
-    "description": "スラスターが10増加。",
-    "image": "噴射制御装置_LV3.jpg"
+    "description": "スラスターが10増加。"
   },
   {
     "name": "噴射制御装置_LV4",
@@ -71,21 +67,23 @@
   {
     "name": "オーバーチューン[機動]_LV1",
     "category": "移動",
+    "highSpeedMovementByLevel": [1, 4, 7, 10],
     "close": 3,
     "mid": 1,
     "long": 0,
-    "description": "機体LVが1上昇するごとにスピードが3増加。同一のパーツ効果による最大上昇値は10。"
+    "description": "高速移動が1増加。機体LVが1上昇するごとにさらに3増加。同一のパーツ効果による最大上昇値は10。"
   },
   {
     "name": "オーバーチューン[スラスター]_LV1",
     "category": "移動",
+    "thrusterByLevel": [3, 7, 11, 15],
     "close": 2,
     "mid": 3,
     "long": 2,
-    "description": "スラスターが3増加。機体LVが1上昇するごとにスラスターが4増加。同一のパーツ効果による最大上昇値は15。"
+    "description": "スラスターが3増加。機体LVが1上昇するごとにさらに4増加。同一のパーツ効果による最大上昇値は15。"
   },
   {
-    "name": "駆動系強化機構_LV1",
+    "name": "運動性能強化機構_LV1",
     "category": "移動",
     "close": 5,
     "mid": 2,
@@ -115,13 +113,12 @@
     "turnPerformanceSpace": 12
   },
   {
-    "name": "高効率推進材_LV1",
+    "name": "高純度推進剤_LV1",
     "category": "移動",
     "close": 5,
     "mid": 2,
     "long": 4,
     "thruster": 15,
-    "description": "スラスターが15増加。スラスターの上限値が10増加する。スラスターの回復速度が10%上昇。",
-    "image": "高効率推進材.jpg"
+    "description": "スラスターが15増加。スラスターの上限値が10増加する。スラスターの回復速度が10%上昇。"
   }
 ]

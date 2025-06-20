@@ -387,17 +387,17 @@
   }
 },
   {
-    "name": "オーバーチューン[フレーム]_LV1",
-    "category": "防御",
-    "close": 3,
-    "mid": 4,
-    "long": 3,
-    "hp": 300,
-    "armor_melee": 0,
-    "armor_range": 0,
-    "armor_beam": 0,
-    "description": "機体HPが300増加。\n機体LVが1上昇するごとにさらに900増加。\n同一のパーツ効果による最大上昇値は3000。"
-  },
+  "name": "オーバーチューン[フレーム]_LV1",
+  "category": "防御",
+  "close": 3,
+  "mid": 4,
+  "long": 3,
+  "hpByLevel": [300, 1200, 2100, 3000],
+  "armor_melee": 0,
+  "armor_range": 0,
+  "armor_beam": 0,
+  "description": "機体HPが300増加。機体LVが1上昇するごとにさらに900増加。同一のパーツ効果による最大上昇値は3000。"
+},
   {
     "name": "オーバーチューン[実弾装甲]_LV1",
     "category": "防御",
@@ -522,6 +522,7 @@
     "armor_melee": 0,
     "armor_range": 9,
     "armor_beam": 9,
+    "hp_percent": 5,
     "kind":"特殊強化",
     "description": "機体HPが5%増加。\n耐実弾補正と耐ビーム補正が9増加。\n特殊強化フレーム系パーツは複数装備できない。"
   },
@@ -535,6 +536,7 @@
     "armor_melee": 18,
     "armor_range": 0,
     "armor_beam": 0,
+    "hp_percent": 5,
     "kind":"特殊強化",
     "description": "機体HPが5%増加。\n耐格闘補正が18増加。\n特殊強化フレーム系パーツは複数装備できない。"
   },

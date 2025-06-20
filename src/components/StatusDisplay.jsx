@@ -51,14 +51,10 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
 
     // 数値を強制的に文字列として返すように変更
     const displayNumericValue = (value) => {
-      console.log(`[StatusDisplay] displayNumericValue called with value: ${value}, typeof: ${typeof value}`);
       if (value === null || value === undefined || isNaN(value)) {
-        console.log(`[StatusDisplay] displayNumericValue returning '0' for invalid value.`);
         return '0';
       }
-      const stringValue = String(value);
-      console.log(`[StatusDisplay] displayNumericValue returning string: '${stringValue}'`);
-      return stringValue;
+      return String(value);
     };
 
     // partBonusValueとexpansionBonusValueを合算した新しいボーナス値を定義
@@ -66,9 +62,6 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
 
     // 「上限増」列の値を合算（拡張選択＋カスタムパーツ上限幅）
     const totalLimitBonusValue = expansionBonusValue + partLimitBonusValue;
-
-    // ログ追加: 上限増の合算値
-    console.log(`[StatusDisplay] totalLimitBonusValue for ${statKey}:`, totalLimitBonusValue);
 
     let limitDisplay = '-';
     let limitColorClass = 'text-gray-400';
@@ -86,19 +79,17 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     const isStatModified = isModified && isModified[statKey];
     const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-white';
 
+    // 合計値はrawTotalValueを表示し、オーバー分もrawTotalValueから計算
     return (
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
         <div className="text-gray-300 text-sm font-semibold whitespace-nowrap">{label}</div>
-        {/* displayNumericValue から返されるのは文字列になる */}
         <div className="text-gray-300 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
-        {/* 修正箇所: combinedBonusValue を使用 */}
         <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-green-400' : (combinedBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(combinedBonusValue)}
         </div>
         <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(fullStrengthenBonusValue)}
         </div>
-        {/* ここを修正：「上限増」列に拡張選択＋カスタムパーツ上限幅を合算して表示 */}
         <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-green-400' : (totalLimitBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
           {formatBonus(totalLimitBonusValue)}
         </div>
@@ -107,7 +98,9 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           <span className={
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
               ? 'text-red-500' : totalValueColorClass
-          }>{displayNumericValue(totalValue)}</span>
+          }>
+            {displayNumericValue(rawTotalValue)}
+          </span>
           {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
             <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
               +{rawTotalValue - currentLimits[statKey]} OVER
