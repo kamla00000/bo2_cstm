@@ -72,48 +72,83 @@ export const calculateMSStatsLogic = (ms, parts, isFullStrengthened, expansionTy
 
 
     // 2. カスタムパーツのボーナスと上限引き上げの収集
-    parts.forEach(part => {
-        console.groupCollapsed(`[calculateMSStatsLogic] Processing Part: ${part.name}`);
-        console.log(`Part data for ${part.name}:`, JSON.parse(JSON.stringify(part)));
+  parts.forEach(part => {
+    console.groupCollapsed(`[calculateMSStatsLogic] Processing Part: ${part.name}`);
+    console.log(`Part data for ${part.name}:`, JSON.parse(JSON.stringify(part)));
 
-        // 各ステータスの加算処理
-        if (typeof part.hp === 'number') partBonus.hp += part.hp;
-        if (typeof part.shootDefense === 'number') partBonus.armorRange += part.shootDefense;
-        else if (typeof part.armor_range === 'number') partBonus.armorRange += part.armor_range;
-        if (typeof part.beamDefense === 'number') partBonus.armorBeam += part.beamDefense;
-        else if (typeof part.armor_beam === 'number') partBonus.armorBeam += part.armor_beam;
-        if (typeof part.meleeDefense === 'number') partBonus.armorMelee += part.meleeDefense;
-        else if (typeof part.armor_melee === 'number') partBonus.armorMelee += part.armor_melee;
+    // HP
+    if (isFullStrengthened && typeof part.hp_full === 'number') {
+      partBonus.hp += part.hp_full;
+    } else if (typeof part.hp === 'number') {
+      partBonus.hp += part.hp;
+    }
 
-        if (typeof part.shoot === 'number') partBonus.shoot += part.shoot;
-        if (typeof part.melee === 'number') partBonus.meleeCorrection += part.melee;
-        if (typeof part.speed === 'number') partBonus.speed += part.speed;
-        if (typeof part.highSpeedMovement === 'number') partBonus.highSpeedMovement += part.highSpeedMovement;
-        if (typeof part.thruster === 'number') partBonus.thruster += part.thruster;
-        if (typeof part.turnPerformanceGround === 'number') partBonus.turnPerformanceGround += part.turnPerformanceGround;
-        if (typeof part.turnPerformanceSpace === 'number') partBonus.turnPerformanceSpace += part.turnPerformanceSpace;
+    // 射撃補正
+    if (isFullStrengthened && typeof part.shoot_full === 'number') {
+      partBonus.shoot += part.shoot_full;
+    } else if (typeof part.shoot === 'number') {
+      partBonus.shoot += part.shoot;
+    }
 
-        console.log(`Current partBonus after processing ${part.name}:`, JSON.parse(JSON.stringify(partBonus)));
+    // 格闘補正
+    if (isFullStrengthened && typeof part.melee_full === 'number') {
+      partBonus.meleeCorrection += part.melee_full;
+    } else if (typeof part.melee === 'number') {
+      partBonus.meleeCorrection += part.melee;
+    }
 
-        if (part.limitIncreases && typeof part.limitIncreases === 'object') {
-            for (const statKey in part.limitIncreases) {
-                if (part.limitIncreases.hasOwnProperty(statKey) && bonusInitialState.hasOwnProperty(statKey)) {
-                    const value = part.limitIncreases[statKey];
-                    if (typeof value === 'number' && !isNaN(value)) {
-                        partLimitsIncrease[statKey] += value;
-                        console.log(`Part '${part.name}' added ${value} to limitIncrease for '${statKey}'.`);
-                    } else {
-                        console.warn(`[calculateMSStatsLogic] Part '${part.name}' limitIncrease for '${statKey}' is not a valid number: '${value}'`);
-                    }
-                } else {
-                    console.warn(`[calculateMSStatsLogic] Part '${part.name}' has unhandled limitIncrease key or not in bonusInitialState: '${statKey}'`);
-                }
-            }
+    // 耐実弾補正
+    if (isFullStrengthened && typeof part.armor_range_full === 'number') {
+      partBonus.armorRange += part.armor_range_full;
+    } else if (typeof part.armor_range === 'number') {
+      partBonus.armorRange += part.armor_range;
+    } else if (typeof part.shootDefense === 'number') {
+      partBonus.armorRange += part.shootDefense;
+    }
+
+    // 耐ビーム補正
+    if (isFullStrengthened && typeof part.armor_beam_full === 'number') {
+      partBonus.armorBeam += part.armor_beam_full;
+    } else if (typeof part.armor_beam === 'number') {
+      partBonus.armorBeam += part.armor_beam;
+    } else if (typeof part.beamDefense === 'number') {
+      partBonus.armorBeam += part.beamDefense;
+    }
+
+    // 耐格闘補正
+    if (isFullStrengthened && typeof part.armor_melee_full === 'number') {
+      partBonus.armorMelee += part.armor_melee_full;
+    } else if (typeof part.armor_melee === 'number') {
+      partBonus.armorMelee += part.armor_melee;
+    } else if (typeof part.meleeDefense === 'number') {
+      partBonus.armorMelee += part.meleeDefense;
+    }
+
+    // 他のステータスは従来通り
+    if (typeof part.speed === 'number') partBonus.speed += part.speed;
+    if (typeof part.highSpeedMovement === 'number') partBonus.highSpeedMovement += part.highSpeedMovement;
+    if (typeof part.thruster === 'number') partBonus.thruster += part.thruster;
+    if (typeof part.turnPerformanceGround === 'number') partBonus.turnPerformanceGround += part.turnPerformanceGround;
+    if (typeof part.turnPerformanceSpace === 'number') partBonus.turnPerformanceSpace += part.turnPerformanceSpace;
+
+    // 上限引き上げ
+    if (part.limitIncreases && typeof part.limitIncreases === 'object') {
+      for (const statKey in part.limitIncreases) {
+        if (part.limitIncreases.hasOwnProperty(statKey) && bonusInitialState.hasOwnProperty(statKey)) {
+          const value = part.limitIncreases[statKey];
+          if (typeof value === 'number' && !isNaN(value)) {
+            partLimitsIncrease[statKey] += value;
+            console.log(`Part '${part.name}' added ${value} to limitIncrease for '${statKey}'.`);
+          } else {
+            console.warn(`[calculateMSStatsLogic] Part '${part.name}' limitIncrease for '${statKey}' is not a valid number: '${value}'`);
+          }
+        } else {
+          console.warn(`[calculateMSStatsLogic] Part '${part.name}' has unhandled limitIncrease key or not in bonusInitialState: '${statKey}'`);
         }
-        console.groupEnd();
-    });
-    console.log("[calculateMSStatsLogic] Final partBonus after loop:", JSON.parse(JSON.stringify(partBonus)));
-    console.log("[calculateMSStatsLogic] Final partLimitsIncrease after loop:", JSON.parse(JSON.stringify(partLimitsIncrease)));
+      }
+    }
+    console.groupEnd();
+  });
 
     // 3. カスタムパーツによる上限引き上げを適用 (currentLimits に追加)
     displayStatKeys.forEach(key => {
