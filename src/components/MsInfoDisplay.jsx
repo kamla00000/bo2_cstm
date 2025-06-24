@@ -42,11 +42,11 @@ const MsInfoDisplay = ({
               コスト: {selectedMs.コスト}
             </span>
           </div>
-          <span className="text-2xl font-bold text-white leading-tight">{selectedMs["MS名"]}</span>
+          <span className="text-xl font-bold text-gray-400 leading-tight">{selectedMs["MS名"]}</span>
         </div>
 
-        <div className="flex flex-col items-start gap-1 text-white text-base ml-4">
-          <label className="flex items-center text-white text-base cursor-pointer">
+        <div className="flex flex-col items-start gap-1 text-gray-400 text-base ml-4">
+          <label className="flex items-center text-gray-400 text-base cursor-pointer">
             <input
               type="checkbox"
               checked={isFullStrengthened}
@@ -61,7 +61,7 @@ const MsInfoDisplay = ({
               id="expansion-select"
               value={expansionType}
               onChange={(e) => setExpansionType(e.target.value)}
-              className="block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white w-auto"
+              className="block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-400 w-auto"
             >
               {expansionOptions.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -70,10 +70,10 @@ const MsInfoDisplay = ({
           </div>
         </div>
       </div>
-      <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 text-white text-base text-center">
+      <div className="bg-gray-800 p-3 rounded-xl shadow-inner border border-gray-700 text-gray-400 text-base text-center">
         {/* max-w-sm を max-w-md に変更 */}
         <div
-          className="text-md text-white text-center mx-auto max-w-md"
+          className="text-md text-gray-400 text-center mx-auto max-w-lg"
           dangerouslySetInnerHTML={{
             __html: expansionDescriptions[expansionType] || "説明がありません"
           }}

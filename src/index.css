@@ -5,23 +5,12 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Zen Old Mincho', serif;
+  font-family: 'Noto Serif JP', serif;
+  /* font-family: 'Zen Old Mincho', serif; */
   /* font-family: 'Noto Sans JP', serif; */
   font-weight: 900;
 }
 
-h1, h2, h3 {
-    color: #333;
-}
-
-button {
-    padding: 8px 16px;
-    margin: 5px;
-    border: none;
-    background-color: #4CAF50;
-    color: white;
-    cursor: pointer;
-}
 
 
 ul {

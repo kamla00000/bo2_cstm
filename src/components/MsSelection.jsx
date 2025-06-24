@@ -39,15 +39,15 @@ const MsSelection = ({
     const getTypeColor = (type) => {
         switch (type) {
             case '強襲':
-                return 'bg-red-500 text-white';
+                return 'bg-red-500 text-gray-400';
             case '汎用':
             case '汎用（変形）':
-                return 'bg-blue-500 text-white';
+                return 'bg-blue-500 text-gray-400';
             case '支援':
             case '支援攻撃':
                 return 'bg-yellow-500 text-black';
             default:
-                return 'bg-gray-500 text-white';
+                return 'bg-gray-500 text-gray-400';
         }
     };
 

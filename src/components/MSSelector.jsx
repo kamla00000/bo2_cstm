@@ -16,6 +16,7 @@ const MSSelector = ({
 }) => {
   const [filterType, setFilterType] = useState('');
   const [filterCost, setFilterCost] = useState('');
+  const [searchText, setSearchText] = useState('');
   const [filteredMs, setFilteredMs] = useState([]);
 
   useEffect(() => {
@@ -24,16 +25,17 @@ const MSSelector = ({
       return;
     }
 
-    // 完全一致でフィルタ
     let results = msData.filter((ms) => {
       const msType = String(ms.属性).trim();
       const typeFilter = filterType.trim();
       const matchesType = !filterType || msType === typeFilter;
       const matchesCost = !filterCost || String(ms.コスト) === String(filterCost);
-      return matchesType && matchesCost;
+      // ★名前検索（部分一致・大文字小文字区別なし）
+      const matchesSearch = !searchText || (ms["MS名"] && ms["MS名"].toLowerCase().includes(searchText.toLowerCase()));
+      return matchesType && matchesCost && matchesSearch;
     });
 
-    // 重複排除（MS名＋コスト＋属性でユニーク化）
+    // 重複排除
     const seen = new Set();
     results = results.filter(ms => {
       const key = `${ms["MS名"]}_${ms.コスト}_${ms.属性}`;
@@ -42,7 +44,7 @@ const MSSelector = ({
       return true;
     });
 
-    // コスト降順→属性順→名前昇順
+    // ソート
     results.sort((a, b) => {
       if (b.コスト !== a.コスト) {
         return b.コスト - a.コスト;
@@ -58,19 +60,19 @@ const MSSelector = ({
     });
 
     setFilteredMs(results);
-  }, [filterType, filterCost, msData]);
+  }, [filterType, filterCost, searchText, msData]);
 
   const getTypeColor = (type) => {
     switch (type) {
       case '強襲':
-        return 'bg-red-500 text-white';
+        return 'bg-red-500 text-gray-400';
       case '汎用':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-500 text-gray-400';
       case '支援':
       case '支援攻撃':
         return 'bg-yellow-500 text-black';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-700 text-gray-400';
     }
   };
 
@@ -80,64 +82,74 @@ const MSSelector = ({
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-start">
-      <div className="w-full bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl flex flex-col gap-6">
+      <div className="w-full bg-gray-700 bg-opacity-90 rounded-2xl shadow-2xl flex flex-col gap-6">
         {/* フィルター */}
-        <div className="flex flex-col md:flex-row gap-3 w-full">
-          <div className="flex flex-wrap gap-1">
-            <button
-              onClick={() => setFilterType('')}
-              className={`px-3 py-1 text-sm font-bold transition ${
-                filterType === ''
-                  ? 'bg-blue-500 text-white shadow'
-                  : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
-              }`}
-              style={{ borderRadius: 0 }}
-            >
-              すべて
-            </button>
-            {TYPES.map((type) => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type.trim())}
-                className={`px-3 py-1 text-sm font-bold transition ${
-                  filterType === type
-                    ? 'bg-blue-500 text-white shadow'
-                    : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
-                }`}
-                style={{ borderRadius: 0 }}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            <button
-              onClick={() => setFilterCost('')}
-              className={`px-3 py-1 text-sm font-bold transition ${
-                filterCost === ''
-                  ? 'bg-green-500 text-white shadow'
-                  : 'bg-gray-700 text-gray-200 hover:bg-green-600'
-              }`}
-              style={{ borderRadius: 0 }}
-            >
-              コスト:すべて
-            </button>
-            {COSTS.map((cost) => (
-              <button
-                key={cost}
-                onClick={() => setFilterCost(String(cost))}
-                className={`px-3 py-1 text-sm font-bold transition ${
-                  filterCost === String(cost)
-                    ? 'bg-green-500 text-white shadow'
-                    : 'bg-gray-700 text-gray-200 hover:bg-green-600'
-                }`}
-                style={{ borderRadius: 0 }}
-              >
-                {cost}
-              </button>
-            ))}
-          </div>
-        </div>
+        <div className="flex w-full items-center gap-3">
+  {/* 左詰め：タイプ＋コスト */}
+  <div className="flex flex-wrap gap-1">
+    <button
+      onClick={() => setFilterType('')}
+      className={`px-3 py-1 text-sm font-bold transition ${
+        filterType === ''
+          ? 'bg-blue-500 text-gray-400 shadow'
+          : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
+      }`}
+      style={{ borderRadius: 0 }}
+    >
+      すべて
+    </button>
+    {TYPES.map((type) => (
+      <button
+        key={type}
+        onClick={() => setFilterType(type.trim())}
+        className={`px-3 py-1 text-sm font-bold transition ${
+          filterType === type
+            ? 'bg-blue-500 text-gray-400 shadow'
+            : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
+        }`}
+        style={{ borderRadius: 0 }}
+      >
+        {type}
+      </button>
+    ))}
+    <button
+      onClick={() => setFilterCost('')}
+      className={`px-3 py-1 text-sm font-bold transition ${
+        filterCost === ''
+          ? 'bg-green-500 text-gray-400 shadow'
+          : 'bg-gray-700 text-gray-200 hover:bg-green-600'
+      }`}
+      style={{ borderRadius: 0 }}
+    >
+      コスト:すべて
+    </button>
+    {COSTS.map((cost) => (
+      <button
+        key={cost}
+        onClick={() => setFilterCost(String(cost))}
+        className={`px-3 py-1 text-sm font-bold transition ${
+          filterCost === String(cost)
+            ? 'bg-green-500 text-gray-400 shadow'
+            : 'bg-gray-700 text-gray-200 hover:bg-green-600'
+        }`}
+        style={{ borderRadius: 0 }}
+      >
+        {cost}
+      </button>
+    ))}
+  </div>
+  {/* 右詰め：検索窓 */}
+  <div className="ml-auto">
+    <input
+      type="text"
+      value={searchText}
+      onChange={e => setSearchText(e.target.value)}
+      placeholder="MS名で検索"
+      className="px-2 py-1 text-sm rounded bg-gray-900 text-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      style={{ minWidth: 120, maxWidth: 200 }}
+    />
+  </div>
+</div>
         {/* MSリスト */}
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar w-full">
@@ -150,11 +162,11 @@ const MSSelector = ({
 
                 return (
                   <div
-  key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
-  className="cursor-pointer p-2 rounded flex items-center gap-3 transition-all hover:bg-gray-700 hover:shadow"
-  onClick={() => handleMsSelect(ms)}
-  style={{ minHeight: 56 }}
->
+                    key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
+                    className="cursor-pointer p-2 rounded flex items-center gap-3 transition-all hover:bg-gray-700 hover:shadow"
+                    onClick={() => handleMsSelect(ms)}
+                    style={{ minHeight: 56 }}
+                  >
                     <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden flex-shrink-0 border border-gray-700 group-hover:border-blue-400 transition">
                       <img
                         src={`/images/ms/${baseName}.jpg`}
@@ -178,7 +190,7 @@ const MSSelector = ({
                           コスト: {ms.コスト}
                         </span>
                       </div>
-                      <span className="block font-semibold truncate text-white text-base">{ms["MS名"]}</span>
+                      <span className="block font-semibold truncate text-gray-400 text-base">{ms["MS名"]}</span>
                     </div>
                   </div>
                 );

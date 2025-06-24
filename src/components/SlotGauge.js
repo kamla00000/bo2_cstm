@@ -95,10 +95,10 @@
 //       <div className="space-y-3">
 //         {/* 近距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
-//           <span className="text-gray-300 mr-2 whitespace-nowrap">近</span>
+//           <span className="text-gray-400 mr-2 whitespace-nowrap">近</span>
 //           <span
 //             className={`text-base font-bold w-[60px] flex-shrink-0 ${
-//               closeCurrent > closeMaxWithBonus ? 'text-red-500' : 'text-white'
+//               closeCurrent > closeMaxWithBonus ? 'text-red-500' : 'text-gray-400'
 //             }`}
 //           >
 //             {closeCurrent} / {closeMaxWithBonus}
@@ -108,10 +108,10 @@
 
 //         {/* 中距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
-//           <span className="text-gray-300 mr-2 whitespace-nowrap">中</span>
+//           <span className="text-gray-400 mr-2 whitespace-nowrap">中</span>
 //           <span
 //             className={`text-base font-bold w-[60px] flex-shrink-0 ${
-//               midCurrent > midMaxWithBonus ? 'text-red-500' : 'text-white'
+//               midCurrent > midMaxWithBonus ? 'text-red-500' : 'text-gray-400'
 //             }`}
 //           >
 //             {midCurrent} / {midMaxWithBonus}
@@ -121,10 +121,10 @@
 
 //         {/* 遠距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
-//           <span className="text-gray-300 mr-2 whitespace-nowrap">遠</span>
+//           <span className="text-gray-400 mr-2 whitespace-nowrap">遠</span>
 //           <span
 //             className={`text-base font-bold w-[60px] flex-shrink-0 ${
-//               longCurrent > longMaxWithBonus ? 'text-red-500' : 'text-white'
+//               longCurrent > longMaxWithBonus ? 'text-red-500' : 'text-gray-400'
 //             }`}
 //           >
 //             {longCurrent} / {longMaxWithBonus}
