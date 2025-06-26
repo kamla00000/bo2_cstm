@@ -47,7 +47,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
                 onLoad={handleLoad}
             />
             {level !== undefined && level !== null && (
-                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-gray-400 text-xs font-bold px-1 py-0.5 z-10 pointer-events-none">
+                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-gray-200 text-xs font-bold px-1 py-0.5 z-10 pointer-events-none">
                     LV{level}
                 </div>
             )}
@@ -66,7 +66,7 @@ const PartList = ({
     onPreviewSelect
 }) => {
     if (!parts || !Array.isArray(parts)) {
-        return <p className="text-gray-400">パーツデータがありません。</p>;
+        return <p className="text-gray-200">パーツデータがありません。</p>;
     }
 
     // 装備中判定
@@ -151,7 +151,7 @@ const PartList = ({
     return (
         <div className="overflow-y-auto pr-2">
             {sortedParts.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">パーツデータがありません。</p>
+                <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
             ) : (
                 <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
                     {sortedParts.map((part) => {
@@ -193,7 +193,7 @@ const PartList = ({
 
                                 {/* ホバー時のオレンジ半透明レイヤー */}
                                 {partHovered && !selected && !notEquipable && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-400 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
+                                    <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
                                         装<br />備
                                     </div>
                                 )}

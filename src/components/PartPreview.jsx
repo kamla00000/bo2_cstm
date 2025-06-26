@@ -37,7 +37,7 @@ const ImageWithFallback = ({ partName, className }) => {
 const PartPreview = ({ part }) => {
   if (!part) {
     return (
-      <div className="flex items-center justify-center h-80 w-80 text-gray-400 bg-gray-900 shadow-md">
+      <div className="text-4xl flex items-center justify-center h-80 w-80 text-gray-200 bg-gray-900 shadow-md rounded-md">
         装備選択
       </div>
     );
@@ -55,17 +55,17 @@ const PartPreview = ({ part }) => {
 
         {/* パーツ名とスロット情報エリア */}
         <div className="flex flex-col flex-grow"> {/* 残りのスペースを埋める */}
-          <h3 className="text-base font-bold text-gray-400 mb-1">{part.name || part.名前}</h3> {/* text-sm から text-base に戻すか、任意で調整 */}
+          <h3 className="text-base font-bold text-gray-200 mb-1">{part.name || part.名前}</h3> {/* text-sm から text-base に戻すか、任意で調整 */}
           <div className="flex flex-row gap-1 w-full justify-start text-xs"> {/* justify-start で左揃えに */}
-            <div className="text-gray-400 text-sm bg-gray-700 px-2 py-1">
+            <div className="text-gray-200 text-sm bg-gray-700 px-2 py-1">
               <span className="font-semibold">近：</span>
               {part.close ?? part.近 ?? 0}
             </div>
-            <div className="text-gray-400 text-sm bg-gray-700 px-2 py-1">
+            <div className="text-gray-200 text-sm bg-gray-700 px-2 py-1">
               <span className="font-semibold">中：</span>
               {part.mid ?? part.中 ?? 0}
             </div>
-            <div className="text-gray-400 text-sm bg-gray-700 px-2 py-1">
+            <div className="text-gray-200 text-sm bg-gray-700 px-2 py-1">
               <span className="font-semibold">遠：</span>
               {part.long ?? part.遠 ?? 0}
             </div>
@@ -74,7 +74,7 @@ const PartPreview = ({ part }) => {
       </div>
 
       {/* 特性表示エリア (画像と情報のブロックの下に配置) */}
-      <div className="text-gray-400 mb-2 break-words w-full flex-grow overflow-hidden">
+      <div className="text-gray-200 mb-2 break-words w-full flex-grow overflow-hidden">
         <span className="font-semibold">特性：</span>
         {part.description || part.説明 || '-'}
       </div>

@@ -37,11 +37,11 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                             partName={part.name}
                             className="w-full h-full object-cover"
                         />
-                        <div className="absolute top-0 right-0 bg-red-600 text-gray-400 w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 transition-colors duration-200">
+                        <div className="absolute top-0 right-0 bg-red-600 text-gray-200 w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 transition-colors duration-200">
                             ✕
                         </div>
                         {levelDisplay && (
-                            <div className="absolute bottom-0 right-0 bg-gray-700 bg-opacity-60 text-gray-400 text-xs py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-right px-1"
+                            <div className="absolute bottom-0 right-0 bg-gray-700 bg-opacity-60 text-gray-200 text-xs py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-right px-1"
                                 style={{ width: 'fit-content' }}
                             >
                                 {levelDisplay}
@@ -56,7 +56,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
     };
 
     return (
-        <div className="bg-gray-700 p-3 shadow-inner flex flex-row gap-2 relative">
+        <div className="bg-gray-700 p-3 flex flex-row gap-2 relative">
             {/* パーツ表示エリア */}
             <div className="flex flex-col gap-2">
                 <div className="flex flex-row gap-2 justify-start">
@@ -71,7 +71,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
             <div className="absolute bottom-3 right-3">
 <button
     onClick={onClearAllParts}
-    className="relative h-32 w-16 p-0 border-none text-gray-400 text-4xl flex flex-col items-center justify-center font-bold group"
+    className="relative h-32 w-16 p-0 border-none text-gray-200 text-4xl flex flex-col items-center justify-center font-bold group"
     title="全てのカスタムパーツを解除"
     style={{ background: 'none' }}
 >

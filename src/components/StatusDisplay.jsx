@@ -77,7 +77,7 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     }
 
     let limitDisplay = '-';
-    let limitColorClass = 'text-gray-400';
+    let limitColorClass = 'text-gray-200';
 
     if (statKey === 'hp' || currentLimits[statKey] === Infinity) {
       limitDisplay = '-';
@@ -89,19 +89,19 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     }
 
     const isStatModified = isModified && isModified[statKey];
-    const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-gray-400';
+    const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-gray-200';
 
     return (
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
-        <div className="text-gray-400 text-sm font-semibold whitespace-nowrap">{label}</div>
-        <div className="text-gray-400 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
-        <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-green-400' : (combinedBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
+        <div className="text-gray-200 text-sm font-semibold whitespace-nowrap">{label}</div>
+        <div className="text-gray-200 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
+        <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-green-400' : (combinedBonusValue < 0 ? 'text-red-400' : 'text-gray-200')}`}>
           {formatBonus(combinedBonusValue)}
         </div>
-        <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
+        <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-200')}`}>
           {formatBonus(fullStrengthenBonusValue)}
         </div>
-        <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-green-400' : (totalLimitBonusValue < 0 ? 'text-red-400' : 'text-gray-400')}`}>
+        <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-green-400' : (totalLimitBonusValue < 0 ? 'text-red-400' : 'text-gray-200')}`}>
           {formatBonus(totalLimitBonusValue)}
         </div>
         <div className="text-sm text-right font-bold flex flex-col items-end justify-center">
@@ -126,10 +126,10 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
 
   return (
     <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 flex-grow">
-      <h2 className="text-xl font-semibold mb-3 text-gray-400">ステータス一覧</h2>
+      <h2 className="text-xl font-semibold mb-3 text-gray-200">ステータス一覧</h2>
       {selectedMs ? (
         <div className="space-y-1">
-          <div className="grid grid-cols-7 gap-2 pb-2 border-b border-gray-600 text-gray-400 font-bold">
+          <div className="grid grid-cols-7 gap-2 pb-2 border-b border-gray-600 text-gray-200 font-bold">
             <div className="whitespace-nowrap">項目</div>
             <div className="text-right whitespace-nowrap">初期値</div>
             <div className="text-right whitespace-nowrap">補正値</div>
@@ -152,16 +152,16 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           {renderStatRow('旋回(宇宙)', 'turnPerformanceSpace')}
 
           <div className="grid grid-cols-7 gap-2 py-1 items-center border-b border-gray-700 last:border-b-0">
-            <div className="col-span-full text-sm text-right text-gray-400 pr-2">
-              <span className="font-semibold mr-4">格闘判定力:</span>
+            <div className="col-span-full text-md text-right text-gray-200 pr-2">
+              <span className="font-semibold">格闘判定力：</span>
               <span className="font-bold mr-8">{selectedMs["格闘判定力"] || '-'}</span>
-              <span className="font-semibold mr-4">カウンター:</span>
+              <span className="font-semibold">カウンター：</span>
               <span className="font-bold">{selectedMs["カウンター"] || '-'}</span>
             </div>
           </div>
         </div>
       ) : (
-        <p className="text-gray-400 py-4 text-center">モビルスーツを選択してください。</p>
+        <p className="text-gray-200 py-4 text-center">モビルスーツを選択してください。</p>
       )}
     </div>
   );

@@ -289,7 +289,7 @@ export const calculateMSStatsLogic = (
       expansionBonus.thruster += 10;
       currentLimits.thruster += 20;
       limitChangedFlags.thruster = true; break;
-    case "拡張[HP]":
+    case "パーツ拡張[HP]":
       {
         const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
         const offensivePartsCountHP = parts.filter(p =>
@@ -298,7 +298,7 @@ export const calculateMSStatsLogic = (
         expansionBonus.hp += offensivePartsCountHP * 400;
       }
       break;
-    case "拡張[攻撃]":
+    case "パーツ拡張[攻撃]":
       {
         const movingParts = allPartsCacheForExpansion?.['移動'] || [];
         const movingPartsCountAttack = parts.filter(p =>
@@ -308,7 +308,7 @@ export const calculateMSStatsLogic = (
         expansionBonus.shoot += movingPartsCountAttack * 3;
       }
       break;
-    case "拡張[装甲]":
+    case "パーツ拡張[装甲]":
       {
         const supportParts = allPartsCacheForExpansion?.['補助'] || [];
         const supportPartsCountArmor = parts.filter(p =>
@@ -319,7 +319,7 @@ export const calculateMSStatsLogic = (
         expansionBonus.armorMelee += supportPartsCountArmor * 3;
       }
       break;
-    case "拡張[スラスター]":
+    case "パーツ拡張[スラスター]":
       {
         const specialParts = allPartsCacheForExpansion?.['特殊'] || [];
         const specialPartsCountThruster = parts.filter(p =>

@@ -33,7 +33,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
                 onError={handleError}
             />
             {level !== undefined && level !== null && (
-                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-gray-400 text-xs font-bold px-1 py-0.5 rounded-tl-lg z-10 pointer-events-none">
+                <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-gray-200 text-xs font-bold px-1 py-0.5 rounded-tl-lg z-10 pointer-events-none">
                     LV{level}
                 </div>
             )}

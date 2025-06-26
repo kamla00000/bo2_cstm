@@ -39,13 +39,13 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
     return (
         // flexコンテナとしての設定と、パディングをなくすための調整
         // inline-flex に変更し、内容に応じた幅にする
-        <div className="bg-gray-700 rounded-lg shadow-inner inline-flex flex-col"> 
+        <div className="bg-gray-700 rounded-md inline-flex flex-col"> 
             <div className="space-y-3"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-400 mr-2 whitespace-nowrap">近距離</span>
+                    <span className="text-gray-200 mr-2 whitespace-nowrap">近距離</span>
                     <span className={`text-base font-bold w-[60px] flex-shrink-0 ${
-                            (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-gray-400'
+                            (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-gray-200'
                         }`}>
                         {safeUsage.close ?? 0} / {closeMax}
                     </span>
@@ -64,10 +64,10 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
                 {/* 中距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-400 mr-2 whitespace-nowrap">中距離</span>
+                    <span className="text-gray-200 mr-2 whitespace-nowrap">中距離</span>
                     <span
                         className={`text-base font-bold w-[60px] flex-shrink-0 ${
-                            (safeUsage.mid ?? 0) > midMax ? 'text-red-500' : 'text-gray-400'
+                            (safeUsage.mid ?? 0) > midMax ? 'text-red-500' : 'text-gray-200'
                         }`}
                     >
                         {safeUsage.mid ?? 0} / {midMax}
@@ -87,10 +87,10 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
                 {/* 遠距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-400 mr-2 whitespace-nowrap">遠距離</span>
+                    <span className="text-gray-200 mr-2 whitespace-nowrap">遠距離</span>
                     <span
                         className={`text-base font-bold w-[60px] flex-shrink-0 ${
-                            (safeUsage.long ?? 0) > longMax ? 'text-red-500' : 'text-gray-400'
+                            (safeUsage.long ?? 0) > longMax ? 'text-red-500' : 'text-gray-200'
                         }`}
                     >
                         {safeUsage.long ?? 0} / {longMax}

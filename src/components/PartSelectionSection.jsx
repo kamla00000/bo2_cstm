@@ -19,10 +19,10 @@ const PartSelectionSection = ({
 }) => {
   // カテゴリボタンの表示
   return (
-    <div className="bg-gray-800 rounded-xl p-4 mt-4 shadow-inner border border-gray-700">
+    <div className="bg-gray-800 rounded-md p-4 mt-4 shadow-inner border border-gray-700">
       <div className="flex flex-wrap gap-2 mb-4">
         <button
-          className={`px-3 py-1 rounded ${filterCategory === allCategoryName ? 'bg-blue-600 text-gray-400' : 'bg-gray-600 text-gray-200'}`}
+          className={`px-3 py-1 rounded ${filterCategory === allCategoryName ? 'bg-blue-600 text-gray-200' : 'bg-gray-600 text-gray-200'}`}
           onClick={() => setFilterCategory(allCategoryName)}
         >
           すべて
@@ -30,7 +30,7 @@ const PartSelectionSection = ({
         {categories.map((cat) => (
           <button
             key={cat.name}
-            className={`px-3 py-1 rounded ${filterCategory === cat.name ? 'bg-blue-600 text-gray-400' : 'bg-gray-600 text-gray-200'}`}
+            className={`px-3 py-1 rounded ${filterCategory === cat.name ? 'bg-blue-600 text-gray-200' : 'bg-gray-600 text-gray-200'}`}
             onClick={() => setFilterCategory(cat.name)}
           >
             {cat.name}

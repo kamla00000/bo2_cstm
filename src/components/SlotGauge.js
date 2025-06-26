@@ -34,7 +34,7 @@
 //     const actualDisplayBars = Math.min(displayableSlots, maxRenderLimit);
 
 //     for (let i = 0; i < actualDisplayBars; i++) {
-//       // 変更点: rounded-sm を削除
+//       // 変更点: rounded-md を削除
 //       let cellClass = `flex-none w-1 h-2.5 mr-0.5`;
 
 //       const isCurrentlyUsed = (i + 1) <= current;
@@ -63,13 +63,13 @@
 
 //       // スロットオーバー分を赤で表示（最優先）
 //       if (isOverflow) {
-//           // 変更点: rounded-sm を削除
+//           // 変更点: rounded-md を削除
 //           cellClass = `flex-none w-1 h-2.5 mr-0.5 bg-red-500 animate-pulse border-2 border-red-500`;
 //       }
 
 //       // ホバー時に黄色点滅のクラスを最優先で適用
 //       if (isHoveredOccupied) {
-//           // 変更点: rounded-sm を削除
+//           // 変更点: rounded-md を削除
 //           cellClass = `flex-none w-1 h-2.5 mr-0.5 bg-yellow-400 border-yellow-300 animate-ping-once`;
 //       }
 
@@ -91,14 +91,14 @@
 
 
 //   return (
-//     <div className="p-4 bg-gray-700 rounded-lg shadow-inner">
+//     <div className="p-4 bg-gray-700 rounded-md shadow-inner">
 //       <div className="space-y-3">
 //         {/* 近距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
-//           <span className="text-gray-400 mr-2 whitespace-nowrap">近</span>
+//           <span className="text-gray-200 mr-2 whitespace-nowrap">近</span>
 //           <span
 //             className={`text-base font-bold w-[60px] flex-shrink-0 ${
-//               closeCurrent > closeMaxWithBonus ? 'text-red-500' : 'text-gray-400'
+//               closeCurrent > closeMaxWithBonus ? 'text-red-500' : 'text-gray-200'
 //             }`}
 //           >
 //             {closeCurrent} / {closeMaxWithBonus}
@@ -108,10 +108,10 @@
 
 //         {/* 中距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
-//           <span className="text-gray-400 mr-2 whitespace-nowrap">中</span>
+//           <span className="text-gray-200 mr-2 whitespace-nowrap">中</span>
 //           <span
 //             className={`text-base font-bold w-[60px] flex-shrink-0 ${
-//               midCurrent > midMaxWithBonus ? 'text-red-500' : 'text-gray-400'
+//               midCurrent > midMaxWithBonus ? 'text-red-500' : 'text-gray-200'
 //             }`}
 //           >
 //             {midCurrent} / {midMaxWithBonus}
@@ -121,10 +121,10 @@
 
 //         {/* 遠距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
-//           <span className="text-gray-400 mr-2 whitespace-nowrap">遠</span>
+//           <span className="text-gray-200 mr-2 whitespace-nowrap">遠</span>
 //           <span
 //             className={`text-base font-bold w-[60px] flex-shrink-0 ${
-//               longCurrent > longMaxWithBonus ? 'text-red-500' : 'text-gray-400'
+//               longCurrent > longMaxWithBonus ? 'text-red-500' : 'text-gray-200'
 //             }`}
 //           >
 //             {longCurrent} / {longMaxWithBonus}

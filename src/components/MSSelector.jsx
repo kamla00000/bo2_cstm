@@ -65,14 +65,14 @@ const MSSelector = ({
   const getTypeColor = (type) => {
     switch (type) {
       case '強襲':
-        return 'bg-red-500 text-gray-400';
+        return 'bg-red-500 text-gray-200';
       case '汎用':
-        return 'bg-blue-500 text-gray-400';
+        return 'bg-blue-500 text-gray-200';
       case '支援':
       case '支援攻撃':
         return 'bg-yellow-500 text-black';
       default:
-        return 'bg-gray-700 text-gray-400';
+        return 'bg-gray-700 text-gray-200';
     }
   };
 
@@ -91,7 +91,7 @@ const MSSelector = ({
       onClick={() => setFilterType('')}
       className={`px-3 py-1 text-sm font-bold transition ${
         filterType === ''
-          ? 'bg-blue-500 text-gray-400 shadow'
+          ? 'bg-blue-500 text-gray-200 shadow'
           : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
       }`}
       style={{ borderRadius: 0 }}
@@ -104,7 +104,7 @@ const MSSelector = ({
         onClick={() => setFilterType(type.trim())}
         className={`px-3 py-1 text-sm font-bold transition ${
           filterType === type
-            ? 'bg-blue-500 text-gray-400 shadow'
+            ? 'bg-blue-500 text-gray-200 shadow'
             : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
         }`}
         style={{ borderRadius: 0 }}
@@ -116,7 +116,7 @@ const MSSelector = ({
       onClick={() => setFilterCost('')}
       className={`px-3 py-1 text-sm font-bold transition ${
         filterCost === ''
-          ? 'bg-green-500 text-gray-400 shadow'
+          ? 'bg-green-500 text-gray-200 shadow'
           : 'bg-gray-700 text-gray-200 hover:bg-green-600'
       }`}
       style={{ borderRadius: 0 }}
@@ -129,7 +129,7 @@ const MSSelector = ({
         onClick={() => setFilterCost(String(cost))}
         className={`px-3 py-1 text-sm font-bold transition ${
           filterCost === String(cost)
-            ? 'bg-green-500 text-gray-400 shadow'
+            ? 'bg-green-500 text-gray-200 shadow'
             : 'bg-gray-700 text-gray-200 hover:bg-green-600'
         }`}
         style={{ borderRadius: 0 }}
@@ -145,7 +145,7 @@ const MSSelector = ({
       value={searchText}
       onChange={e => setSearchText(e.target.value)}
       placeholder="MS名で検索"
-      className="px-2 py-1 text-sm rounded bg-gray-900 text-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      className="px-2 py-1 text-sm rounded bg-gray-900 text-gray-200 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
       style={{ minWidth: 120, maxWidth: 200 }}
     />
   </div>
@@ -186,17 +186,17 @@ const MSSelector = ({
                         >
                           {ms.属性}
                         </span>
-                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                        <span className="text-xs text-gray-200 whitespace-nowrap">
                           コスト: {ms.コスト}
                         </span>
                       </div>
-                      <span className="block font-semibold truncate text-gray-400 text-base">{ms["MS名"]}</span>
+                      <span className="block font-semibold truncate text-gray-200 text-base">{ms["MS名"]}</span>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-gray-400 text-center py-8 col-span-2">該当するMSが見つかりません。</p>
+              <p className="text-gray-200 text-center py-8 col-span-2">該当するMSが見つかりません。</p>
             )}
           </div>
         </div>
