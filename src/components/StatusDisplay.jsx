@@ -15,57 +15,85 @@ const initialLimits = {
   turnPerformanceSpace: Infinity,
 };
 
-const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isModified }) => {
+const StatusDisplay = ({
+  stats,
+  selectedMs,
+  hoveredPart,
+  isFullStrengthened,
+  isModified,
+  expansionType,
+}) => {
   console.log("[StatusDisplay] props.stats:", stats);
 
-  const { base, partBonus, fullStrengthenBonus, expansionBonus, partLimitBonus, currentLimits, total, rawTotal } = stats;
-
-  console.log("[StatusDisplay] base:", base);
-  console.log("[StatusDisplay] partBonus:", partBonus);
-  console.log("[StatusDisplay] fullStrengthenBonus:", fullStrengthenBonus);
-  console.log("[StatusDisplay] expansionBonus:", expansionBonus);
-  console.log("[StatusDisplay] partLimitBonus:", partLimitBonus);
-  console.log("[StatusDisplay] currentLimits:", currentLimits);
-  console.log("[StatusDisplay] total:", total);
-  console.log("[StatusDisplay] rawTotal:", rawTotal);
+  const {
+    base,
+    partBonus,
+    fullStrengthenBonus,
+    expansionBonus,
+    partLimitBonus,
+    currentLimits,
+    total,
+    rawTotal,
+  } = stats;
 
   if (!selectedMs || !stats) {
     console.log("[StatusDisplay] No selected MS or stats data available.");
     return <div className="bg-gray-800 p-4 rounded-xl shadow-md">ステータス情報なし</div>;
   }
 
-  const renderStatRow = (label, statKey) => {
-    const baseValue = Number(base[statKey] || 0);
-    const partBonusValue = Number(partBonus[statKey] || 0);
-    const fullStrengthenBonusValue = Number(fullStrengthenBonus[statKey] || 0);
-    const expansionBonusValue = Number(expansionBonus[statKey] || 0);
-    const partLimitBonusValue = Number(partLimitBonus?.[statKey] || 0);
-    const rawTotalValue = Number(rawTotal[statKey] || 0);
-    const totalValue = Number(total[statKey] || 0);
+  // 3桁区切りのフォーマット関数
+  const formatNumber = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return '0';
+    return Number(value).toLocaleString();
+  };
 
-    console.groupCollapsed(`[StatusDisplay] renderStatRow for ${label} (${statKey})`);
-    console.log(`  baseValue: ${baseValue} (typeof: ${typeof baseValue})`);
-    console.log(`  partBonusValue: ${partBonusValue} (typeof: ${typeof partBonusValue})`);
-    console.log(`  fullStrengthenBonusValue: ${fullStrengthenBonusValue} (typeof: ${typeof fullStrengthenBonusValue})`);
-    console.log(`  expansionBonusValue: ${expansionBonusValue} (typeof: ${typeof expansionBonusValue})`);
-    console.log(`  partLimitBonusValue: ${partLimitBonusValue} (typeof: ${typeof partLimitBonusValue})`);
-    console.log(`  rawTotalValue: ${rawTotalValue} (typeof: ${typeof rawTotalValue})`);
-    console.log(`  totalValue: ${totalValue} (typeof: ${typeof totalValue})`);
-    console.groupEnd();
+  // HPだけ大文字小文字の違いに対応
+  const getBonusValue = (obj, statKey) => {
+    if (!obj) return 0;
+    if (statKey in obj) return Number(obj[statKey] || 0);
+    if (statKey.toLowerCase() in obj) return Number(obj[statKey.toLowerCase()] || 0);
+    if (statKey.toUpperCase() in obj) return Number(obj[statKey.toUpperCase()] || 0);
+    return 0;
+  };
+
+  const renderStatRow = (label, statKey) => {
+    const baseValue = getBonusValue(base, statKey);
+    const partBonusValue = getBonusValue(partBonus, statKey);
+    const fullStrengthenBonusValue = getBonusValue(fullStrengthenBonus, statKey);
+    const expansionBonusValue = getBonusValue(expansionBonus, statKey);
+    const partLimitBonusValue = getBonusValue(partLimitBonus, statKey);
+    const rawTotalValue = getBonusValue(rawTotal, statKey);
+    const totalValue = getBonusValue(total, statKey);
+
+    let displayPartBonusValue = partBonusValue;
+
+    // 拡張スロット・拡張選択・expansionType すべてで判定
+    const isSpecialFrameA =
+      (expansionType && expansionType.includes('特殊強化フレーム')) ||
+      (selectedMs?.拡張選択 && selectedMs.拡張選択.includes('特殊強化フレーム')) ||
+      (selectedMs?.拡張スロット && selectedMs.拡張スロット.includes('特殊強化フレーム'));
+
+    if (
+      (statKey === 'hp' || statKey === 'HP') &&
+      expansionBonusValue !== 0 &&
+      isSpecialFrameA
+    ) {
+      displayPartBonusValue += expansionBonusValue;
+    }
 
     const formatBonus = (value) => {
       if (value === 0) return '-';
-      return value > 0 ? `+${value}` : `${value}`;
+      return value > 0 ? `+${formatNumber(value)}` : `${formatNumber(value)}`;
     };
 
     const displayNumericValue = (value) => {
       if (value === null || value === undefined || isNaN(value)) {
         return '0';
       }
-      return String(value);
+      return formatNumber(value);
     };
 
-    const combinedBonusValue = partBonusValue + expansionBonusValue;
+    const combinedBonusValue = displayPartBonusValue;
 
     // 上限増は「現在の上限値 - 初期上限値」で計算
     const initialLimitValue = initialLimits[statKey] ?? 0;
@@ -79,7 +107,7 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
     let limitDisplay = '-';
     let limitColorClass = 'text-gray-200';
 
-    if (statKey === 'hp' || currentLimits[statKey] === Infinity) {
+    if (statKey === 'hp' || statKey === 'HP' || currentLimits[statKey] === Infinity) {
       limitDisplay = '-';
     } else if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
       limitDisplay = displayNumericValue(currentLimits[statKey]);
@@ -113,7 +141,7 @@ const StatusDisplay = ({ stats, selectedMs, hoveredPart, isFullStrengthened, isM
           </span>
           {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
             <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
-              +{rawTotalValue - currentLimits[statKey]} OVER
+              +{formatNumber(rawTotalValue - currentLimits[statKey])} OVER
             </span>
           )}
         </div>

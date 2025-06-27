@@ -9,7 +9,8 @@ const MsInfoDisplay = ({
   setExpansionType,
   expansionOptions,
   expansionDescriptions,
-  getTypeColor
+  getTypeColor,
+  onMsImageClick, // 画像クリック時のハンドラ
 }) => {
   if (!selectedMs) {
     return null;
@@ -22,12 +23,14 @@ const MsInfoDisplay = ({
           <img
             src={`/images/ms/${baseName}.jpg`}
             alt={selectedMs["MS名"]}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-pointer transition hover:opacity-80"
+            onClick={onMsImageClick}
             onError={(e) => {
               console.error(`MsInfoDisplay: Image load error for: /images/ms/${baseName}.jpg`);
               e.target.src = '/images/ms/default.jpg';
               e.target.onerror = null;
             }}
+            title="MSを再選択"
           />
         </div>
         <div className="flex flex-col flex-grow">

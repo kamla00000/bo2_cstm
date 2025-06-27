@@ -94,6 +94,7 @@ const PickedMs = ({
                             expansionOptions={EXPANSION_OPTIONS}
                             expansionDescriptions={EXPANSION_DESCRIPTIONS}
                             getTypeColor={getTypeColor}
+                            onMsImageClick={handleOpenSelector} // 追加
                         />
 
                         {/* スロットバー、装着済みパーツ一覧、装備選択を配置するメインの横並びコンテナ */}

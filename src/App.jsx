@@ -57,7 +57,7 @@ function App() {
   // 再生スピード
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.playbackRate = 4.0;
+      videoRef.current.playbackRate = 2.0;
     }
   }, []);
 

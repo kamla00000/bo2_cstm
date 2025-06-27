@@ -265,72 +265,80 @@ export const calculateMSStatsLogic = (
 
   // 5. 拡張スキルによるボーナスと上限引き上げ
   switch (expansionType) {
-    case "射撃補正拡張":
-      expansionBonus.shoot += 8;
-      currentLimits.shoot += 8;
-      limitChangedFlags.shoot = true; break;
-    case "格闘補正拡張":
-      expansionBonus.meleeCorrection += 8;
-      currentLimits.meleeCorrection += 8;
-      limitChangedFlags.meleeCorrection = true; break;
-    case "耐実弾補正拡張":
-      expansionBonus.armorRange += 10;
-      currentLimits.armorRange += 10;
-      limitChangedFlags.armorRange = true; break;
-    case "耐ビーム補正拡張":
-      expansionBonus.armorBeam += 10;
-      currentLimits.armorBeam += 10;
-      limitChangedFlags.armorBeam = true; break;
-    case "耐格闘補正拡張":
-      expansionBonus.armorMelee += 10;
-      currentLimits.armorMelee += 10;
-      limitChangedFlags.armorMelee = true; break;
-    case "スラスター拡張":
-      expansionBonus.thruster += 10;
-      currentLimits.thruster += 20;
-      limitChangedFlags.thruster = true; break;
-    case "パーツ拡張[HP]":
-      {
-        const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
-        const offensivePartsCountHP = parts.filter(p =>
-          offensiveParts.some(op => op.name === p.name)
-        ).length;
-        expansionBonus.hp += offensivePartsCountHP * 400;
-      }
-      break;
-    case "パーツ拡張[攻撃]":
-      {
-        const movingParts = allPartsCacheForExpansion?.['移動'] || [];
-        const movingPartsCountAttack = parts.filter(p =>
-          movingParts.some(mp => mp.name === p.name)
-        ).length;
-        expansionBonus.meleeCorrection += movingPartsCountAttack * 3;
-        expansionBonus.shoot += movingPartsCountAttack * 3;
-      }
-      break;
-    case "パーツ拡張[装甲]":
-      {
-        const supportParts = allPartsCacheForExpansion?.['補助'] || [];
-        const supportPartsCountArmor = parts.filter(p =>
-          supportParts.some(sp => sp.name === p.name)
-        ).length;
-        expansionBonus.armorRange += supportPartsCountArmor * 3;
-        expansionBonus.armorBeam += supportPartsCountArmor * 3;
-        expansionBonus.armorMelee += supportPartsCountArmor * 3;
-      }
-      break;
-    case "パーツ拡張[スラスター]":
-      {
-        const specialParts = allPartsCacheForExpansion?.['特殊'] || [];
-        const specialPartsCountThruster = parts.filter(p =>
-          specialParts.some(spp => spp.name === p.name)
-        ).length;
-        expansionBonus.thruster += specialPartsCountThruster * 5;
-      }
-      break;
-    default:
-      break;
+  case "射撃補正拡張":
+    expansionBonus.shoot += 8;
+    currentLimits.shoot += 8;
+    limitChangedFlags.shoot = true; break;
+  case "格闘補正拡張":
+    expansionBonus.meleeCorrection += 8;
+    currentLimits.meleeCorrection += 8;
+    limitChangedFlags.meleeCorrection = true; break;
+  case "耐実弾補正拡張":
+    expansionBonus.armorRange += 10;
+    currentLimits.armorRange += 10;
+    limitChangedFlags.armorRange = true; break;
+  case "耐ビーム補正拡張":
+    expansionBonus.armorBeam += 10;
+    currentLimits.armorBeam += 10;
+    limitChangedFlags.armorBeam = true; break;
+  case "耐格闘補正拡張":
+    expansionBonus.armorMelee += 10;
+    currentLimits.armorMelee += 10;
+    limitChangedFlags.armorMelee = true; break;
+  case "スラスター拡張": {
+    const specialParts = allPartsCacheForExpansion?.['特殊'] || [];
+    const specialPartsCountThruster = parts.filter(p =>
+      specialParts.some(spp => spp.name === p.name)
+    ).length;
+    expansionBonus.thruster += specialPartsCountThruster * 5;
+    partBonus.thruster += specialPartsCountThruster * 5; // ★補正値にも加算
+    expansionBonus.thruster = Math.max(expansionBonus.thruster, 0); // 念のため
+    currentLimits.thruster += 20;
+    limitChangedFlags.thruster = true;
+    break;
   }
+  case "パーツ拡張[HP]": {
+    const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
+    const offensivePartsCountHP = parts.filter(p =>
+      offensiveParts.some(op => op.name === p.name)
+    ).length;
+    expansionBonus.hp += offensivePartsCountHP * 400;
+    partBonus.hp += offensivePartsCountHP * 400; // ★補正値にも加算
+    expansionBonus.hp = Math.max(expansionBonus.hp, 0);
+    break;
+  }
+  case "パーツ拡張[攻撃]": {
+    const movingParts = allPartsCacheForExpansion?.['移動'] || [];
+    const movingPartsCountAttack = parts.filter(p =>
+      movingParts.some(mp => mp.name === p.name)
+    ).length;
+    expansionBonus.meleeCorrection += movingPartsCountAttack * 3;
+    expansionBonus.shoot += movingPartsCountAttack * 3;
+    partBonus.meleeCorrection += movingPartsCountAttack * 3; // ★補正値にも加算
+    partBonus.shoot += movingPartsCountAttack * 3;           // ★補正値にも加算
+    expansionBonus.meleeCorrection = Math.max(expansionBonus.meleeCorrection, 0);
+    expansionBonus.shoot = Math.max(expansionBonus.shoot, 0);
+    break;
+  }
+  case "パーツ拡張[装甲]": {
+    const supportParts = allPartsCacheForExpansion?.['補助'] || [];
+    const supportPartsCountArmor = parts.filter(p =>
+      supportParts.some(sp => sp.name === p.name)
+    ).length;
+    expansionBonus.armorRange += supportPartsCountArmor * 3;
+    expansionBonus.armorBeam += supportPartsCountArmor * 3;
+    expansionBonus.armorMelee += supportPartsCountArmor * 3;
+    partBonus.armorRange += supportPartsCountArmor * 3; // ★補正値にも加算
+    partBonus.armorBeam += supportPartsCountArmor * 3;  // ★補正値にも加算
+    partBonus.armorMelee += supportPartsCountArmor * 3; // ★補正値にも加算
+    expansionBonus.armorRange = Math.max(expansionBonus.armorRange, 0);
+    expansionBonus.armorBeam = Math.max(expansionBonus.armorBeam, 0);
+    expansionBonus.armorMelee = Math.max(expansionBonus.armorMelee, 0);
+    break;
+  }
+  default:
+    break;
+}
 
   currentLimits.flags = limitChangedFlags;
 
@@ -384,6 +392,8 @@ export const calculateMSStatsLogic = (
     if (totalPercent > 0) {
       const before = rawTotalStats[statKey];
       const after = Math.floor(before * (1 + totalPercent / 100));
+      const percentBonus = after - before;
+    partBonus[statKey] += percentBonus;
       rawTotalStats[statKey] = after;
       totalStats[statKey] = after;
       isModified[statKey] = true;
