@@ -12,8 +12,7 @@ const PartSelectionSection = ({
   usageWithPreview,
   filterCategory,
   setFilterCategory,
-  categories,
-  allCategoryName,
+  categories, // ['防御', '攻撃', ... 'すべて'] のstring配列で渡す
   onPreviewSelect,
   hoveredPart,
 }) => {
@@ -21,19 +20,13 @@ const PartSelectionSection = ({
   return (
     <div className="bg-gray-800 rounded-md p-4 mt-4 shadow-inner border border-gray-700">
       <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          className={`px-3 py-1 rounded ${filterCategory === allCategoryName ? 'bg-blue-600 text-gray-200' : 'bg-gray-600 text-gray-200'}`}
-          onClick={() => setFilterCategory(allCategoryName)}
-        >
-          すべて
-        </button>
         {categories.map((cat) => (
           <button
-            key={cat.name}
-            className={`px-3 py-1 rounded ${filterCategory === cat.name ? 'bg-blue-600 text-gray-200' : 'bg-gray-600 text-gray-200'}`}
-            onClick={() => setFilterCategory(cat.name)}
+            key={cat}
+            className={`px-3 py-1 rounded ${filterCategory === cat ? 'bg-blue-600 text-gray-200' : 'bg-gray-600 text-gray-200'}`}
+            onClick={() => setFilterCategory(cat)}
           >
-            {cat.name}
+            {cat}
           </button>
         ))}
       </div>
@@ -46,6 +39,9 @@ const PartSelectionSection = ({
         selectedMs={selectedMs}
         currentSlotUsage={currentSlotUsage}
         onPreviewSelect={onPreviewSelect}
+        categories={categories}
+        filterCategory={filterCategory}
+        setFilterCategory={setFilterCategory}
       />
     </div>
   );

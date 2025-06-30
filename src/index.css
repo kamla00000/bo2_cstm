@@ -26,3 +26,34 @@ li {
 .overflow-x-auto {
     scrollbar-gutter: stable;
 }
+.hex-badge {
+  display: inline-block;
+  position: relative;
+  width: 100px; /* 固定幅にする（例: 100px） */
+  height: 34px;
+  background: #444;
+  color: #fff;
+  text-align: center;
+  line-height: 34px;
+  font-weight: bold;
+  clip-path: polygon(
+    18% 0%, 82% 0%,
+    100% 50%,
+    82% 100%, 18% 100%,
+    0% 50%
+  );
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.hex-toggle {
+  clip-path: polygon(
+    25% 0%, 75% 0%,
+    100% 50%,
+    75% 100%, 25% 100%,
+    0% 50%
+  );
+  background: #444;
+  padding: 0;
+}

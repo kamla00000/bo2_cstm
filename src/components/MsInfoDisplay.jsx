@@ -1,5 +1,19 @@
 import React from 'react';
 
+// 属性ごとに色を返す関数をこのファイル内に記述
+const getTypeColor = (type) => {
+  switch (type) {
+    case '強襲':
+      return '#e53935'; // 赤
+    case '汎用':
+      return '#1e88e5'; // 青
+    case '支援':
+      return '#eab308'; // 黄
+    default:
+      return '#444';    // デフォルト
+  }
+};
+
 const MsInfoDisplay = ({
   selectedMs,
   baseName,
@@ -9,7 +23,6 @@ const MsInfoDisplay = ({
   setExpansionType,
   expansionOptions,
   expansionDescriptions,
-  getTypeColor,
   onMsImageClick, // 画像クリック時のハンドラ
 }) => {
   if (!selectedMs) {
@@ -23,7 +36,7 @@ const MsInfoDisplay = ({
           <img
             src={`/images/ms/${baseName}.jpg`}
             alt={selectedMs["MS名"]}
-            className="w-full h-full object-cover cursor-pointer transition hover:opacity-80"
+            className="w-full h-full object-cover cursor-pointer transition hover:opacity-20 hover:scale-125"
             onClick={onMsImageClick}
             onError={(e) => {
               console.error(`MsInfoDisplay: Image load error for: /images/ms/${baseName}.jpg`);
@@ -36,12 +49,13 @@ const MsInfoDisplay = ({
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 mb-1">
             <span
-              className={`px-3 py-1 rounded-full text-sm ${getTypeColor(selectedMs.属性)} flex-shrink-0`}
+              className="hex-badge text-base flex-shrink-0"
+              style={{
+                background: getTypeColor(selectedMs.属性),
+                color: '#fff'
+              }}
             >
-              {selectedMs.属性}
-            </span>
-            <span className="text-base text-gray-200 whitespace-nowrap">
-              コスト: {selectedMs.コスト}
+              {selectedMs.属性}：{selectedMs.コスト}
             </span>
           </div>
           <span className="text-xl font-bold text-gray-200 leading-tight">{selectedMs["MS名"]}</span>
@@ -49,26 +63,59 @@ const MsInfoDisplay = ({
 
         <div className="flex flex-col items-start gap-1 text-gray-200 text-base ml-4">
           {/* スライドトグル */}
-          <div className="flex items-center gap-2">
-            <span className={`text-sm ${!isFullStrengthened ? 'text-blue-400 font-bold' : 'text-gray-400'}`}>未強化</span>
-            <button
-              type="button"
-              className={`relative w-14 h-7 bg-gray-600 rounded-full transition-colors duration-300 focus:outline-none`}
-              onClick={() => setIsFullStrengthened(!isFullStrengthened)}
-              aria-pressed={isFullStrengthened}
-              tabIndex={0}
-            >
-              <span
-                className={`absolute top-1 left-1 w-5 h-5 rounded-full transition-transform duration-300
-                  ${isFullStrengthened ? 'bg-blue-500 translate-x-7' : 'bg-gray-300 translate-x-0'}
-                `}
-                style={{
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
-                }}
-              />
-            </button>
-            <span className={`text-sm ${isFullStrengthened ? 'text-blue-400 font-bold' : 'text-gray-400'}`}>フル強化</span>
-          </div>
+<div className="flex items-center gap-2">
+  <span
+    className={`text-md cursor-pointer select-none ${!isFullStrengthened ? 'text-orange-400 font-bold' : 'text-gray-400'}`}
+    onClick={() => setIsFullStrengthened(false)}
+    tabIndex={0}
+    role="button"
+    aria-pressed={!isFullStrengthened}
+    style={{ minWidth: 48, textAlign: 'center' }}
+  >
+    未強化
+  </span>
+<button
+  type="button"
+  className="relative flex items-center justify-center shadow-lg focus:outline-none hex-toggle"
+  onClick={() => setIsFullStrengthened(!isFullStrengthened)}
+  aria-pressed={isFullStrengthened}
+  tabIndex={0}
+  style={{
+    width: 64,
+    height: 24,
+    background: '#444',
+    padding: 0,
+    transition: 'background 0.3s',
+    clipPath: 'polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%)',
+    overflow: 'hidden'
+  }}
+>
+  {/* スライドする六角形ノブ */}
+  <span
+    className="absolute"
+    style={{
+      top: 0,
+      left: isFullStrengthened ? 32 : 0, // 64/2=32
+      width: 32,
+      height: 24,
+      background: isFullStrengthened ? '#f59e42' : '#d1d5db',
+      transition: 'left 0.3s, background 0.3s',
+      clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
+    }}
+  />
+</button>
+  <span
+    className={`text-md cursor-pointer select-none ${isFullStrengthened ? 'text-orange-400 font-bold' : 'text-gray-400'}`}
+    onClick={() => setIsFullStrengthened(true)}
+    tabIndex={0}
+    role="button"
+    aria-pressed={isFullStrengthened}
+    style={{ minWidth: 48, textAlign: 'center' }}
+  >
+    フル強化
+  </span>
+</div>
           <div className="flex items-center gap-2">
             <label htmlFor="expansion-select" className="whitespace-nowrap">拡張選択:</label>
             <select

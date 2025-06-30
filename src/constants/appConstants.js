@@ -1,5 +1,3 @@
-// src/constants/appConstants.js
-
 export const CATEGORIES = [
   { name: '防御', fileName: 'defensive_parts.json' },
   { name: '攻撃', fileName: 'offensive_parts.json' },
@@ -9,6 +7,16 @@ export const CATEGORIES = [
 ];
 
 export const ALL_CATEGORY_NAME = 'すべて';
+
+// 並び順：防御, 攻撃, 移動, 補助, 特殊, すべて
+export const CATEGORY_NAMES = [
+  '防御',
+  '攻撃',
+  '移動',
+  '補助',
+  '特殊',
+  'すべて'
+];
 
 export const EXPANSION_OPTIONS = [
   "無し",

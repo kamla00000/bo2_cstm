@@ -1,17 +1,19 @@
 import React from 'react';
+import { ALL_CATEGORY_NAME } from '../constants/appConstants';
 
 // 画像パスを生成する関数をコンポーネントの外に定義
 const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName)}`;
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp']; // 試す拡張子の優先順位
 
 // 属性の並び順を定義
-const CATEGORY_ORDER = ['防御', '攻撃', '移動', '補助', '特殊'];
+const CATEGORY_ORDER = ['防御', '攻撃', '移動', '補助', '特殊', ALL_CATEGORY_NAME];
+
 const getCategoryOrder = (category) => {
     const idx = CATEGORY_ORDER.indexOf(category);
     return idx === -1 ? CATEGORY_ORDER.length : idx;
 };
 
-// PartList.jsx の中に ImageWithFallback を定義する
+// 画像の拡張子フォールバック付き表示
 const ImageWithFallback = ({ partName, level, className }) => {
     const [currentExtIndex, setCurrentExtIndex] = React.useState(0);
     const [hasLoaded, setHasLoaded] = React.useState(false);
@@ -63,7 +65,10 @@ const PartList = ({
     hoveredPart,
     selectedMs,
     currentSlotUsage,
-    onPreviewSelect
+    onPreviewSelect,
+    categories = [],
+    filterCategory,
+    setFilterCategory,
 }) => {
     if (!parts || !Array.isArray(parts)) {
         return <p className="text-gray-200">パーツデータがありません。</p>;
@@ -149,73 +154,76 @@ const PartList = ({
     const sortedParts = [...equipableParts, ...selectedPartsGroup, ...notEquipableParts];
 
     return (
-        <div className="overflow-y-auto pr-2">
-            {sortedParts.length === 0 ? (
-                <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
-            ) : (
-                <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
-                    {sortedParts.map((part) => {
-                        const selected = isSelected(part);
-                        const partHovered = hoveredPart && hoveredPart.name === part.name;
-                        const notEquipable = isNotEquipable(part) && !selected;
+        <div>
+            {/* パーツリスト */}
+            <div className="overflow-y-auto pr-2" style={{ maxHeight: '195px' }}>
+                {sortedParts.length === 0 ? (
+                    <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
+                ) : (
+                    <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
+                        {sortedParts.map((part) => {
+                            const selected = isSelected(part);
+                            const partHovered = hoveredPart && hoveredPart.name === part.name;
+                            const notEquipable = isNotEquipable(part) && !selected;
 
-                        const levelMatch = part.name.match(/_LV(\d+)/);
-                        const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
+                            const levelMatch = part.name.match(/_LV(\d+)/);
+                            const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
-                        return (
-                            <button
-                                key={part.name}
-                                className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
-                                    w-16 h-16 aspect-square
-                                    ${selected ? 'bg-green-700' : 'bg-gray-800'}
-                                    cursor-pointer
-                                `}
-                                onClick={() => {
-                                    if (!notEquipable || selected) {
-                                        onSelect(part);
-                                    }
-                                    onPreviewSelect?.(part);
-                                }}
-                                onMouseEnter={() => {
-                                    if (selected) {
-                                        onHover?.(part, 'selectedParts');
-                                    } else if (notEquipable) {
-                                        onHover?.(part, 'partListOverflow');
-                                    } else {
-                                        onHover?.(part, 'partList');
-                                    }
-                                }}
-                                onMouseLeave={() => {
-                                    onHover?.(null, null);
-                                }}
-                            >
-                                <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
+                            return (
+                                <button
+                                    key={part.name}
+                                    className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
+                                        w-16 h-16 aspect-square
+                                        ${selected ? 'bg-green-700' : 'bg-gray-800'}
+                                        cursor-pointer
+                                    `}
+                                    onClick={() => {
+                                        if (!notEquipable || selected) {
+                                            onSelect(part);
+                                        }
+                                        onPreviewSelect?.(part);
+                                    }}
+                                    onMouseEnter={() => {
+                                        if (selected) {
+                                            onHover?.(part, 'selectedParts');
+                                        } else if (notEquipable) {
+                                            onHover?.(part, 'partListOverflow');
+                                        } else {
+                                            onHover?.(part, 'partList');
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        onHover?.(null, null);
+                                    }}
+                                >
+                                    <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                                {/* ホバー時のオレンジ半透明レイヤー */}
-                                {partHovered && !selected && !notEquipable && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
-                                        装<br />備
-                                    </div>
-                                )}
+                                    {/* ホバー時のオレンジ半透明レイヤー */}
+                                    {partHovered && !selected && !notEquipable && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
+                                            装<br />備
+                                        </div>
+                                    )}
 
-                                {/* 装備中の表示 */}
-                                {selected && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
-                                        装<br />備<br />中
-                                    </div>
-                                )}
+                                    {/* 装備中の表示 */}
+                                    {selected && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-green-400 font-bold text-base z-20 writing-mode-vertical-rl pointer-events-none">
+                                            装<br />備<br />中
+                                        </div>
+                                    )}
 
-                                {/* 不可の表示 */}
-                                {notEquipable && !selected && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl pointer-events-none">
-                                        不<br />可
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
+                                    {/* 不可の表示 */}
+                                    {notEquipable && !selected && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-500 font-bold text-base z-20 cursor-not-allowed writing-mode-vertical-rl pointer-events-none">
+                                            不<br />可
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

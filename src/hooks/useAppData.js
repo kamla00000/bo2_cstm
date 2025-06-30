@@ -17,7 +17,7 @@ export const useAppData = () => {
     const [selectedParts, setSelectedParts] = useState([]);
     const [hoveredPart, setHoveredPart] = useState(null);
     const [hoverSource, setHoverSource] = useState(null); // 'partList' または 'selectedParts'
-    const [filterCategory, setFilterCategory] = useState(ALL_CATEGORY_NAME);
+    const [filterCategory, setFilterCategory] = useState('防御');
     const [isFullStrengthened, setIsFullStrengthened] = useState(false);
     const [expansionType, setExpansionType] = useState('無し');
     // プレビュー固定用
@@ -144,7 +144,7 @@ export const useAppData = () => {
         setHoverSource(null);
         setIsFullStrengthened(false);
         setExpansionType('無し');
-        setFilterCategory(ALL_CATEGORY_NAME);
+        setFilterCategory('防御');
         setSelectedPreviewPart(null);
     }, []);
 

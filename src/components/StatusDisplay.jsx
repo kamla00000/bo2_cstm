@@ -112,24 +112,24 @@ const StatusDisplay = ({
     } else if (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null) {
       limitDisplay = displayNumericValue(currentLimits[statKey]);
       if (currentLimits.flags && currentLimits.flags[statKey]) {
-        limitColorClass = 'text-green-400';
+        limitColorClass = 'text-orange-500';
       }
     }
 
     const isStatModified = isModified && isModified[statKey];
-    const totalValueColorClass = isStatModified ? 'text-green-500' : 'text-gray-200';
+    const totalValueColorClass = isStatModified ? 'text-orange-500' : 'text-gray-200';
 
     return (
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
         <div className="text-gray-200 text-sm font-semibold whitespace-nowrap">{label}</div>
         <div className="text-gray-200 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
-        <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-green-400' : (combinedBonusValue < 0 ? 'text-red-400' : 'text-gray-200')}`}>
+        <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-orange-300' : (combinedBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(combinedBonusValue)}
         </div>
-        <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-green-400' : (fullStrengthenBonusValue < 0 ? 'text-red-400' : 'text-gray-200')}`}>
+        <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-orange-300' : (fullStrengthenBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(fullStrengthenBonusValue)}
         </div>
-        <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-green-400' : (totalLimitBonusValue < 0 ? 'text-red-400' : 'text-gray-200')}`}>
+        <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-orange-300' : (totalLimitBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(totalLimitBonusValue)}
         </div>
         <div className="text-sm text-right font-bold flex flex-col items-end justify-center">

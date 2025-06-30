@@ -91,7 +91,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
         {/* ホバー時の背景色（角欠け多角形） ←これを上に */}
         <polygon
             points="0,0 40,0 64,50 64,256 0,256"
-            fill="#fb923c" // Tailwind bg-orange-400
+            fill="#e53935" // Tailwind bg-orange-400
             opacity="0"
             className="group-hover:opacity-100 transition-opacity duration-200"
         />

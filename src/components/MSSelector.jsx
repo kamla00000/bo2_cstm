@@ -36,13 +36,13 @@ const MSSelector = ({
     });
 
     // 重複排除
-    const seen = new Set();
-    results = results.filter(ms => {
-      const key = `${ms["MS名"]}_${ms.コスト}_${ms.属性}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    // const seen = new Set();
+    // results = results.filter(ms => {
+    //   const key = `${ms["MS名"]}_${ms.コスト}_${ms.属性}`;
+    //   if (seen.has(key)) return false;
+    //   seen.add(key);
+    //   return true;
+    // });
 
     // ソート
     results.sort((a, b) => {
@@ -96,7 +96,7 @@ const MSSelector = ({
       }`}
       style={{ borderRadius: 0 }}
     >
-      すべて
+      全属性
     </button>
     {TYPES.map((type) => (
       <button
@@ -121,7 +121,7 @@ const MSSelector = ({
       }`}
       style={{ borderRadius: 0 }}
     >
-      コスト:すべて
+      全コスト
     </button>
     {COSTS.map((cost) => (
       <button
@@ -152,7 +152,7 @@ const MSSelector = ({
 </div>
         {/* MSリスト */}
         <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar w-full">
             {filteredMs.length > 0 ? (
               filteredMs.map((ms) => {
                 const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];

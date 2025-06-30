@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import PickedMs from './components/PickedMs';
 import PartSelectionSection from './components/PartSelectionSection';
 import { useAppData } from './hooks/useAppData';
-import { CATEGORIES, ALL_CATEGORY_NAME } from './constants/appConstants';
+import { CATEGORY_NAMES, ALL_CATEGORY_NAME } from './constants/appConstants';
+
+// 追加: 背景動画のパターン
+const BG_VIDEOS = [
+  "/images/zekunova.mp4",
+  "/images/zekunova2.mp4",
+];
 
 function App() {
   const {
@@ -38,6 +44,16 @@ function App() {
 
   // 動画再生速度用ref
   const videoRef = useRef(null);
+
+  // ランダム動画選択
+  const [bgVideo, setBgVideo] = useState(BG_VIDEOS[0]);
+
+  // MSピック時にランダム動画を選択
+  const handleMsSelectWithVideo = (ms) => {
+    setBgVideo(BG_VIDEOS[Math.floor(Math.random() * BG_VIDEOS.length)]);
+    handleMsSelect(ms);
+    setShowSelector(false);
+  };
 
   useEffect(() => {
     if (!selectedMs) setShowSelector(true);
@@ -126,7 +142,7 @@ function App() {
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover opacity-0 group-hover:opacity-100 transform group-hover:scale-110 transition-all duration-700"
-                src="/images/zekunova.mp4" // 動画ファイルのパス
+                src={bgVideo}
                 autoPlay
                 loop
                 muted
@@ -166,10 +182,7 @@ function App() {
             hoveredOccupiedSlots={hoveredOccupiedSlots}
             setIsFullStrengthened={setIsFullStrengthened}
             setExpansionType={setExpansionType}
-            handleMsSelect={(ms) => {
-              handleMsSelect(ms);
-              setShowSelector(false);
-            }}
+            handleMsSelect={handleMsSelectWithVideo}
             handlePartRemove={handlePartRemove}
             handleClearAllParts={handleClearAllParts}
             onSelectedPartDisplayHover={(part) => handlePartHover(part, 'selectedParts')}
@@ -191,7 +204,7 @@ function App() {
               usageWithPreview={usageWithPreview}
               filterCategory={filterCategory}
               setFilterCategory={setFilterCategory}
-              categories={CATEGORIES}
+              categories={CATEGORY_NAMES}
               allCategoryName={ALL_CATEGORY_NAME}
               onPreviewSelect={handlePartPreviewSelect}
               hoveredPart={hoveredPart}
