@@ -58,14 +58,14 @@ const MsInfoDisplay = ({
               {selectedMs.属性}：{selectedMs.コスト}
             </span>
           </div>
-          <span className="text-xl font-bold text-gray-200 leading-tight">{selectedMs["MS名"]}</span>
+          <span className="text-xl text-gray-200 leading-tight">{selectedMs["MS名"]}</span>
         </div>
 
         <div className="flex flex-col items-start gap-1 text-gray-200 text-base ml-4">
           {/* スライドトグル */}
 <div className="flex items-center gap-2">
   <span
-    className={`text-md cursor-pointer select-none ${!isFullStrengthened ? 'text-orange-400 font-bold' : 'text-gray-400'}`}
+    className={`text-md cursor-pointer select-none ${!isFullStrengthened ? 'text-orange-400' : 'text-gray-400'}`}
     onClick={() => setIsFullStrengthened(false)}
     tabIndex={0}
     role="button"
@@ -106,7 +106,7 @@ const MsInfoDisplay = ({
   />
 </button>
   <span
-    className={`text-md cursor-pointer select-none ${isFullStrengthened ? 'text-orange-400 font-bold' : 'text-gray-400'}`}
+    className={`text-md cursor-pointer select-none ${isFullStrengthened ? 'text-orange-400' : 'text-gray-400'}`}
     onClick={() => setIsFullStrengthened(true)}
     tabIndex={0}
     role="button"

@@ -6,9 +6,18 @@
 
 body {
   font-family: 'Noto Serif JP', serif;
-  /* font-family: 'Zen Old Mincho', serif; */
-  /* font-family: 'Noto Sans JP', serif; */
   font-weight: 900;
+  /* font-family: 'Zen Old Mincho', serif; */
+  /* 画像パスが通らない場合は下記のコメントアウトを順に試してください */
+  background-image: url('/images/e.jpg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-color: #444857 !important;
+  min-height: 100vh !important;
+  width: 100vw !important;
+  z-index: 0 !important;
 }
 
 
@@ -54,6 +63,10 @@ li {
     75% 100%, 25% 100%,
     0% 50%
   );
+
+#root, .App {
+  background: transparent !important; /* New property */
+}
   background: #444;
   padding: 0;
 }

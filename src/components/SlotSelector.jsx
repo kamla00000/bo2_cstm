@@ -39,12 +39,12 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
     return (
         // flexコンテナとしての設定と、パディングをなくすための調整
         // inline-flex に変更し、内容に応じた幅にする
-        <div className="bg-gray-700 rounded-md inline-flex flex-col"> 
+        <div className="bg-gray-700 inline-flex flex-col"> 
             <div className="space-y-3"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
                 <div className="flex items-center text-sm font-medium">
                     <span className="text-gray-200 mr-2 whitespace-nowrap">近距離</span>
-                    <span className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                    <span className={`text-base w-[60px] flex-shrink-0 ${
                             (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-gray-200'
                         }`}>
                         {safeUsage.close ?? 0} / {closeMax}
@@ -66,7 +66,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                 <div className="flex items-center text-sm font-medium">
                     <span className="text-gray-200 mr-2 whitespace-nowrap">中距離</span>
                     <span
-                        className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                        className={`text-base w-[60px] flex-shrink-0 ${
                             (safeUsage.mid ?? 0) > midMax ? 'text-red-500' : 'text-gray-200'
                         }`}
                     >
@@ -89,7 +89,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                 <div className="flex items-center text-sm font-medium">
                     <span className="text-gray-200 mr-2 whitespace-nowrap">遠距離</span>
                     <span
-                        className={`text-base font-bold w-[60px] flex-shrink-0 ${
+                        className={`text-base w-[60px] flex-shrink-0 ${
                             (safeUsage.long ?? 0) > longMax ? 'text-red-500' : 'text-gray-200'
                         }`}
                     >

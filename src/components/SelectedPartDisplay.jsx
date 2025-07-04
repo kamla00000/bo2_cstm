@@ -17,7 +17,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
             <div
                 key={part ? part.name : `empty-${index}`}
                 className={`w-16 h-16 bg-gray-900 overflow-hidden relative flex-shrink-0
-                            ${part ? 'border border-blue-500 cursor-pointer' : 'border border-gray-600 flex items-center justify-center text-gray-600'}`}
+                            ${part ? 'border border-orange-400 cursor-pointer' : 'border border-gray-600 flex items-center justify-center text-gray-600'}`}
                 onClick={() => part && onRemove(part)}
                 title={part ? `「${part.name}」を外す` : '空きスロット'}
                 onMouseEnter={() => {
@@ -56,7 +56,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
     };
 
     return (
-        <div className="bg-gray-700 p-3 flex flex-row gap-2 relative">
+        <div className="bg-gray-700 p-3 flex flex-row gap-2 relative rounded-md bg-gray-800">
             {/* パーツ表示エリア */}
             <div className="flex flex-col gap-2">
                 <div className="flex flex-row gap-2 justify-start">
@@ -71,7 +71,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
             <div className="absolute bottom-3 right-3">
 <button
     onClick={onClearAllParts}
-    className="relative h-32 w-16 p-0 border-none text-gray-200 text-4xl flex flex-col items-center justify-center font-bold group"
+    className="relative h-32 w-16 p-0 border-none text-gray-200 text-4xl flex flex-col items-center justify-center group"
     title="全てのカスタムパーツを解除"
     style={{ background: 'none' }}
 >

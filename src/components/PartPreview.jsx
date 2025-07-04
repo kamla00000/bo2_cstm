@@ -37,9 +37,12 @@ const ImageWithFallback = ({ partName, className }) => {
 const PartPreview = ({ part }) => {
   if (!part) {
     return (
-      <div className="text-4xl flex items-center justify-center h-80 w-80 text-gray-200 bg-gray-900 shadow-md rounded-md">
-        装備選択
-      </div>
+      <div className="relative h-80 w-80 text-gray-200 bg-gray-900 shadow-md">
+  <span className="absolute top-8 left-8 text-8xl [text-shadow:1px_1px_2px_black]">装</span>
+  <span className="absolute top-8 right-8 text-8xl [text-shadow:1px_1px_2px_black]">備</span>
+  <span className="absolute bottom-8 left-8 text-8xl [text-shadow:1px_1px_2px_black]">選</span>
+  <span className="absolute bottom-8 right-8 text-8xl [text-shadow:1px_1px_2px_black]">択</span>
+</div>
     );
   }
 
@@ -55,7 +58,7 @@ const PartPreview = ({ part }) => {
 
         {/* パーツ名とスロット情報エリア */}
         <div className="flex flex-col flex-grow"> {/* 残りのスペースを埋める */}
-          <h3 className="text-base font-bold text-gray-200 mb-1">{part.name || part.名前}</h3> {/* text-sm から text-base に戻すか、任意で調整 */}
+          <h3 className="text-base text-gray-200 mb-1">{part.name || part.名前}</h3> {/* text-sm から text-base に戻すか、任意で調整 */}
           <div className="flex flex-row gap-1 w-full justify-start text-xs"> {/* justify-start で左揃えに */}
             <div className="text-gray-200 text-sm bg-gray-700 px-2 py-1">
               <span className="font-semibold">近：</span>

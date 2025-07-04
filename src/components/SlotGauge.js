@@ -91,13 +91,13 @@
 
 
 //   return (
-//     <div className="p-4 bg-gray-700 rounded-md shadow-inner">
+//     <div className="p-4 bg-gray-700 -md shadow-inner">
 //       <div className="space-y-3">
 //         {/* 近距離スロット */}
 //         <div className="flex items-center text-sm font-medium">
 //           <span className="text-gray-200 mr-2 whitespace-nowrap">近</span>
 //           <span
-//             className={`text-base font-bold w-[60px] flex-shrink-0 ${
+//             className={`text-base w-[60px] flex-shrink-0 ${
 //               closeCurrent > closeMaxWithBonus ? 'text-red-500' : 'text-gray-200'
 //             }`}
 //           >
@@ -110,7 +110,7 @@
 //         <div className="flex items-center text-sm font-medium">
 //           <span className="text-gray-200 mr-2 whitespace-nowrap">中</span>
 //           <span
-//             className={`text-base font-bold w-[60px] flex-shrink-0 ${
+//             className={`text-base w-[60px] flex-shrink-0 ${
 //               midCurrent > midMaxWithBonus ? 'text-red-500' : 'text-gray-200'
 //             }`}
 //           >
@@ -123,7 +123,7 @@
 //         <div className="flex items-center text-sm font-medium">
 //           <span className="text-gray-200 mr-2 whitespace-nowrap">遠</span>
 //           <span
-//             className={`text-base font-bold w-[60px] flex-shrink-0 ${
+//             className={`text-base w-[60px] flex-shrink-0 ${
 //               longCurrent > longMaxWithBonus ? 'text-red-500' : 'text-gray-200'
 //             }`}
 //           >

@@ -68,7 +68,7 @@ const PickedMs = ({
 
     return (
         <div
-            className={`flex flex-row gap-6 items-start min-w-0 rounded-2xl relative z-10 w-full max-w-screen-xl ${className}`}
+            className={`flex flex-row gap-6 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
         >
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
@@ -103,7 +103,7 @@ const PickedMs = ({
                             <div className="flex flex-col gap-6 flex-grow" style={{ maxWidth: '400px' }}>
                                 {/* スロットバー */}
                                 <div className="flex flex-col gap-2">
-                                    <div className="p-4 rounded-md w-fit">
+                                    <div className="p-4 w-fit">
                                         <SlotSelector
                                             usage={usageWithPreview}
                                             baseUsage={slotUsage}

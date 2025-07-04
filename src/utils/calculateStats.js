@@ -285,25 +285,17 @@ export const calculateMSStatsLogic = (
     expansionBonus.armorMelee += 10;
     currentLimits.armorMelee += 10;
     limitChangedFlags.armorMelee = true; break;
-  case "スラスター拡張": {
-    const specialParts = allPartsCacheForExpansion?.['特殊'] || [];
-    const specialPartsCountThruster = parts.filter(p =>
-      specialParts.some(spp => spp.name === p.name)
-    ).length;
-    expansionBonus.thruster += specialPartsCountThruster * 5;
-    partBonus.thruster += specialPartsCountThruster * 5; // ★補正値にも加算
-    expansionBonus.thruster = Math.max(expansionBonus.thruster, 0); // 念のため
-    currentLimits.thruster += 20;
-    limitChangedFlags.thruster = true;
-    break;
-  }
+  case "スラスター拡張":
+  expansionBonus.thruster += 10;
+  currentLimits.thruster += 20;
+  limitChangedFlags.thruster = true;
+  break;
   case "パーツ拡張[HP]": {
     const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
     const offensivePartsCountHP = parts.filter(p =>
       offensiveParts.some(op => op.name === p.name)
     ).length;
     expansionBonus.hp += offensivePartsCountHP * 400;
-    partBonus.hp += offensivePartsCountHP * 400; // ★補正値にも加算
     expansionBonus.hp = Math.max(expansionBonus.hp, 0);
     break;
   }
@@ -314,8 +306,6 @@ export const calculateMSStatsLogic = (
     ).length;
     expansionBonus.meleeCorrection += movingPartsCountAttack * 3;
     expansionBonus.shoot += movingPartsCountAttack * 3;
-    partBonus.meleeCorrection += movingPartsCountAttack * 3; // ★補正値にも加算
-    partBonus.shoot += movingPartsCountAttack * 3;           // ★補正値にも加算
     expansionBonus.meleeCorrection = Math.max(expansionBonus.meleeCorrection, 0);
     expansionBonus.shoot = Math.max(expansionBonus.shoot, 0);
     break;
@@ -328,9 +318,6 @@ export const calculateMSStatsLogic = (
     expansionBonus.armorRange += supportPartsCountArmor * 3;
     expansionBonus.armorBeam += supportPartsCountArmor * 3;
     expansionBonus.armorMelee += supportPartsCountArmor * 3;
-    partBonus.armorRange += supportPartsCountArmor * 3; // ★補正値にも加算
-    partBonus.armorBeam += supportPartsCountArmor * 3;  // ★補正値にも加算
-    partBonus.armorMelee += supportPartsCountArmor * 3; // ★補正値にも加算
     expansionBonus.armorRange = Math.max(expansionBonus.armorRange, 0);
     expansionBonus.armorBeam = Math.max(expansionBonus.armorBeam, 0);
     expansionBonus.armorMelee = Math.max(expansionBonus.armorMelee, 0);
@@ -347,59 +334,59 @@ export const calculateMSStatsLogic = (
   const isModified = {};
 
   // 最終的な合計値と上限適用（％加算前の値をrawTotalStatsに入れる）
-  displayStatKeys.forEach(key => {
-    let calculatedValue = (baseStats[key] || 0) + (partBonus[key] || 0) + (fullStrengthenBonus[key] || 0) + (expansionBonus[key] || 0);
-    rawTotalStats[key] = calculatedValue;
+displayStatKeys.forEach(key => {
+  let calculatedValue = (baseStats[key] || 0) + (partBonus[key] || 0) + (fullStrengthenBonus[key] || 0) + (expansionBonus[key] || 0);
+  rawTotalStats[key] = calculatedValue;
 
-    let finalLimit = currentLimits[key];
-    if (finalLimit === null || finalLimit === undefined) {
-      finalLimit = Infinity;
-    }
+  let finalLimit = currentLimits[key];
+  if (finalLimit === null || finalLimit === undefined) {
+    finalLimit = Infinity;
+  }
 
-    if (finalLimit !== Infinity) {
-      totalStats[key] = Math.min(calculatedValue, finalLimit);
-    } else {
-      totalStats[key] = calculatedValue;
-    }
+  if (finalLimit !== Infinity) {
+    totalStats[key] = Math.min(calculatedValue, finalLimit);
+  } else {
+    totalStats[key] = calculatedValue;
+  }
 
-    isModified[key] = (baseStats[key] !== totalStats[key]) ||
-      (partBonus[key] !== 0) ||
-      (fullStrengthenBonus[key] !== 0) ||
-      (expansionBonus[key] !== 0);
+  isModified[key] = (baseStats[key] !== totalStats[key]) ||
+    (partBonus[key] !== 0) ||
+    (fullStrengthenBonus[key] !== 0) ||
+    (expansionBonus[key] !== 0);
 
-    if (totalStats[key] === 0 &&
-      partBonus[key] === 0 &&
-      fullStrengthenBonus[key] === 0 &&
-      expansionBonus[key] === 0) {
-      isModified[key] = false;
-    }
-  });
+  if (totalStats[key] === 0 &&
+    partBonus[key] === 0 &&
+    fullStrengthenBonus[key] === 0 &&
+    expansionBonus[key] === 0) {
+    isModified[key] = false;
+  }
+});
 
-  // ★ここから追加：パーツの％上昇項目を適用
-  const percentKeys = {
-    hp: "hp_percent",
-    shoot: "shoot_percent",
-    meleeCorrection: "meleeCorrection_percent",
-    armorRange: "armorRange_percent",
-    armorBeam: "armorBeam_percent",
-    armorMelee: "armorMelee_percent"
-  };
+// ★ここから追加：パーツの％上昇項目を適用
+const percentKeys = {
+  hp: "hp_percent",
+  shoot: "shoot_percent",
+  meleeCorrection: "meleeCorrection_percent",
+  armorRange: "armorRange_percent",
+  armorBeam: "armorBeam_percent",
+  armorMelee: "armorMelee_percent"
+};
 
-  Object.entries(percentKeys).forEach(([statKey, percentProp]) => {
-    const totalPercent = parts.reduce((sum, part) => {
-      return sum + (typeof part[percentProp] === "number" ? part[percentProp] : 0);
-    }, 0);
-    if (totalPercent > 0) {
-      const before = rawTotalStats[statKey];
-      const after = Math.floor(before * (1 + totalPercent / 100));
-      const percentBonus = after - before;
-    partBonus[statKey] += percentBonus;
-      rawTotalStats[statKey] = after;
-      totalStats[statKey] = after;
-      isModified[statKey] = true;
-      console.log(`[calculateMSStatsLogic] パーツ％効果: ${statKey}を${totalPercent}%増加 (${before}→${after})`);
-    }
-  });
+Object.entries(percentKeys).forEach(([statKey, percentProp]) => {
+  const totalPercent = parts.reduce((sum, part) => {
+    return sum + (typeof part[percentProp] === "number" ? part[percentProp] : 0);
+  }, 0);
+  if (totalPercent > 0) {
+    const before = rawTotalStats[statKey];
+    const after = Math.floor(before * (1 + totalPercent / 100));
+    const percentBonus = after - before;
+    // partBonus[statKey] += percentBonus; ← ここはpartBonusではなく expansionBonus でもない
+    rawTotalStats[statKey] = after;
+    totalStats[statKey] = Math.min(after, currentLimits[statKey] ?? Infinity);
+    isModified[statKey] = true;
+    console.log(`[calculateMSStatsLogic] パーツ％効果: ${statKey}を${totalPercent}%増加 (${before}→${after})`);
+  }
+});
 
   const statsResult = {
     base: baseStats,

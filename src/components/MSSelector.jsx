@@ -26,23 +26,32 @@ const MSSelector = ({
     }
 
     let results = msData.filter((ms) => {
-      const msType = String(ms.属性).trim();
-      const typeFilter = filterType.trim();
-      const matchesType = !filterType || msType === typeFilter;
-      const matchesCost = !filterCost || String(ms.コスト) === String(filterCost);
-      // ★名前検索（部分一致・大文字小文字区別なし）
-      const matchesSearch = !searchText || (ms["MS名"] && ms["MS名"].toLowerCase().includes(searchText.toLowerCase()));
+      const msType = String(ms.属性 ?? '').trim();
+      const msCost = String(ms.コスト ?? '').trim();
+      const msName = String(ms["MS名"] ?? '').trim();
+
+      // タイプフィルタ
+      const matchesType = !filterType || msType === filterType;
+      // コストフィルタ
+      const matchesCost = !filterCost || msCost === filterCost;
+      // 名前検索（部分一致・大文字小文字・全角半角・ひらがなカタカナ区別なし）
+      const toHiragana = (str) => str.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+      const normalize = (str) => toHiragana(str.toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC'));
+      const matchesSearch =
+        !searchText ||
+        normalize(msName).includes(normalize(searchText));
+
       return matchesType && matchesCost && matchesSearch;
     });
 
-    // 重複排除
-    // const seen = new Set();
-    // results = results.filter(ms => {
-    //   const key = `${ms["MS名"]}_${ms.コスト}_${ms.属性}`;
-    //   if (seen.has(key)) return false;
-    //   seen.add(key);
-    //   return true;
-    // });
+    // 重複排除（スクロール挙動確認用に一時コメントアウト）
+    const seen = new Set();
+    results = results.filter(ms => {
+      const key = `${ms["MS名"]}_${ms.コスト}_${ms.属性}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     // ソート
     results.sort((a, b) => {
@@ -81,116 +90,253 @@ const MSSelector = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-start">
-      <div className="w-full bg-gray-700 bg-opacity-90 rounded-2xl shadow-2xl flex flex-col gap-6">
+    <div
+      className="w-full h-full flex flex-col items-center justify-start"
+    >
+      <div className="w-full flex flex-col gap-6">
         {/* フィルター */}
         <div className="flex w-full items-center gap-3">
-  {/* 左詰め：タイプ＋コスト */}
-  <div className="flex flex-wrap gap-1">
-    <button
-      onClick={() => setFilterType('')}
-      className={`px-3 py-1 text-sm font-bold transition ${
-        filterType === ''
-          ? 'bg-blue-500 text-gray-200 shadow'
-          : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
-      }`}
-      style={{ borderRadius: 0 }}
-    >
-      全属性
-    </button>
-    {TYPES.map((type) => (
-      <button
-        key={type}
-        onClick={() => setFilterType(type.trim())}
-        className={`px-3 py-1 text-sm font-bold transition ${
-          filterType === type
-            ? 'bg-blue-500 text-gray-200 shadow'
-            : 'bg-gray-700 text-gray-200 hover:bg-blue-600'
-        }`}
-        style={{ borderRadius: 0 }}
-      >
-        {type}
-      </button>
-    ))}
-    <button
-      onClick={() => setFilterCost('')}
-      className={`px-3 py-1 text-sm font-bold transition ${
-        filterCost === ''
-          ? 'bg-green-500 text-gray-200 shadow'
-          : 'bg-gray-700 text-gray-200 hover:bg-green-600'
-      }`}
-      style={{ borderRadius: 0 }}
-    >
-      全コスト
-    </button>
-    {COSTS.map((cost) => (
-      <button
-        key={cost}
-        onClick={() => setFilterCost(String(cost))}
-        className={`px-3 py-1 text-sm font-bold transition ${
-          filterCost === String(cost)
-            ? 'bg-green-500 text-gray-200 shadow'
-            : 'bg-gray-700 text-gray-200 hover:bg-green-600'
-        }`}
-        style={{ borderRadius: 0 }}
-      >
-        {cost}
-      </button>
-    ))}
-  </div>
-  {/* 右詰め：検索窓 */}
-  <div className="ml-auto">
-    <input
-      type="text"
-      value={searchText}
-      onChange={e => setSearchText(e.target.value)}
-      placeholder="MS名で検索"
-      className="px-2 py-1 text-sm rounded bg-gray-900 text-gray-200 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      style={{ minWidth: 120, maxWidth: 200 }}
-    />
-  </div>
-</div>
+          {/* 左詰め：タイプ＋コスト */}
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => setFilterType('')}
+              className={`hex-filter-btn text-lg transition ${
+                filterType === ''
+                  ? 'hex-filter-btn-active'
+                  : ''
+              }`}
+            >
+              全属性
+            </button>
+            {TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                className={`hex-filter-btn text-lg transition ${
+                  filterType === type
+                    ? 'hex-filter-btn-active'
+                    : ''
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+            <button
+              onClick={() => setFilterCost('')}
+              className={`hex-filter-btn text-lg transition ${
+                filterCost === ''
+                  ? 'hex-filter-btn-active'
+                  : ''
+              }`}
+            >
+              全コスト
+            </button>
+            {COSTS.map((cost) => (
+              <button
+                key={cost}
+                onClick={() => setFilterCost(String(cost))}
+                className={`hex-filter-btn text-lg transition ${
+                  filterCost === String(cost)
+                    ? 'hex-filter-btn-active'
+                    : ''
+                }`}
+              >
+                {cost}
+              </button>
+            ))}
+      {/* 六角形フィルターボタン用CSS */}
+      <style>{`
+        .hex-filter-btn {
+          position: relative;
+          padding: 0.5rem 1.2rem;
+          background: #23272e;
+          color: #f3f3f3;
+          border: none;
+          outline: none;
+          /* 正六角形のclip-pathに統一 */
+          clip-path: polygon(
+            25% 0%, 75% 0%,
+            100% 50%,
+            75% 100%, 25% 100%,
+            0% 50%
+          );
+          margin: 0 2px;
+          z-index: 1;
+          border-top: 3px solid #fb923c;
+          border-bottom: 3px solid #fb923c;
+          border-left: none;
+          border-right: none;
+          box-shadow: 0 2px 8px #0004;
+          transition: background 0.2s, color 0.2s;
+        }
+        .hex-filter-btn:hover, .hex-filter-btn-active {
+          background: #b85c00;
+          color: #fff;
+        }
+      `}</style>
+          </div>
+          {/* 右詰め：検索窓 */}
+          <div className="ml-auto relative flex items-center">
+            <input
+              type="text"
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              placeholder="MS名で検索"
+              className="search-input px-2 py-1 text-lg bg-gray-900 text-gray-200 border border-gray-600 pr-8"
+              style={{ minWidth: 152, maxWidth: 232, textDecoration: 'none' }}
+            />
+            <style>{`
+              .search-input:focus {
+                outline: none;
+                border-color: #ff9100 !important;
+                box-shadow: 0 0 0 2px #ff910044;
+              }
+            `}</style>
+            {searchText && (
+              <button
+                type="button"
+                onClick={() => setSearchText('')}
+                className="clear-search-btn absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
+                tabIndex={-1}
+                aria-label="検索内容をクリア"
+              >
+                ×
+              </button>
+            )}
+            <style>{`
+              .clear-search-btn {
+                color: #ff9100;
+                font-size: 1.7em;
+                font-weight: bold;
+                background: none;
+                border: none;
+                line-height: 1;
+                padding: 0 2px;
+                cursor: pointer;
+                text-shadow: 0 0 4px #fff8, 0 0 2px #ff9100;
+                transition: color 0.2s, text-shadow 0.2s;
+              }
+              .clear-search-btn:hover {
+                color: #fff;
+                text-shadow: 0 0 8px #ff9100, 0 0 2px #fff;
+              }
+            `}</style>
+          </div>
+        </div>
         {/* MSリスト */}
         <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar w-full">
             {filteredMs.length > 0 ? (
               filteredMs.map((ms) => {
                 const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
-                const baseName = ms["MS名"]
-                  .replace(/_LV\d+$/, '')
-                  .trim();
+                const baseName = (ms["MS名"] ?? '').replace(/_LV\d+$/, '').trim();
 
                 return (
                   <div
-                    key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
-                    className="cursor-pointer p-2 rounded flex items-center gap-3 transition-all hover:bg-gray-700 hover:shadow"
-                    onClick={() => handleMsSelect(ms)}
-                    style={{ minHeight: 56 }}
-                  >
-                    <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden flex-shrink-0 border border-gray-700 group-hover:border-blue-400 transition">
+  key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
+  className={`ms-row-card-mecha cursor-pointer flex items-center gap-2 transition-all`}
+  onClick={() => handleMsSelect(ms)}
+  style={{
+    minHeight: 72,
+    background: 'transparent',
+    border: 'none', // 罫線なし
+    boxShadow: '0 2px 8px #0003',
+    padding: '0.3rem 0.2rem',
+    borderRadius: '0',
+    clipPath: 'polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+  }}
+>
+                    <div className="ms-imgbox-card relative w-16 h-16 flex-shrink-0 overflow-hidden transition">
                       <img
                         src={`/images/ms/${baseName}.jpg`}
                         alt={ms["MS名"]}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-contain ms-img-card transition ${isSelected ? 'selected' : ''}`}
+                        style={{ borderRadius: '0', boxShadow: 'none', background: 'transparent' }}
                         onError={(e) => {
                           e.target.src = '/images/ms/default.jpg';
                           e.target.onerror = null;
                         }}
                       />
+
                     </div>
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
                         <span
-                          className={`px-2 py-0.5 text-xs font-bold ${getTypeColor(ms.属性)} flex-shrink-0`}
-                          style={{ borderRadius: 0 }}
+                          className={`ms-badge-hex text-sm flex-shrink-0 text-right`}
+                          data-type={ms.属性}
                         >
-                          {ms.属性}
+                          {`${ms.属性}：${ms.コスト}`}
                         </span>
-                        <span className="text-xs text-gray-200 whitespace-nowrap">
-                          コスト: {ms.コスト}
-                        </span>
+                        <style>{`
+                          .ms-row-card-mecha {
+                            background: transparent;
+                            border: none;
+                            box-shadow: 0 2px 8px #0003;
+                            padding: 0.3rem 0.2rem;
+                            border-radius: 0;
+                            /* 右上の角を45度でカット（小さめ） */
+                            clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+                            transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+                            backdrop-filter: blur(12px);
+                            -webkit-backdrop-filter: blur(12px);
+                          }
+                          .ms-row-card-mecha:hover {
+                            background: rgba(255,255,255,0.2) !important;
+                            /* 罫線なし */
+                            box-shadow: 0 0 0 1.5px #ff9100, 0 2px 10px #0004;
+                            transform: translateY(-1px) scale(1.01);
+                          }
+                          .ms-imgbox-card {
+                            border-radius: 0.1rem;
+                            box-shadow: 0 2px 8px #0007;
+                            background: linear-gradient(135deg, #23272e 60%, #444857 100%);
+                            /* border: なし */
+                            /* clip-path: なし */
+                          }
+                          .ms-row-card-mecha:hover .ms-imgbox-card {
+                            /* border-color: #ff9100; 削除 */
+                            box-shadow: 0 0 0 0px #ff9100, 0 4px 20px #0008;
+                          }
+                          .ms-row-card-mecha:hover .ms-img-card {
+                            filter: brightness(1.18) saturate(1.13);
+                            transform: scale(1.2) translateY(-2px);
+                          }
+                          .ms-row-card-mecha:hover .ms-name {color: #fff;
+  text-shadow: 0 0 8px #fff, 0 0 2px #fff;
+                          }
+                          .ms-badge-hex {
+                            display: inline-block;
+                            padding: 0.2em 1.1em;
+                            clip-path: polygon(18% 0%, 82% 0%, 100% 50%, 82% 100%, 18% 100%, 0% 50%);
+                            margin: 0 2px;
+                            box-shadow: 0 2px 8px #0003;
+                            letter-spacing: 0.05em;
+                            background: #353942;
+                            color: #fff;
+                            border-top: 3px solid transparent;
+                            border-bottom: 3px solid transparent;
+                            transition: box-shadow 0.18s, background 0.18s, color 0.18s, transform 0.18s;
+                          }
+                          .ms-badge-hex[data-type="強襲"] {
+                            border-top: 3px solid #ef4444;
+                            border-bottom: 3px solid #ef4444;
+                          }
+                          .ms-badge-hex[data-type="汎用"] {
+                            border-top: 3px solid #3b82f6;
+                            border-bottom: 3px solid #3b82f6;
+                          }
+                          .ms-badge-hex[data-type="支援"],
+                          .ms-badge-hex[data-type="支援攻撃"] {
+                            border-top: 3px solid #facc15;
+                            border-bottom: 3px solid #facc15;
+                          }
+                        `}</style>
                       </div>
-                      <span className="block font-semibold truncate text-gray-200 text-base">{ms["MS名"]}</span>
+                      <span className="block truncate text-gray-200 text-base ms-name" style={{
+                        textShadow: '0 3px 16px #000, 0 0 4px #fff, 0 1px 0 #000'
+                      }}>{ms["MS名"]}</span>
                     </div>
                   </div>
                 );

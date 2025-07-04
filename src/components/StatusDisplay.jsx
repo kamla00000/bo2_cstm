@@ -38,7 +38,7 @@ const StatusDisplay = ({
 
   if (!selectedMs || !stats) {
     console.log("[StatusDisplay] No selected MS or stats data available.");
-    return <div className="bg-gray-800 p-4 rounded-xl shadow-md">ステータス情報なし</div>;
+    return <div className="bg-gray-800 p-4 shadow-md">ステータス情報なし</div>;
   }
 
   // 3桁区切りのフォーマット関数
@@ -57,29 +57,38 @@ const StatusDisplay = ({
   };
 
   const renderStatRow = (label, statKey) => {
-    const baseValue = getBonusValue(base, statKey);
-    const partBonusValue = getBonusValue(partBonus, statKey);
-    const fullStrengthenBonusValue = getBonusValue(fullStrengthenBonus, statKey);
-    const expansionBonusValue = getBonusValue(expansionBonus, statKey);
-    const partLimitBonusValue = getBonusValue(partLimitBonus, statKey);
-    const rawTotalValue = getBonusValue(rawTotal, statKey);
-    const totalValue = getBonusValue(total, statKey);
+  const baseValue = getBonusValue(base, statKey);
+  const partBonusValue = getBonusValue(partBonus, statKey);
+  const fullStrengthenBonusValue = getBonusValue(fullStrengthenBonus, statKey);
+  const expansionBonusValue = getBonusValue(expansionBonus, statKey);
+  const partLimitBonusValue = getBonusValue(partLimitBonus, statKey);
+  const rawTotalValue = getBonusValue(rawTotal, statKey);
+  const totalValue = getBonusValue(total, statKey);
 
-    let displayPartBonusValue = partBonusValue;
+  // 補正値 = パーツ + 拡張（スラスター拡張も常に加算する）
+  let combinedBonusValue = partBonusValue + expansionBonusValue;
 
-    // 拡張スロット・拡張選択・expansionType すべてで判定
-    const isSpecialFrameA =
-      (expansionType && expansionType.includes('特殊強化フレーム')) ||
-      (selectedMs?.拡張選択 && selectedMs.拡張選択.includes('特殊強化フレーム')) ||
-      (selectedMs?.拡張スロット && selectedMs.拡張スロット.includes('特殊強化フレーム'));
+  // HP特殊強化フレームのみ例外処理
+  const isSpecialFrameA =
+    (expansionType && expansionType.includes('特殊強化フレーム')) ||
+    (selectedMs?.拡張選択 && selectedMs.拡張選択.includes('特殊強化フレーム')) ||
+    (selectedMs?.拡張スロット && selectedMs.拡張スロット.includes('特殊強化フレーム'));
 
-    if (
-      (statKey === 'hp' || statKey === 'HP') &&
-      expansionBonusValue !== 0 &&
-      isSpecialFrameA
-    ) {
-      displayPartBonusValue += expansionBonusValue;
-    }
+  if (
+    (statKey === 'hp' || statKey === 'HP') &&
+    expansionBonusValue !== 0 &&
+    isSpecialFrameA
+  ) {
+    combinedBonusValue = partBonusValue + expansionBonusValue;
+  }
+
+  // --- スラスター拡張時も必ずexpansionBonusを補正値に加算する ---
+  if (
+    statKey === 'thruster' &&
+    expansionBonusValue !== 0
+  ) {
+    combinedBonusValue = partBonusValue + expansionBonusValue;
+  }
 
     const formatBonus = (value) => {
       if (value === 0) return '-';
@@ -92,8 +101,6 @@ const StatusDisplay = ({
       }
       return formatNumber(value);
     };
-
-    const combinedBonusValue = displayPartBonusValue;
 
     // 上限増は「現在の上限値 - 初期上限値」で計算
     const initialLimitValue = initialLimits[statKey] ?? 0;
@@ -121,7 +128,7 @@ const StatusDisplay = ({
 
     return (
       <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
-        <div className="text-gray-200 text-sm font-semibold whitespace-nowrap">{label}</div>
+        <div className="text-gray-200 text-sm whitespace-nowrap">{label}</div>
         <div className="text-gray-200 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
         <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-orange-300' : (combinedBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(combinedBonusValue)}
@@ -132,7 +139,7 @@ const StatusDisplay = ({
         <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-orange-300' : (totalLimitBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(totalLimitBonusValue)}
         </div>
-        <div className="text-sm text-right font-bold flex flex-col items-end justify-center">
+        <div className="text-sm text-right flex flex-col items-end justify-center">
           <span className={
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
               ? 'text-red-500' : totalValueColorClass
@@ -145,7 +152,7 @@ const StatusDisplay = ({
             </span>
           )}
         </div>
-        <div className="text-sm text-right whitespace-nowrap font-bold">
+        <div className="text-sm text-right whitespace-nowrap">
           <span className={limitColorClass}>{limitDisplay}</span>
         </div>
       </div>
@@ -153,11 +160,11 @@ const StatusDisplay = ({
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-xl shadow-inner border border-gray-700 flex-grow">
-      <h2 className="text-xl font-semibold mb-3 text-gray-200">ステータス一覧</h2>
+    <div className="bg-gray-800 p-4 shadow-inner border flex-grow border-neon-orange shadow-neon-orange rounded-md">
+      <h2 className="text-xl mb-3 text-gray-200">ステータス一覧</h2>
       {selectedMs ? (
         <div className="space-y-1">
-          <div className="grid grid-cols-7 gap-2 pb-2 border-b border-gray-600 text-gray-200 font-bold">
+          <div className="grid grid-cols-7 gap-2 pb-2 border-b border-gray-600 text-gray-200">
             <div className="whitespace-nowrap">項目</div>
             <div className="text-right whitespace-nowrap">初期値</div>
             <div className="text-right whitespace-nowrap">補正値</div>
@@ -168,11 +175,12 @@ const StatusDisplay = ({
           </div>
 
           {renderStatRow('HP', 'hp')}
-          {renderStatRow('射撃補正', 'shoot')}
-          {renderStatRow('格闘補正', 'meleeCorrection')}
+          
           {renderStatRow('耐実弾補正', 'armorRange')}
           {renderStatRow('耐ビーム補正', 'armorBeam')}
           {renderStatRow('耐格闘補正', 'armorMelee')}
+          {renderStatRow('射撃補正', 'shoot')}
+          {renderStatRow('格闘補正', 'meleeCorrection')}
           {renderStatRow('スピード', 'speed')}
           {renderStatRow('高速移動', 'highSpeedMovement')}
           {renderStatRow('スラスター', 'thruster')}

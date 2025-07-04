@@ -171,11 +171,6 @@ export const useAppData = () => {
             return;
         }
 
-        if (part.name.startsWith("高性能走行制御機構") && selectedParts.some(p => p.name.startsWith("高性能走行制御機構"))) {
-            alert("「高性能走行制御機構」系パーツは複数装備できません。");
-            return;
-        }
-
         const partsWithNew = [...selectedParts, part];
         const projectedSlots = calculateSlotUsage(selectedMs, partsWithNew, isFullStrengthened, fullStrengtheningEffects);
 
@@ -187,14 +182,14 @@ export const useAppData = () => {
         }
 
         const isSpeedOrTurnPart = (p) => (p.speed > 0 || p.turnPerformanceGround > 0 || p.turnPerformanceSpace > 0);
-        const isDriveOrComposite = (p) => p.name === "駆動系強化機構" || p.name === "コンポジットモーター";
+        const isDriveOrComposite = (p) => p.name === "運動性能強化機構" || p.name === "コンポジットモーター";
 
         if (isDriveOrComposite(part) && selectedParts.some(p => isSpeedOrTurnPart(p) && !isDriveOrComposite(p))) {
-            alert("「駆動系強化機構」または「コンポジットモーター」は、スピードまたは旋回性能が上昇する他のパーツと同時装備できません。");
+            alert("「運動性能強化機構」または「コンポジットモーター」は、スピードまたは旋回性能が上昇する他のパーツと同時装備できません。");
             return;
         }
         if (isSpeedOrTurnPart(part) && selectedParts.some(p => isDriveOrComposite(p))) {
-            alert("スピードまたは旋回性能が上昇するパーツは、「駆動系強化機構」または「コンポジットモーター」と同時装備できません。");
+            alert("スピードまたは旋回性能が上昇するパーツは、「運動性能強化機構」または「コンポジットモーター」と同時装備できません。");
             return;
         }
 
@@ -213,16 +208,8 @@ export const useAppData = () => {
     }, []);
 
     const setFullStrengthenedWrapper = useCallback((newValue) => {
-        if (!newValue && selectedParts.length > 0) {
-            if (window.confirm("フル強化を解除すると、装着中のカスタムパーツは全て外されます。続行しますか？")) {
-                handleClearAllParts();
-            } else {
-                setIsFullStrengthened(true);
-                return;
-            }
-        }
-        setIsFullStrengthened(newValue);
-    }, [selectedParts, handleClearAllParts]);
+    setIsFullStrengthened(newValue);
+}, []);
 
     const handlePartHover = useCallback((part, source) => {
     setHoveredPart(part);
