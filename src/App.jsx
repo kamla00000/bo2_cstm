@@ -133,7 +133,7 @@ function App() {
 
       {showSelector && (
         <h1 className="text-5xl font-extrabold tracking-wide text-gray-200 drop-shadow-lg mb-8">
-          BTOP2-CSTM
+          GBO2-CMTM
         </h1>
       )}
       {/* MS再選択バー */}
