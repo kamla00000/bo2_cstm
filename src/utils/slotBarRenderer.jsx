@@ -36,7 +36,7 @@ export const renderSlotBar = (current, totalMax, base, originalMax, slotName, ho
 
     // フル強化スロットのボーダーを適用
     if (isFullStrengthenedBonusSlot) {
-        cellClass += " border-2 border-lime-400";
+        cellClass += " border-2 border-orange-400";
     }
 
     // スロットオーバー分を赤で表示（最優先）

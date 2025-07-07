@@ -52,7 +52,7 @@ const SlotBar = ({
         }
 
         if (isFullStrengthenedBonusSlot && !isOverflow) {
-             tempBorderClass = "border-t-2 border-b-2 border-green-400"; 
+             tempBorderClass = "border-t-2 border-b-2 border-orange-600"; 
         }
         barClass += ` ${tempBorderClass}`;
 
