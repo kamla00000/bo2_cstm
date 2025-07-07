@@ -56,7 +56,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
     };
 
     return (
-        <div className="bg-gray-700 p-3 flex flex-row gap-2 relative rounded-md bg-gray-800">
+        <div className="pickedms-card p-3 flex flex-row gap-2 relative">
             {/* パーツ表示エリア */}
             <div className="flex flex-col gap-2">
                 <div className="flex flex-row gap-2 justify-start">

@@ -160,7 +160,7 @@ const StatusDisplay = ({
   };
 
   return (
-    <div className="bg-gray-800 p-4 shadow-inner border flex-grow border-neon-orange shadow-neon-orange rounded-md">
+    <div className="pickedms-card p-4 flex-grow flex flex-col justify-end pb-0.5">
       <h2 className="text-xl mb-3 text-gray-200">ステータス一覧</h2>
       {selectedMs ? (
         <div className="space-y-1">

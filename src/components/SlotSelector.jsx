@@ -39,16 +39,20 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
     return (
         // flexコンテナとしての設定と、パディングをなくすための調整
         // inline-flex に変更し、内容に応じた幅にする
-        <div className="bg-gray-700 inline-flex flex-col"> 
+        <div className="msrow-card-shape inline-flex flex-col p-3 pr-10"> 
             <div className="space-y-3"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-200 mr-2 whitespace-nowrap">近距離</span>
-                    <span className={`text-base w-[60px] flex-shrink-0 ${
+                    <span className="text-gray-200 whitespace-nowrap">近距離</span>
+                    <span className={`text-base flex-shrink-0 ${
                             (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-gray-200'
                         }`}>
-                        {safeUsage.close ?? 0} / {closeMax}
+                        <span style={{display:'inline-block',width:'2.2em',textAlign:'right'}}>{safeUsage.close ?? 0}</span>
+                        <span style={{display:'inline-block',width:'1.0em',textAlign:'center'}}>/</span>
+                        <span style={{display:'inline-block',width:'1.4em',textAlign:'right',marginLeft:'-0.2em'}}>{closeMax}</span>
                     </span>
+                    {/* 分母とゲージの間に余白 */}
+                    <span className="ml-2"></span>
                     <SlotBar
                         slotType="Close"
                         currentConfirmedUsage={closeCurrentConfirmedUsage} // 緑色の確定使用量
@@ -64,14 +68,18 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
                 {/* 中距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-200 mr-2 whitespace-nowrap">中距離</span>
+                    <span className="text-gray-200 whitespace-nowrap">中距離</span>
                     <span
-                        className={`text-base w-[60px] flex-shrink-0 ${
+                        className={`text-base flex-shrink-0 ${
                             (safeUsage.mid ?? 0) > midMax ? 'text-red-500' : 'text-gray-200'
                         }`}
                     >
-                        {safeUsage.mid ?? 0} / {midMax}
+                        <span style={{display:'inline-block',width:'2.2em',textAlign:'right'}}>{safeUsage.mid ?? 0}</span>
+                        <span style={{display:'inline-block',width:'1.0em',textAlign:'center'}}>/</span>
+                        <span style={{display:'inline-block',width:'1.4em',textAlign:'right',marginLeft:'-0.2em'}}>{midMax}</span>
                     </span>
+                    {/* 分母とゲージの間に余白 */}
+                    <span className="ml-2"></span>
                     <SlotBar
                         slotType="Mid"
                         currentConfirmedUsage={midCurrentConfirmedUsage}
@@ -87,14 +95,18 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
 
                 {/* 遠距離スロット */}
                 <div className="flex items-center text-sm font-medium">
-                    <span className="text-gray-200 mr-2 whitespace-nowrap">遠距離</span>
+                    <span className="text-gray-200 whitespace-nowrap">遠距離</span>
                     <span
-                        className={`text-base w-[60px] flex-shrink-0 ${
+                        className={`text-base flex-shrink-0 ${
                             (safeUsage.long ?? 0) > longMax ? 'text-red-500' : 'text-gray-200'
                         }`}
                     >
-                        {safeUsage.long ?? 0} / {longMax}
+                        <span style={{display:'inline-block',width:'2.2em',textAlign:'right'}}>{safeUsage.long ?? 0}</span>
+                        <span style={{display:'inline-block',width:'1.0em',textAlign:'center'}}>/</span>
+                        <span style={{display:'inline-block',width:'1.4em',textAlign:'right',marginLeft:'-0.2em'}}>{longMax}</span>
                     </span>
+                    {/* 分母とゲージの間に余白 */}
+                    <span className="ml-2"></span>
                     <SlotBar
                         slotType="Long"
                         currentConfirmedUsage={longCurrentConfirmedUsage}

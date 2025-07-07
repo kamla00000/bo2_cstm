@@ -233,33 +233,29 @@ const MSSelector = ({
 
                 return (
                   <div
-  key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
-  className={`ms-row-card-mecha cursor-pointer flex items-center gap-2 transition-all`}
-  onClick={() => handleMsSelect(ms)}
-  style={{
-    minHeight: 72,
-    background: 'transparent',
-    border: 'none', // 罫線なし
-    boxShadow: '0 2px 8px #0003',
-    padding: '0.3rem 0.2rem',
-    borderRadius: '0',
-    clipPath: 'polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-  }}
->
-                    <div className="ms-imgbox-card relative w-16 h-16 flex-shrink-0 overflow-hidden transition">
+                    key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
+                    className={`ms-row-card-mecha cursor-pointer flex items-center gap-2 transition-all`}
+                    onClick={() => handleMsSelect(ms)}
+                    style={{
+                      minHeight: 72,
+                      border: 'none', // 罫線なし
+                      padding: '0.3rem 0.2rem',
+                      borderRadius: '0',
+                      // clipPath: 'polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%)',
+                      // backdropFilter: 'blur(12px)',
+                      // WebkitBackdropFilter: 'blur(12px)',
+                    }}
+                  >
+                    <div className="ms-imgbox-card relative w-16 h-16 flex-shrink-0 overflow-hidden transition" style={{ width: '4rem', height: '4rem', position: 'relative', overflow: 'hidden' }}>
                       <img
                         src={`/images/ms/${baseName}.jpg`}
                         alt={ms["MS名"]}
-                        className={`w-full h-full object-contain ms-img-card transition ${isSelected ? 'selected' : ''}`}
-                        style={{ borderRadius: '0', boxShadow: 'none', background: 'transparent' }}
+                        className={`ms-img-card transition ${isSelected ? 'selected' : ''}`}
                         onError={(e) => {
-                          e.target.src = '/images/ms/default.jpg';
+                          e.target.src = '/images/ms/default.webp';
                           e.target.onerror = null;
                         }}
                       />
-
                     </div>
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
@@ -271,7 +267,7 @@ const MSSelector = ({
                         </span>
                         <style>{`
                           .ms-row-card-mecha {
-                            background: transparent;
+                            background: rgba(0,0,0,0.5);
                             border: none;
                             box-shadow: 0 2px 8px #0003;
                             padding: 0.3rem 0.2rem;
@@ -279,29 +275,41 @@ const MSSelector = ({
                             /* 右上の角を45度でカット（小さめ） */
                             clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
                             transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
-                            backdrop-filter: blur(12px);
-                            -webkit-backdrop-filter: blur(12px);
+                            /* すりガラス効果は削除 */
                           }
                           .ms-row-card-mecha:hover {
-                            background: rgba(255,255,255,0.2) !important;
-                            /* 罫線なし */
-                            box-shadow: 0 0 0 1.5px #ff9100, 0 2px 10px #0004;
-                            transform: translateY(-1px) scale(1.01);
+                            background: rgba(0,0,0,0.32);
                           }
                           .ms-imgbox-card {
-                            border-radius: 0.1rem;
-                            box-shadow: 0 2px 8px #0007;
-                            background: linear-gradient(135deg, #23272e 60%, #444857 100%);
-                            /* border: なし */
-                            /* clip-path: なし */
+                            width: 4rem;
+                            height: 4rem;
+                            aspect-ratio: 1 / 1;
+                            position: relative;
+                            overflow: hidden;
+                            background: none;
+                            border: none;
+                            border-radius: 0;
+                            box-shadow: none;
+                            flex-shrink: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
                           }
-                          .ms-row-card-mecha:hover .ms-imgbox-card {
-                            /* border-color: #ff9100; 削除 */
-                            box-shadow: 0 0 0 0px #ff9100, 0 4px 20px #0008;
+                          .ms-imgbox-card .ms-img-card {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            object-position: center;
+                            background: none;
+                            border: none;
+                            border-radius: 0;
+                            box-shadow: none;
+                            transition: filter 0.18s, transform 0.18s, opacity 0.18s;
+                            transform: scale(1);
+                            display: block;
                           }
-                          .ms-row-card-mecha:hover .ms-img-card {
-                            filter: brightness(1.18) saturate(1.13);
-                            transform: scale(1.2) translateY(-2px);
+                          .ms-row-card-mecha:hover .ms-imgbox-card .ms-img-card {
+                            transform: scale(1.25);
                           }
                           .ms-row-card-mecha:hover .ms-name {color: #fff;
   text-shadow: 0 0 8px #fff, 0 0 2px #fff;
@@ -334,8 +342,8 @@ const MSSelector = ({
                           }
                         `}</style>
                       </div>
-                      <span className="block truncate text-gray-200 text-base ms-name" style={{
-                        textShadow: '0 3px 16px #000, 0 0 4px #fff, 0 1px 0 #000'
+                      <span className="block truncate text-white text-base ms-name" style={{
+                        textShadow: '0 3px 16px #000, 0 0 0px #000, 0 1px 0 #000'
                       }}>{ms["MS名"]}</span>
                     </div>
                   </div>

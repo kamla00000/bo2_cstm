@@ -31,16 +31,57 @@ const MsInfoDisplay = ({
 
   return (
     <>
-      <div className="flex items-center gap-4 p-3 bg-gray-800 rounded-md shadow-inner border border-gray-700">
-        <div className="w-16 h-16 bg-gray-700 overflow-hidden flex-shrink-0">
+      <div className="msrow-card-shape flex items-center gap-4 p-3">
+        <style>{`
+          .msrow-card-shape {
+            background: rgba(0,0,0,0.5);
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+            transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+          }
+          .ms-imgbox-card {
+            width: 4rem;
+            height: 4rem;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            overflow: hidden;
+            background: none;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .ms-imgbox-card .ms-img-card {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            background: none;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            transition: filter 0.18s, transform 0.18s, opacity 0.18s;
+            transform: scale(1);
+            display: block;
+          }
+          .ms-imgbox-card:hover .ms-img-card {
+            transform: scale(1.25);
+          }
+        `}</style>
+        <div className="ms-imgbox-card">
           <img
             src={`/images/ms/${baseName}.jpg`}
             alt={selectedMs["MS名"]}
-            className="w-full h-full object-cover cursor-pointer transition hover:opacity-20 hover:scale-125"
+            className="ms-img-card cursor-pointer"
             onClick={onMsImageClick}
             onError={(e) => {
               console.error(`MsInfoDisplay: Image load error for: /images/ms/${baseName}.jpg`);
-              e.target.src = '/images/ms/default.jpg';
+              e.target.src = '/images/ms/default.webp';
               e.target.onerror = null;
             }}
             title="MSを再選択"
@@ -49,14 +90,39 @@ const MsInfoDisplay = ({
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 mb-1">
             <span
-              className="hex-badge text-base flex-shrink-0"
-              style={{
-                background: getTypeColor(selectedMs.属性),
-                color: '#fff'
-              }}
+              className="ms-badge-hex text-base flex-shrink-0"
+              data-type={selectedMs.属性}
             >
               {selectedMs.属性}：{selectedMs.コスト}
             </span>
+            <style>{`
+              .ms-badge-hex {
+                display: inline-block;
+                padding: 0.2em 1.1em;
+                clip-path: polygon(18% 0%, 82% 0%, 100% 50%, 82% 100%, 18% 100%, 0% 50%);
+                margin: 0 2px;
+                box-shadow: 0 2px 8px #0003;
+                letter-spacing: 0.05em;
+                background: #353942;
+                color: #fff;
+                border-top: 3px solid transparent;
+                border-bottom: 3px solid transparent;
+                transition: box-shadow 0.18s, background 0.18s, color 0.18s, transform 0.18s;
+              }
+              .ms-badge-hex[data-type="強襲"] {
+                border-top: 3px solid #ef4444;
+                border-bottom: 3px solid #ef4444;
+              }
+              .ms-badge-hex[data-type="汎用"] {
+                border-top: 3px solid #3b82f6;
+                border-bottom: 3px solid #3b82f6;
+              }
+              .ms-badge-hex[data-type="支援"],
+              .ms-badge-hex[data-type="支援攻撃"] {
+                border-top: 3px solid #facc15;
+                border-bottom: 3px solid #facc15;
+              }
+            `}</style>
           </div>
           <span className="text-xl text-gray-200 leading-tight">{selectedMs["MS名"]}</span>
         </div>
@@ -131,7 +197,17 @@ const MsInfoDisplay = ({
           </div>
         </div>
       </div>
-      <div className="bg-gray-800 p-3 rounded-md shadow-inner border border-gray-700 text-gray-200 text-base text-center">
+      <div className="msrow-card-shape p-3 text-gray-200 text-base text-center mt-2">
+        <style>{`
+          .msrow-card-shape {
+            background: rgba(0,0,0,0.5);
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+            transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+          }
+        `}</style>
         <div
           className="text-md text-gray-200 text-center mx-auto max-w-lg"
           dangerouslySetInnerHTML={{

@@ -16,7 +16,7 @@ const ImageWithFallback = ({ partName, className }) => {
     const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
     src = `${getBaseImagePath(partName)}.${currentExt}`;
   } else {
-    src = '/images/parts/default.jpg'; // 全ての拡張子で画像が見つからない場合のフォールバック
+    src = '/images/parts/default.webp'; // 全ての拡張子で画像が見つからない場合のフォールバック
   }
 
   const handleError = () => {
@@ -37,7 +37,7 @@ const ImageWithFallback = ({ partName, className }) => {
 const PartPreview = ({ part }) => {
   if (!part) {
     return (
-      <div className="relative h-80 w-80 text-gray-200 bg-gray-900 shadow-md">
+      <div className="msrow-card-shape relative h-80 w-80 text-gray-200">
   <span className="absolute top-8 left-8 text-8xl [text-shadow:1px_1px_2px_black]">装</span>
   <span className="absolute top-8 right-8 text-8xl [text-shadow:1px_1px_2px_black]">備</span>
   <span className="absolute bottom-8 left-8 text-8xl [text-shadow:1px_1px_2px_black]">選</span>
@@ -47,7 +47,17 @@ const PartPreview = ({ part }) => {
   }
 
   return (
-    <div className="p-2 bg-gray-900 shadow-md h-80 w-80 flex flex-col"> {/* items-center を削除し、flex-col のままで配置調整 */}
+    <div className="msrow-card-shape p-2 h-80 min-w-[320px] max-w-[400px] w-full flex flex-col"> {/* 横幅を拡張スキル表示と揃える */}
+      <style>{`
+        .msrow-card-shape {
+          background: rgba(0,0,0,0.5);
+          border: none;
+          box-shadow: none;
+          border-radius: 0;
+          clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+          transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+        }
+      `}</style>
 
       {/* 画像とパーツ名、スロット情報を横並びにする新しいコンテナ */}
       <div className="flex flex-row items-end mb-2"> {/* items-start で上揃えに */}

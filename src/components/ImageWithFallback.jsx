@@ -16,7 +16,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
         const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
         src = `${getBaseImagePath(partName)}.${currentExt}`;
     } else {
-        src = '/images/parts/default.jpg';
+        src = '/images/parts/default.webp';
     }
 
     const handleError = () => {

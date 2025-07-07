@@ -70,6 +70,17 @@ const PickedMs = ({
         <div
             className={`flex flex-row gap-6 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
         >
+            <style>{`
+              .pickedms-card {
+                background: rgba(0,0,0,0.5);
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
+                /* 右上の角を45度でカット（小さめ） */
+                clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+                transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+              }
+            `}</style>
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
                 {/* MSSelectorのみ表示 */}
@@ -98,12 +109,12 @@ const PickedMs = ({
                         />
 
                         {/* スロットバー、装着済みパーツ一覧、装備選択を配置するメインの横並びコンテナ */}
-                        <div className="flex flex-row gap-6 items-start w-full">
+                        <div className="flex flex-row gap-6 items-end w-full">
                             {/* 左サブカラム: スロットバーと装着済みパーツ一覧 (縦並び) */}
                             <div className="flex flex-col gap-6 flex-grow" style={{ maxWidth: '400px' }}>
                                 {/* スロットバー */}
                                 <div className="flex flex-col gap-2">
-                                    <div className="p-4 w-fit">
+                                    <div className="w-fit">
                                         <SlotSelector
                                             usage={usageWithPreview}
                                             baseUsage={slotUsage}
@@ -136,8 +147,7 @@ const PickedMs = ({
 
             {/* 右側のカラム: ステータス一覧（MS詳細時のみ表示、幅を広く使う） */}
             {selectedMs && !showSelector && (
-                <div className="space-y-4 flex flex-col flex-grow w-full"
-                    style={{ width: '40%' }}>
+                <div className="space-y-4 flex flex-col flex-grow w-full h-full justify-end items-end" style={{ width: '40%', display: 'flex' }}>
                     <StatusDisplay
                         stats={currentStats}
                         selectedMs={selectedMs}

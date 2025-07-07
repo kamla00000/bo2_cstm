@@ -32,7 +32,7 @@ const SlotBar = ({
         
         const isFullStrengthenedBonusSlot = originalMax !== undefined && slotIndex > originalMax && slotIndex <= totalMax;
 
-        let bgColorClass = "bg-gray-500";
+        let bgColorClass = "bg-gray-300";
 
         if (isOverflow) {
             bgColorClass = "bg-red-500 animate-pulse";

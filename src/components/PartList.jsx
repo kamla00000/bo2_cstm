@@ -36,7 +36,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
         const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
         src = `${getBaseImagePath(partName)}.${currentExt}`;
     } else {
-        src = '/images/parts/default.jpg';
+        src = '/images/parts/default.webp';
     }
 
     return (
@@ -188,98 +188,100 @@ const PartList = ({
     const sortedParts = [...equipableParts, ...selectedPartsGroup, ...notEquipableParts];
 
     return (
-        <div>
-            {/* パーツリスト */}
-            <div className="overflow-y-auto pr-2" style={{ maxHeight: '195px' }}>
-                {sortedParts.length === 0 ? (
-                    <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
-                ) : (
-                    <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
-                        {sortedParts.map((part) => {
-                            const selected = isSelected(part);
-                            const partHovered = hoveredPart && hoveredPart.name === part.name;
-                            const mutuallyExclusive = isMutuallyExclusiveOnly(part) && !selected;
-                            const notEquipable = isNotEquipable(part) && !selected && !mutuallyExclusive;
+        <div
+          className="flex-grow w-full partlist-card-shape">
+          {/* パーツリスト */}
+          <div className="overflow-y-auto pr-2" style={{ maxHeight: '195px' }}>
+            {sortedParts.length === 0 ? (
+              <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
+            ) : (
+              <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
+                {sortedParts.map((part) => {
+                  const selected = isSelected(part);
+                  const partHovered = hoveredPart && hoveredPart.name === part.name;
+                  const mutuallyExclusive = isMutuallyExclusiveOnly(part) && !selected;
+                  const notEquipable = isNotEquipable(part) && !selected && !mutuallyExclusive;
 
-                            const levelMatch = part.name.match(/_LV(\d+)/);
-                            const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
+                  const levelMatch = part.name.match(/_LV(\d+)/);
+                  const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
-                            return (
-                                <button
-                                    key={part.name}
-                                    className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
-                                        w-16 h-16 aspect-square
-                                        ${selected ? 'bg-green-700' : 'bg-gray-800'}
-                                        cursor-pointer
-                                    `}
-                                    onClick={() => {
-                                        if ((!notEquipable && !mutuallyExclusive) || selected) {
-                                            onSelect(part);
-                                        }
-                                        onPreviewSelect?.(part);
-                                    }}
-                                    onMouseEnter={() => {
-                                        if (selected) {
-                                            onHover?.(part, 'selectedParts');
-                                        } else if (mutuallyExclusive) {
-                                            onHover?.(part, 'partListMutualExclusive');
-                                        } else if (notEquipable) {
-                                            onHover?.(part, 'partListOverflow');
-                                        } else {
-                                            onHover?.(part, 'partList');
-                                        }
-                                    }}
-                                    onMouseLeave={() => {
-                                        onHover?.(null, null);
-                                    }}
-                                >
-                                    <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
+                  return (
+                    <button
+                      key={part.name}
+                      className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
+                        w-16 h-16 aspect-square
+                        ${selected ? 'bg-green-700' : 'bg-gray-800'}
+                        cursor-pointer
+                      `}
+                      onClick={() => {
+                        if ((!notEquipable && !mutuallyExclusive) || selected) {
+                          onSelect(part);
+                        }
+                        onPreviewSelect?.(part);
+                      }}
+                      onMouseEnter={() => {
+                        if (selected) {
+                          onHover?.(part, 'selectedParts');
+                        } else if (mutuallyExclusive) {
+                          onHover?.(part, 'partListMutualExclusive');
+                        } else if (notEquipable) {
+                          onHover?.(part, 'partListOverflow');
+                        } else {
+                          onHover?.(part, 'partList');
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        onHover?.(null, null);
+                      }}
+                    >
+                      <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                                    {/* 併用不可の表示（kind重複も含む、優先） */}
-                                    {mutuallyExclusive && !selected && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-400 text-base z-20 cursor-not-allowed pointer-events-none">
-                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                                                <span>併 用</span>
-                                                <span>不 可</span>
-                                            </span>
-                                        </div>
-                                    )}
+                      {/* 併用不可の表示（kind重複も含む、優先） */}
+                      {mutuallyExclusive && !selected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-400 text-base z-20 cursor-not-allowed pointer-events-none">
+                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                            <span>併 用</span>
+                            <span>不 可</span>
+                          </span>
+                        </div>
+                      )}
 
-                                    {/* 不可の表示（mutuallyExclusiveと重複時は非表示） */}
-                                    {notEquipable && !selected && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-orange text-base z-20 cursor-not-allowed pointer-events-none">
-                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                                                <span>装 備</span>
-                                                <span>不 可</span>
-                                            </span>
-                                        </div>
-                                    )}
+                      {/* 不可の表示（mutuallyExclusiveと重複時は非表示） */}
+                      {notEquipable && !selected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-orange text-base z-20 cursor-not-allowed pointer-events-none">
+                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                            <span>装 備</span>
+                            <span>不 可</span>
+                          </span>
+                        </div>
+                      )}
 
-                                    {/* ホバー時のオレンジ半透明レイヤー */}
-                                    {partHovered && !selected && !notEquipable && !mutuallyExclusive && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
-                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                                                <span>装 備</span>
-                                                <span>可 能</span>
-                                            </span>
-                                        </div>
-                                    )}
+                      {/* ホバー時のオレンジ半透明レイヤー */}
+                      {partHovered && !selected && !notEquipable && !mutuallyExclusive && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
+                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                            <span>装 備</span>
+                            <span>可 能</span>
+                          </span>
+                        </div>
+                      )}
 
-                                    {/* 装備中の表示 */}
-                                    {selected && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20 pointer-events-none">
-                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                                                <span>装 備</span>
-                                                <span>完 了</span>
-                                            </span>
-                                        </div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+                      {/* 装備中の表示 */}
+                      {selected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20 pointer-events-none">
+                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                            <span>装 備</span>
+                            <span>完 了</span>
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
     );
 };
