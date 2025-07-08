@@ -127,6 +127,11 @@ const PartList = ({
     const isEquipable = (part) => {
         if (isSelected(part)) return false;
         if (isMutuallyExclusive(part, selectedParts)) return false;
+        // カテゴリ特攻プログラム_汎用/支援の装備可否（_LV以降を除いた名称で判定）
+        const basePartName = part.name ? part.name.replace(/_LV\d+$/, '') : '';
+        if (basePartName === "カテゴリ特攻プログラム_汎用" && selectedMs && selectedMs["属性"] !== "汎用") return false;
+        if (basePartName === "カテゴリ特攻プログラム_支援" && selectedMs && selectedMs["属性"] !== "支援") return false;
+        if (basePartName === "カテゴリ特攻プログラム_強襲" && selectedMs && selectedMs["属性"] !== "強襲") return false;
         const isOverflowing = selectedMs && currentSlotUsage ? willCauseSlotOverflow(part) : false;
         return !isOverflowing && !isPartLimitReached && !hasSameKind(part);
     };
