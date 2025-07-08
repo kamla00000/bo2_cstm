@@ -31,8 +31,8 @@
     "name": "噴射制御装置_LV3",
     "category": "移動",
     "close": 3,
-    "mid": 0,
-    "long": 4,
+    "mid": 4,
+    "long": 0,
     "thruster": 10,
     "description": "スラスターが10増加。"
   },
@@ -49,7 +49,7 @@
     "name": "噴射制御装置_LV5",
     "category": "移動",
     "close": 3,
-    "mid": 5,
+    "mid": 3,
     "long": 5,
     "thruster": 15,
     "description": "スラスターが15増加。高速移動中のスラスター消費量を5%軽減。"
@@ -60,7 +60,6 @@
     "close": 5,
     "mid": 4,
     "long": 3,
-    "speed": 1,
     "thruster": 10,
     "highSpeedMovement": 1,
     "description": "高速移動が1増加。スラスターが10増加。"
