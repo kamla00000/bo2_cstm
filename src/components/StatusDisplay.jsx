@@ -65,32 +65,38 @@ const StatusDisplay = ({
   const rawTotalValue = getBonusValue(rawTotal, statKey);
   const totalValue = getBonusValue(total, statKey);
 
-  // 補正値 = パーツ + 拡張（スラスター拡張も常に加算する）
-  let combinedBonusValue = partBonusValue + expansionBonusValue;
-
-  // HP特殊強化フレームのみ例外処理
+  // HP特殊強化フレーム判定
   const isSpecialFrameA =
     (expansionType && expansionType.includes('特殊強化フレーム')) ||
     (selectedMs?.拡張選択 && selectedMs.拡張選択.includes('特殊強化フレーム')) ||
     (selectedMs?.拡張スロット && selectedMs.拡張スロット.includes('特殊強化フレーム'));
 
-  if (
-    (statKey === 'hp' || statKey === 'HP') &&
-    expansionBonusValue !== 0 &&
-    isSpecialFrameA
-  ) {
-    combinedBonusValue = partBonusValue + expansionBonusValue;
-  }
+  // 補正値 = パーツ + 拡張（スラスター拡張も常に加算する）
+  let combinedBonusValue = partBonusValue + expansionBonusValue;
 
-  // --- スラスター拡張時も必ずexpansionBonusを補正値に加算する ---
-  if (
+  // HP特殊強化フレーム時はHP5%増加分を補正値に加算して表示
+  let isSpecialHpBonus = false;
+  if ((statKey === 'hp' || statKey === 'HP') && isSpecialFrameA) {
+    const hp5Bonus = Math.floor(baseValue * 0.05);
+    combinedBonusValue = partBonusValue + expansionBonusValue + hp5Bonus;
+    if (hp5Bonus !== 0) isSpecialHpBonus = true;
+  } else if (
     statKey === 'thruster' &&
     expansionBonusValue !== 0
   ) {
+    // --- スラスター拡張時も必ずexpansionBonusを補正値に加算する ---
     combinedBonusValue = partBonusValue + expansionBonusValue;
   }
 
     const formatBonus = (value) => {
+      // HP特殊強化フレーム時、5%分があれば必ず表示。0なら-。
+      if ((statKey === 'hp' || statKey === 'HP') && isSpecialFrameA) {
+        if (isSpecialHpBonus || value !== 0) {
+          return value > 0 ? `+${formatNumber(value)}` : `${formatNumber(value)}`;
+        } else {
+          return '-';
+        }
+      }
       if (value === 0) return '-';
       return value > 0 ? `+${formatNumber(value)}` : `${formatNumber(value)}`;
     };
