@@ -91,58 +91,51 @@ const MSSelector = ({
 
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-start px-[10px]"
+      className="w-full h-full flex flex-col items-center justify-start"
     >
       <div className="w-full flex flex-col gap-6">
-        {/* フィルター */}
-        {/* 2段フィルター：1段目 属性＋検索、2段目 コスト（横スクロール） */}
-        <div className="w-full flex flex-col gap-2 mb-2">
-          <div className="flex flex-row flex-wrap gap-1 items-center w-full mb-3">
+        {/* フィルター：属性・コスト・検索を1行に統合 */}
+        <div className="w-full flex flex-row flex-wrap gap-1 items-center mb-2">
+          <button
+            onClick={() => setFilterType('')}
+            className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === '' ? 'hex-filter-btn-active' : ''}`}
+          >全属性</button>
+          {TYPES.map((type) => (
             <button
-              onClick={() => setFilterType('')}
-              className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === '' ? 'hex-filter-btn-active' : ''}`}
-            >全属性</button>
-            {TYPES.map((type) => (
+              key={type}
+              onClick={() => setFilterType(type)}
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === type ? 'hex-filter-btn-active' : ''}`}
+            >{type}</button>
+          ))}
+          <button
+            onClick={() => setFilterCost('')}
+            className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === '' ? 'hex-filter-btn-active' : ''}`}
+          >全コスト</button>
+          {COSTS.map((cost) => (
+            <button
+              key={cost}
+              onClick={() => setFilterCost(String(cost))}
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
+            >{cost}</button>
+          ))}
+          <div className="ml-auto relative flex items-center">
+            <input
+              type="text"
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              placeholder="MS名で検索"
+              className="search-input px-2 py-1 text-lg sm:text-xl bg-gray-900 text-gray-200 border border-gray-600 pr-8"
+              style={{ minWidth: 152, maxWidth: 232, textDecoration: 'none' }}
+            />
+            {searchText && (
               <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === type ? 'hex-filter-btn-active' : ''}`}
-              >{type}</button>
-            ))}
-            <div className="ml-auto relative flex items-center">
-              <input
-                type="text"
-                value={searchText}
-                onChange={e => setSearchText(e.target.value)}
-                placeholder="MS名で検索"
-                className="search-input px-2 py-1 text-lg sm:text-xl bg-gray-900 text-gray-200 border border-gray-600 pr-8"
-                style={{ minWidth: 152, maxWidth: 232, textDecoration: 'none' }}
-              />
-              {searchText && (
-                <button
-                  type="button"
-                  onClick={() => setSearchText('')}
-                  className="clear-search-btn absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
-                  tabIndex={-1}
-                  aria-label="検索内容をクリア"
-                >×</button>
-              )}
-            </div>
-          </div>
-          <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
-            <div className="flex flex-row gap-1 min-w-max py-1">
-              <button
-                onClick={() => setFilterCost('')}
-                className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === '' ? 'hex-filter-btn-active' : ''}`}
-              >全コスト</button>
-              {COSTS.map((cost) => (
-                <button
-                  key={cost}
-                  onClick={() => setFilterCost(String(cost))}
-                  className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
-                >{cost}</button>
-              ))}
-            </div>
+                type="button"
+                onClick={() => setSearchText('')}
+                className="clear-search-btn absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
+                tabIndex={-1}
+                aria-label="検索内容をクリア"
+              >×</button>
+            )}
           </div>
           <style>{`
             .hex-filter-btn {
@@ -198,9 +191,9 @@ const MSSelector = ({
             }
           `}</style>
         </div>
-        {/* MSリスト：1行2列（スマホ対応） */}
-        <div className="w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[85vh] overflow-y-auto pr-1 custom-scrollbar w-full">
+        {/* MSリスト：複数列表示に更新 */}
+        <div className="w-full h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto custom-scrollbar w-full">
             {filteredMs.length > 0 ? (
               filteredMs.map((ms) => {
                 const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
@@ -287,7 +280,7 @@ const MSSelector = ({
                             transform: scale(1.25);
                           }
                           .ms-row-card-mecha:hover .ms-name {color: #fff;
-  text-shadow: 0 0 8px #fff, 0 0 2px #fff;
+                            text-shadow: 0 0 8px #fff, 0 0 2px #fff;
                           }
                           .ms-badge-hex {
                             display: inline-block;
@@ -325,7 +318,7 @@ const MSSelector = ({
                 );
               })
             ) : (
-              <p className="text-gray-200 text-center py-8 col-span-2">該当するMSが見つかりません。</p>
+              <p className="text-gray-200 text-center py-8 col-span-full">該当するMSが見つかりません。</p>
             )}
           </div>
         </div>
