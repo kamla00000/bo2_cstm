@@ -91,141 +91,116 @@ const MSSelector = ({
 
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-start"
+      className="w-full h-full flex flex-col items-center justify-start px-[10px]"
     >
       <div className="w-full flex flex-col gap-6">
         {/* フィルター */}
-        <div className="flex w-full items-center gap-3">
-          {/* 左詰め：タイプ＋コスト */}
-          <div className="flex flex-wrap gap-1">
+        {/* 2段フィルター：1段目 属性＋検索、2段目 コスト（横スクロール） */}
+        <div className="w-full flex flex-col gap-2 mb-2">
+          <div className="flex flex-row flex-wrap gap-1 items-center w-full mb-3">
             <button
               onClick={() => setFilterType('')}
-              className={`hex-filter-btn text-lg transition ${
-                filterType === ''
-                  ? 'hex-filter-btn-active'
-                  : ''
-              }`}
-            >
-              全属性
-            </button>
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === '' ? 'hex-filter-btn-active' : ''}`}
+            >全属性</button>
             {TYPES.map((type) => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`hex-filter-btn text-lg transition ${
-                  filterType === type
-                    ? 'hex-filter-btn-active'
-                    : ''
-                }`}
-              >
-                {type}
-              </button>
+                className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === type ? 'hex-filter-btn-active' : ''}`}
+              >{type}</button>
             ))}
-            <button
-              onClick={() => setFilterCost('')}
-              className={`hex-filter-btn text-lg transition ${
-                filterCost === ''
-                  ? 'hex-filter-btn-active'
-                  : ''
-              }`}
-            >
-              全コスト
-            </button>
-            {COSTS.map((cost) => (
-              <button
-                key={cost}
-                onClick={() => setFilterCost(String(cost))}
-                className={`hex-filter-btn text-lg transition ${
-                  filterCost === String(cost)
-                    ? 'hex-filter-btn-active'
-                    : ''
-                }`}
-              >
-                {cost}
-              </button>
-            ))}
-      {/* 六角形フィルターボタン用CSS */}
-      <style>{`
-        .hex-filter-btn {
-          position: relative;
-          padding: 0.5rem 1.2rem;
-          background: #23272e;
-          color: #f3f3f3;
-          border: none;
-          outline: none;
-          /* 正六角形のclip-pathに統一 */
-          clip-path: polygon(
-            25% 0%, 75% 0%,
-            100% 50%,
-            75% 100%, 25% 100%,
-            0% 50%
-          );
-          margin: 0 2px;
-          z-index: 1;
-          border-top: 3px solid #fb923c;
-          border-bottom: 3px solid #fb923c;
-          border-left: none;
-          border-right: none;
-          box-shadow: 0 2px 8px #0004;
-          transition: background 0.2s, color 0.2s;
-        }
-        .hex-filter-btn:hover, .hex-filter-btn-active {
-          background: #b85c00;
-          color: #fff;
-        }
-      `}</style>
+            <div className="ml-auto relative flex items-center">
+              <input
+                type="text"
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                placeholder="MS名で検索"
+                className="search-input px-2 py-1 text-lg sm:text-xl bg-gray-900 text-gray-200 border border-gray-600 pr-8"
+                style={{ minWidth: 152, maxWidth: 232, textDecoration: 'none' }}
+              />
+              {searchText && (
+                <button
+                  type="button"
+                  onClick={() => setSearchText('')}
+                  className="clear-search-btn absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
+                  tabIndex={-1}
+                  aria-label="検索内容をクリア"
+                >×</button>
+              )}
+            </div>
           </div>
-          {/* 右詰め：検索窓 */}
-          <div className="ml-auto relative flex items-center">
-            <input
-              type="text"
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              placeholder="MS名で検索"
-              className="search-input px-2 py-1 text-lg bg-gray-900 text-gray-200 border border-gray-600 pr-8"
-              style={{ minWidth: 152, maxWidth: 232, textDecoration: 'none' }}
-            />
-            <style>{`
-              .search-input:focus {
-                outline: none;
-                border-color: #ff9100 !important;
-                box-shadow: 0 0 0 2px #ff910044;
-              }
-            `}</style>
-            {searchText && (
+          <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+            <div className="flex flex-row gap-1 min-w-max py-1">
               <button
-                type="button"
-                onClick={() => setSearchText('')}
-                className="clear-search-btn absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
-                tabIndex={-1}
-                aria-label="検索内容をクリア"
-              >
-                ×
-              </button>
-            )}
-            <style>{`
-              .clear-search-btn {
-                color: #ff9100;
-                font-size: 1.7em;
-                font-weight: bold;
-                background: none;
-                border: none;
-                line-height: 1;
-                padding: 0 2px;
-                cursor: pointer;
-                text-shadow: 0 0 4px #fff8, 0 0 2px #ff9100;
-                transition: color 0.2s, text-shadow 0.2s;
-              }
-              .clear-search-btn:hover {
-                color: #fff;
-                text-shadow: 0 0 8px #ff9100, 0 0 2px #fff;
-              }
-            `}</style>
+                onClick={() => setFilterCost('')}
+                className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === '' ? 'hex-filter-btn-active' : ''}`}
+              >全コスト</button>
+              {COSTS.map((cost) => (
+                <button
+                  key={cost}
+                  onClick={() => setFilterCost(String(cost))}
+                  className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
+                >{cost}</button>
+              ))}
+            </div>
           </div>
+          <style>{`
+            .hex-filter-btn {
+              position: relative;
+              padding: 0.5rem 1.2rem;
+              background: #23272e;
+              color: #f3f3f3;
+              border: none;
+              outline: none;
+              clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+              margin: 0 2px;
+              z-index: 1;
+              border-top: 3px solid #fb923c;
+              border-bottom: 3px solid #fb923c;
+              border-left: none;
+              border-right: none;
+              box-shadow: 0 2px 8px #0004;
+              transition: background 0.2s, color 0.2s;
+            }
+            .hex-filter-btn:hover, .hex-filter-btn-active {
+              background: #b85c00;
+              color: #fff;
+            }
+            .search-input:focus {
+              outline: none;
+              border-color: #ff9100 !important;
+              box-shadow: 0 0 0 2px #ff910044;
+            }
+            .clear-search-btn {
+              color: #ff9100;
+              font-size: 1.7em;
+              font-weight: bold;
+              background: none;
+              border: none;
+              line-height: 1;
+              padding: 0 2px;
+              cursor: pointer;
+              text-shadow: 0 0 4px #fff8, 0 0 2px #ff9100;
+              transition: color 0.2s, text-shadow 0.2s;
+            }
+            .clear-search-btn:hover {
+              color: #fff;
+              text-shadow: 0 0 8px #ff9100, 0 0 2px #fff;
+            }
+            .scrollbar-thin {
+              scrollbar-width: thin;
+            }
+            .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
+              background: #374151;
+            }
+            .scrollbar-track-gray-900::-webkit-scrollbar-track {
+              background: #111827;
+            }
+          `}</style>
         </div>
-        {/* MSリスト */}
+        {/* MSリスト：1行2列（スマホ対応） */}
         <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[85vh] overflow-y-auto pr-1 custom-scrollbar w-full">
             {filteredMs.length > 0 ? (
               filteredMs.map((ms) => {
                 const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];

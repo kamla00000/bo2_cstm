@@ -123,7 +123,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col items-center pt-10">
+    <div className="min-h-screen bg-transparent flex flex-col items-center pt-10 max-w-[1280px] w-full mx-auto">
       {/* フル強化解除警告モーダル */}
       <FullStrengthenWarningModal
         open={showFullStrengthenWarning}
