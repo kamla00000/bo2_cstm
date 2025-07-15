@@ -8,6 +8,7 @@ import {
     EXPANSION_OPTIONS,
     EXPANSION_DESCRIPTIONS
 } from '../constants/appConstants';
+import { isPartDisabled as ngIsPartDisabled } from '../utils/ngparts';
 
 export const useAppData = () => {
     const { msData, fullStrengtheningEffects, allPartsCache, isDataLoaded } = useDataLoading();
@@ -16,12 +17,18 @@ export const useAppData = () => {
     const [selectedMs, setSelectedMs] = useState(null);
     const [selectedParts, setSelectedParts] = useState([]);
     const [hoveredPart, setHoveredPart] = useState(null);
-    const [hoverSource, setHoverSource] = useState(null); // 'partList' または 'selectedParts'
+    const [hoverSource, setHoverSource] = useState(null); 
     const [filterCategory, setFilterCategory] = useState('防御');
     const [isFullStrengthened, setIsFullStrengthened] = useState(false);
     const [expansionType, setExpansionType] = useState('無し');
     // プレビュー固定用
     const [selectedPreviewPart, setSelectedPreviewPart] = useState(null);
+
+    // 併用不可判定はngparts.jsのisPartDisabledに統一
+    const isPartDisabled = useCallback(
+        (part) => ngIsPartDisabled(part, selectedParts),
+        [selectedParts]
+    );
 
     const updateDisplayedParts = useCallback((category) => {
         let loadedParts = [];
@@ -156,49 +163,23 @@ export const useAppData = () => {
     }, []);
 
     const handlePartSelect = useCallback((part) => {
-        if (!selectedMs) {
-            alert("先にモビルスーツを選択してください。");
-            return;
-        }
-
+        if (!selectedMs) return;
         if (selectedParts.some(p => p.name === part.name)) {
             handlePartRemove(part);
             return;
         }
-
-        if (selectedParts.length >= 8) {
-            alert("カスタムパーツは最大8つまでしか装着できません。");
-            return;
-        }
-
+        if (selectedParts.length >= 8) return;
+        if (isPartDisabled(part)) return;
         const partsWithNew = [...selectedParts, part];
         const projectedSlots = calculateSlotUsage(selectedMs, partsWithNew, isFullStrengthened, fullStrengtheningEffects);
-
         if (projectedSlots.close > projectedSlots.maxClose ||
             projectedSlots.mid > projectedSlots.maxMid ||
-            projectedSlots.long > projectedSlots.maxLong) {
-            alert("スロット容量が不足しています。");
-            return;
-        }
-
-        const isSpeedOrTurnPart = (p) => (p.speed > 0 || p.turnPerformanceGround > 0 || p.turnPerformanceSpace > 0);
-        const isDriveOrComposite = (p) => p.name === "運動性能強化機構" || p.name === "コンポジットモーター";
-
-        if (isDriveOrComposite(part) && selectedParts.some(p => isSpeedOrTurnPart(p) && !isDriveOrComposite(p))) {
-            alert("「運動性能強化機構」または「コンポジットモーター」は、スピードまたは旋回性能が上昇する他のパーツと同時装備できません。");
-            return;
-        }
-        if (isSpeedOrTurnPart(part) && selectedParts.some(p => isDriveOrComposite(p))) {
-            alert("スピードまたは旋回性能が上昇するパーツは、「運動性能強化機構」または「コンポジットモーター」と同時装備できません。");
-            return;
-        }
-
+            projectedSlots.long > projectedSlots.maxLong) return;
         setSelectedParts(prevParts => {
             const filteredPrevParts = prevParts.filter(p => p.name !== part.name);
             return [...filteredPrevParts, part];
         });
-
-    }, [selectedMs, selectedParts, handlePartRemove, isFullStrengthened, fullStrengtheningEffects]);
+    }, [selectedMs, selectedParts, handlePartRemove, isFullStrengthened, fullStrengtheningEffects, isPartDisabled]);
 
     const handleClearAllParts = useCallback(() => {
         setSelectedParts([]);
@@ -208,16 +189,16 @@ export const useAppData = () => {
     }, []);
 
     const setFullStrengthenedWrapper = useCallback((newValue) => {
-    setIsFullStrengthened(newValue);
-}, []);
+        setIsFullStrengthened(newValue);
+    }, []);
 
     const handlePartHover = useCallback((part, source) => {
-    setHoveredPart(part);
-    setHoverSource(source);
-    if (!part) {
-        setSelectedPreviewPart(null); // ホバーを外したらプレビューも消す
-    }
-}, []);
+        setHoveredPart(part);
+        setHoverSource(source);
+        if (!part) {
+            setSelectedPreviewPart(null); 
+        }
+    }, []);
     // プレビュー固定用
     const handlePartPreviewSelect = useCallback((part) => {
         setSelectedPreviewPart(part);
@@ -251,5 +232,6 @@ export const useAppData = () => {
         partBonuses,
         selectedPreviewPart,
         handlePartPreviewSelect,
+        isPartDisabled, 
     };
 };

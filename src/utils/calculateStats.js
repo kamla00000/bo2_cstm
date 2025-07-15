@@ -95,6 +95,21 @@ export const calculateMSStatsLogic = (
 
   // 2. カスタムパーツのボーナスと上限引き上げの収集
   parts.forEach(part => {
+    // 総合強化プログラム_格闘_LV1の特殊処理
+    if (part.name === "総合強化プログラム_格闘_LV1") {
+      const levelUpTable = [1, 2, 3, 4, 5, 5];
+      const idx = Math.max(0, Math.min(msLevel - 1, levelUpTable.length - 1));
+      const upValue = levelUpTable[idx];
+      partBonus.meleeCorrection += upValue;
+      partBonus.armorMelee += upValue;
+      partBonus.speed += upValue;
+      partBonus.thruster += upValue;
+      partBonus.turnPerformanceGround += upValue;
+      partBonus.turnPerformanceSpace += upValue;
+      console.log(`[calculateMSStatsLogic] 総合強化プログラム_格闘_LV1: msLevel=${msLevel}, upValue=${upValue}`);
+      // 通常の加算処理はスキップ
+      return;
+    }
     console.groupCollapsed(`[calculateMSStatsLogic] Processing Part: ${part.name}`);
     console.log(`Part data for ${part.name}:`, JSON.parse(JSON.stringify(part)));
 

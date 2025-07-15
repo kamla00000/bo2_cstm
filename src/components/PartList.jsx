@@ -23,6 +23,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
         if (nextExtIndex < IMAGE_EXTENSIONS.length) {
             setCurrentExtIndex(nextExtIndex);
         } else {
+            // 全ての拡張子を試しても画像が見つからない場合
             setCurrentExtIndex(IMAGE_EXTENSIONS.length);
         }
     };
@@ -31,12 +32,18 @@ const ImageWithFallback = ({ partName, level, className }) => {
         setHasLoaded(true);
     };
 
+    React.useEffect(() => {
+        // partNameが変わったら状態をリセット
+        setCurrentExtIndex(0);
+        setHasLoaded(false);
+    }, [partName]);
+
     let src;
     if (currentExtIndex < IMAGE_EXTENSIONS.length) {
         const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
         src = `${getBaseImagePath(partName)}.${currentExt}`;
     } else {
-        src = '/images/parts/default.webp';
+        src = '/images/parts/default.webp'; // デフォルト画像
     }
 
     return (
@@ -45,6 +52,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
                 src={src}
                 alt={partName}
                 className={`w-full h-full object-cover ${className || ''}`}
+                // 画像がロード済みでない場合にのみエラーハンドラを呼び出す
                 onError={hasLoaded ? null : handleError}
                 onLoad={handleLoad}
             />
@@ -57,24 +65,6 @@ const ImageWithFallback = ({ partName, level, className }) => {
     );
 };
 
-const isMutuallyExclusive = (part, selectedParts) => {
-    // フィールドモーター系
-    const isFieldMotor = part.name && part.name.startsWith("フィールドモーター");
-    // コンポジットモーター系
-    const isCompositeMotor = part.name && part.name.startsWith("コンポジットモーター");
-
-    // 装備中にフィールドモーター系があるか
-    const hasFieldMotor = selectedParts.some(p => p.name && p.name.startsWith("フィールドモーター"));
-    // 装備中にコンポジットモーター系があるか
-    const hasCompositeMotor = selectedParts.some(p => p.name && p.name.startsWith("コンポジットモーター"));
-
-    // どちらかが装備中で、もう一方を選ぼうとした場合は併用不可
-    if (isCompositeMotor && hasFieldMotor) return true;
-    if (isFieldMotor && hasCompositeMotor) return true;
-
-    return false;
-};
-
 const PartList = ({
     selectedParts,
     onSelect,
@@ -84,9 +74,7 @@ const PartList = ({
     selectedMs,
     currentSlotUsage,
     onPreviewSelect,
-    categories = [],
-    filterCategory,
-    setFilterCategory,
+    isPartDisabled, // useAppDataから渡されるisPartDisabled関数
 }) => {
     if (!parts || !Array.isArray(parts)) {
         return <p className="text-gray-200">パーツデータがありません。</p>;
@@ -123,31 +111,30 @@ const PartList = ({
     // 装備数上限
     const isPartLimitReached = selectedParts.length >= 8;
 
+    // カテゴリ特攻プログラム_汎用/支援の装備可否（_LV以降を除いた名称で判定）
+    const isCategorySpecificPartDisabled = (part) => {
+        const basePartName = part.name ? part.name.replace(/_LV\d+$/, '') : '';
+        if (basePartName === "カテゴリ特攻プログラム_汎用" && selectedMs && selectedMs["属性"] !== "汎用") return true;
+        if (basePartName === "カテゴリ特攻プログラム_支援" && selectedMs && selectedMs["属性"] !== "支援") return true;
+        if (basePartName === "カテゴリ特攻プログラム_強襲" && selectedMs && selectedMs["属性"] !== "強襲") return true;
+        return false;
+    };
+
     // 装備可能（未装備）判定
     const isEquipable = (part) => {
-        if (isSelected(part)) return false;
-        if (isMutuallyExclusive(part, selectedParts)) return false;
-        // カテゴリ特攻プログラム_汎用/支援の装備可否（_LV以降を除いた名称で判定）
-        const basePartName = part.name ? part.name.replace(/_LV\d+$/, '') : '';
-        if (basePartName === "カテゴリ特攻プログラム_汎用" && selectedMs && selectedMs["属性"] !== "汎用") return false;
-        if (basePartName === "カテゴリ特攻プログラム_支援" && selectedMs && selectedMs["属性"] !== "支援") return false;
-        if (basePartName === "カテゴリ特攻プログラム_強襲" && selectedMs && selectedMs["属性"] !== "強襲") return false;
-        const isOverflowing = selectedMs && currentSlotUsage ? willCauseSlotOverflow(part) : false;
-        return !isOverflowing && !isPartLimitReached && !hasSameKind(part);
+        if (isSelected(part)) return false; // 既に選択されている場合は装備可能ではない
+        // isPartDisabled は useAppData で定義されている総合的な併用不可判定
+        // isPartDisabled が関数として渡されていることを確認
+        if (typeof isPartDisabled === 'function' && isPartDisabled(part)) return false; // 併用不可の場合
+        if (willCauseSlotOverflow(part)) return false; // スロットオーバーの場合
+        if (isPartLimitReached) return false; // パーツ数上限の場合
+        if (hasSameKind(part)) return false; // kind重複の場合
+        if (isCategorySpecificPartDisabled(part)) return false; // カテゴリ特攻の制限
+        return true;
     };
 
-    // 装備不能判定
-    const isNotEquipable = (part) => {
-        if (isSelected(part)) return false;
-        return !isEquipable(part);
-    };
-
-    // 併用不可のみ判定（kind重複も含む）
-    const isMutuallyExclusiveOnly = (part) => {
-        if (isSelected(part)) return false;
-        // 併用不可 or kind重複
-        return isMutuallyExclusive(part, selectedParts) || hasSameKind(part);
-    };
+    // 装備不能判定 (selectedPartsに含まれておらず、isEquipableでないもの)
+    const isNotEquipable = (part) => !isSelected(part) && !isEquipable(part);
 
     // 使用スロット合計
     const getSlotSum = (part) =>
@@ -156,9 +143,9 @@ const PartList = ({
     // 属性取得
     const getCategory = (part) => part.category || '';
 
-    // グループ分け
+    // ソートのためのグループ分け
     const equipableParts = parts
-        .filter(part => !isSelected(part) && isEquipable(part))
+        .filter(part => isEquipable(part))
         .sort((a, b) => {
             const slotDiff = getSlotSum(b) - getSlotSum(a);
             if (slotDiff !== 0) return slotDiff;
@@ -173,14 +160,20 @@ const PartList = ({
             return getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
         });
 
-    // 併用不可＞装備不可 の優先ソート
+    // 「併用不可」と「装備不可」を明確に区別し、優先度を付けてソート
     const getNotEquipablePriority = (part) => {
-        if (isMutuallyExclusiveOnly(part)) return 0; // 併用不可が最優先
-        if (isNotEquipable(part)) return 1; // 装備不可
-        return 2;
+        if (isSelected(part)) return 3; // 選択済みは最後
+        // isPartDisabled が関数として渡されていることを確認
+        if (typeof isPartDisabled === 'function' && isPartDisabled(part)) return 0; // useAppDataのisPartDisabledで不可とされたものが最優先（併用不可扱い）
+        if (willCauseSlotOverflow(part)) return 1; // スロットオーバー
+        if (isPartLimitReached) return 1; // 装備数上限
+        if (hasSameKind(part)) return 0; // kind重複も併用不可扱い (isPartDisabledでカバーされる場合もあるが、明示的に)
+        if (isCategorySpecificPartDisabled(part)) return 1; // カテゴリ特攻の制限
+        return 2; // その他の装備不可
     };
+
     const notEquipableParts = parts
-        .filter(part => !isSelected(part) && isNotEquipable(part))
+        .filter(part => !isSelected(part) && !isEquipable(part)) // 装備可能でなく、かつ選択されていないパーツ
         .sort((a, b) => {
             const priorityDiff = getNotEquipablePriority(a) - getNotEquipablePriority(b);
             if (priorityDiff !== 0) return priorityDiff;
@@ -193,100 +186,103 @@ const PartList = ({
     const sortedParts = [...equipableParts, ...selectedPartsGroup, ...notEquipableParts];
 
     return (
-        <div
-          className="flex-grow w-full partlist-card-shape">
-          {/* パーツリスト */}
-          <div className="overflow-y-auto pr-2" style={{ maxHeight: '195px' }}>
-            {sortedParts.length === 0 ? (
-              <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
-            ) : (
-              <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
-                {sortedParts.map((part) => {
-                  const selected = isSelected(part);
-                  const partHovered = hoveredPart && hoveredPart.name === part.name;
-                  const mutuallyExclusive = isMutuallyExclusiveOnly(part) && !selected;
-                  const notEquipable = isNotEquipable(part) && !selected && !mutuallyExclusive;
+        <div className="flex-grow w-full partlist-card-shape">
+            {/* パーツリスト */}
+            <div className="overflow-y-auto pr-2" style={{ maxHeight: '195px' }}>
+                {sortedParts.length === 0 ? (
+                    <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
+                ) : (
+                    <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
+                        {sortedParts.map((part) => {
+                            const selected = isSelected(part);
+                            const partHovered = hoveredPart && hoveredPart.name === part.name;
+                            // isPartDisabledで併用不可を判定
+                            const disabledByCombination = typeof isPartDisabled === 'function' && isPartDisabled(part) && !selected;
+                            const disabledByKind = hasSameKind(part) && !selected;
+                            const disabledByOtherReasons = !selected && !isEquipable(part) && !disabledByCombination && !disabledByKind;
 
-                  const levelMatch = part.name.match(/_LV(\d+)/);
-                  const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
+                            const levelMatch = part.name.match(/_LV(\d+)/);
+                            const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
-                  return (
-                    <button
-                      key={part.name}
-                      className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
-                        w-16 h-16 aspect-square
-                        ${selected ? 'bg-green-700' : 'bg-gray-800'}
-                        cursor-pointer
-                      `}
-                      onClick={() => {
-                        if ((!notEquipable && !mutuallyExclusive) || selected) {
-                          onSelect(part);
-                        }
-                        onPreviewSelect?.(part);
-                      }}
-                      onMouseEnter={() => {
-                        if (selected) {
-                          onHover?.(part, 'selectedParts');
-                        } else if (mutuallyExclusive) {
-                          onHover?.(part, 'partListMutualExclusive');
-                        } else if (notEquipable) {
-                          onHover?.(part, 'partListOverflow');
-                        } else {
-                          onHover?.(part, 'partList');
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        onHover?.(null, null);
-                      }}
-                    >
-                      <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
+                            // 「併用不可」または「装備不可」の場合にボタンを無効化
+                            const showMutualExclusiveOverlay = disabledByCombination || disabledByKind;
+                            const showNotEquipableOverlay = disabledByOtherReasons;
+                            const reallyDisabled = selected ? false : (showMutualExclusiveOverlay || showNotEquipableOverlay);
 
-                      {/* 併用不可の表示（kind重複も含む、優先） */}
-                      {mutuallyExclusive && !selected && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-400 text-base z-20 cursor-not-allowed pointer-events-none">
-                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                            <span>併 用</span>
-                            <span>不 可</span>
-                          </span>
-                        </div>
-                      )}
+                            return (
+                                <button
+                                    key={part.name}
+                                    className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
+                                        w-16 h-16 aspect-square
+                                        ${selected ? 'bg-green-700' : 'bg-gray-800'}
+                                        ${reallyDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+                                    `}
+                                    onClick={() => {
+                                        if (!reallyDisabled || selected) {
+                                            onSelect(part);
+                                        }
+                                        // ホバー・装備不可でもプレビューは有効
+                                        onPreviewSelect?.(part);
+                                    }}
+                                    onMouseEnter={() => {
+                                        // ホバー・装備不可でもプレビューは有効
+                                        if (selected) {
+                                            onHover?.(part, 'selectedParts');
+                                        } else {
+                                            onHover?.(part, 'partList');
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        onHover?.(null, null);
+                                    }}
+                                >
+                                    <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                      {/* 不可の表示（mutuallyExclusiveと重複時は非表示） */}
-                      {notEquipable && !selected && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-orange text-base z-20 cursor-not-allowed pointer-events-none">
-                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                            <span>装 備</span>
-                            <span>不 可</span>
-                          </span>
-                        </div>
-                      )}
+                                    {/* 併用不可の表示 */}
+                                    {showMutualExclusiveOverlay && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-400 text-base z-20 pointer-events-none">
+                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                                                <span>併 用</span>
+                                                <span>不 可</span>
+                                            </span>
+                                        </div>
+                                    )}
 
-                      {/* ホバー時のオレンジ半透明レイヤー */}
-                      {partHovered && !selected && !notEquipable && !mutuallyExclusive && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
-                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                            <span>装 備</span>
-                            <span>可 能</span>
-                          </span>
-                        </div>
-                      )}
+                                    {/* 装備不可の表示 */}
+                                    {showNotEquipableOverlay && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-orange text-base z-20 pointer-events-none">
+                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                                                <span>装 備</span>
+                                                <span>不 可</span>
+                                            </span>
+                                        </div>
+                                    )}
 
-                      {/* 装備中の表示 */}
-                      {selected && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20 pointer-events-none">
-                          <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
-                            <span>装 備</span>
-                            <span>完 了</span>
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                                    {/* ホバー時のオレンジ半透明レイヤー */}
+                                    {partHovered && !selected && !showNotEquipableOverlay && !showMutualExclusiveOverlay && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
+                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                                                <span>装 備</span>
+                                                <span>可 能</span>
+                                            </span>
+                                        </div>
+                                    )}
 
+                                    {/* 装備中の表示 */}
+                                    {selected && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20 pointer-events-none">
+                                            <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
+                                                <span>装 備</span>
+                                                <span>完 了</span>
+                                            </span>
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
