@@ -15,6 +15,7 @@ const PartSelectionSection = ({
   categories, // ['防御', '攻撃', ... 'すべて'] のstring配列で渡す
   onPreviewSelect,
   hoveredPart,
+  isPartDisabled,
 }) => {
   // カテゴリボタンの表示
   return (
@@ -112,6 +113,7 @@ const PartSelectionSection = ({
         categories={categories}
         filterCategory={filterCategory}
         setFilterCategory={setFilterCategory}
+        isPartDisabled={isPartDisabled} 
       />
     </div>
   );

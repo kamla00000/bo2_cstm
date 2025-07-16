@@ -1,0 +1,125 @@
+[
+  {
+    "name": "高性能走行制御機構_LV1",
+    "category": "移動",
+    "close": 4,
+    "mid": 1,
+    "long": 0,
+    "speed": 5,
+    "kind": "高性能走行制御機構",
+    "description": "スピードが5増加。なお高性能走行制御機構系パーツは複数装備することは不可。"
+  },
+  {
+    "name": "噴射制御装置_LV1",
+    "category": "移動",
+    "close": 3,
+    "mid": 0,
+    "long": 0,
+    "thruster": 5,
+    "description": "スラスターが5増加。"
+  },
+  {
+    "name": "噴射制御装置_LV2",
+    "category": "移動",
+    "close": 4,
+    "mid": 0,
+    "long": 0,
+    "thruster": 7,
+    "description": "スラスターが7増加。"
+  },
+  {
+    "name": "噴射制御装置_LV3",
+    "category": "移動",
+    "close": 3,
+    "mid": 4,
+    "long": 0,
+    "thruster": 10,
+    "description": "スラスターが10増加。"
+  },
+  {
+    "name": "噴射制御装置_LV4",
+    "category": "移動",
+    "close": 6,
+    "mid": 4,
+    "long": 0,
+    "thruster": 12,
+    "description": "スラスターが12増加。"
+  },
+  {
+    "name": "噴射制御装置_LV5",
+    "category": "移動",
+    "close": 3,
+    "mid": 3,
+    "long": 5,
+    "thruster": 15,
+    "description": "スラスターが15増加。高速移動中のスラスター消費量を5%軽減。"
+  },
+  {
+    "name": "大出力追加ブースター_LV1",
+    "category": "移動",
+    "close": 5,
+    "mid": 4,
+    "long": 3,
+    "thruster": 10,
+    "highSpeedMovement": 1,
+    "description": "高速移動が1増加。スラスターが10増加。"
+  },
+  {
+    "name": "オーバーチューン[機動]_LV1",
+    "category": "移動",
+    "highSpeedMovementByLevel": [1, 4, 7, 10],
+    "close": 3,
+    "mid": 1,
+    "long": 0,
+    "description": "高速移動が1増加。機体LVが1上昇するごとにさらに3増加。同一のパーツ効果による最大上昇値は10。"
+  },
+  {
+    "name": "オーバーチューン[スラスター]_LV1",
+    "category": "移動",
+    "thrusterByLevel": [3, 7, 11, 15],
+    "close": 2,
+    "mid": 3,
+    "long": 2,
+    "description": "スラスターが3増加。機体LVが1上昇するごとにさらに4増加。同一のパーツ効果による最大上昇値は15。"
+  },
+  {
+    "name": "運動性能強化機構_LV1",
+    "category": "移動",
+    "close": 5,
+    "mid": 2,
+    "long": 3,
+    "speed": 10,
+    "kind": "高性能走行制御機構",
+    "description": "スピードが10増加し、旋回性能が5増加。脚部負荷発生時の回復速度を20%上昇。なおスピードまたは旋回性能が上昇するパーツとの同時装備は行えない。",
+    "turnPerformanceGround": 5,
+    "turnPerformanceSpace": 5
+  },
+  {
+    "name": "燃焼効率補助装置_LV1",
+    "category": "移動",
+    "close": 2,
+    "mid": 2,
+    "long": 1,
+    "description": "高速移動開始時と高速移動のスラスター消費量を10%軽減。"
+  },
+  {
+    "name": "コンポジットモーター_LV1",
+    "category": "移動",
+    "close": 3,
+    "mid": 0,
+    "long": 5,
+    "speed": 7,
+    "description": "スピードが7増加し、旋回性能が12増加。ジャンプ後と高速移動後の脚部負荷を20%軽減する。なおスピードまたは旋回性能が上昇するパーツとの同時装備は行えない。",
+    "turnPerformanceGround": 12,
+    "turnPerformanceSpace": 12
+  },
+  {
+    "name": "高純度推進剤_LV1",
+    "category": "移動",
+    "close": 5,
+    "mid": 2,
+    "long": 4,
+    "thruster": 15,
+    "description": "スラスターが15増加。スラスターの上限値が10増加する。スラスターの回復速度が10%上昇。"
+  }
+]

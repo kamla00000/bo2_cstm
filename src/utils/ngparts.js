@@ -1,36 +1,50 @@
+// ngparts.js
 // 併用不可（NG）パーツ判定ロジックを一元管理
 
-// 併用不可対象パーツ名（部分一致）
 export const specialTurnPartNames = [
     "運動性能強化機構",
     "コンポジットモーター"
 ];
 
-// 特殊パーツかどうか判定
 export const isSpecialTurnPart = (part) => {
-    return specialTurnPartNames.some(name => part.name && part.name.includes(name));
+    const result = specialTurnPartNames.some(name => part.name && part.name.includes(name));
+    return result;
 };
 
-// スピード・旋回性能上昇パーツか判定
 export const isSpeedOrTurnPart = (part) => {
-    return part.speed > 0 || part.turnPerformanceGround > 0 || part.turnPerformanceSpace > 0;
+    const isSpeedPositive = typeof part.speed === 'number' && part.speed > 0;
+    const isTurnGroundPositive = typeof part.turnPerformanceGround === 'number' && part.turnPerformanceGround > 0;
+    const isTurnSpacePositive = typeof part.turnPerformanceSpace === 'number' && part.turnPerformanceSpace > 0;
+
+    const result = isSpeedPositive || isTurnGroundPositive || isTurnSpacePositive;
+    return result;
 };
 
-// 併用不可判定（グレーアウト用）
 export const isPartDisabled = (part, selectedParts) => {
-    // 既に装備済みならfalse
-    if (selectedParts.some(p => p.name === part.name)) return false;
+    const isAlreadySelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name === part.name);
+    if (isAlreadySelected) {
+        return false;
+    }
 
-    // 特殊パーツ装備時、他のスピード/旋回補正パーツはグレーアウト
-    if (
-        isSpecialTurnPart(part) &&
-        selectedParts.some(p => isSpeedOrTurnPart(p) && !isSpecialTurnPart(p))
-    ) return true;
+    const isPartSpecial = isSpecialTurnPart(part);
+    const isPartSpeedOrTurn = isSpeedOrTurnPart(part);
 
-    if (
-        isSpeedOrTurnPart(part) &&
-        selectedParts.some(p => isSpecialTurnPart(p))
-    ) return true;
+    const hasSpecialSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpecialTurnPart(p));
+    const hasSpeedOrTurnSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpeedOrTurnPart(p) && !isSpecialTurnPart(p));
+    
+    const hasOtherSpecialSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpecialTurnPart(p) && p.name !== part.name);
+
+    if (isPartSpeedOrTurn && hasSpecialSelected && !isPartSpecial) {
+        return true;
+    }
+
+    if (isPartSpecial && hasSpeedOrTurnSelected) {
+        return true;
+    }
+
+    if (isPartSpecial && hasOtherSpecialSelected) {
+        return true;
+    }
 
     return false;
 };

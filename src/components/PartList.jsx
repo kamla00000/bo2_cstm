@@ -125,7 +125,7 @@ const PartList = ({
         if (isSelected(part)) return false; // 既に選択されている場合は装備可能ではない
         // isPartDisabled は useAppData で定義されている総合的な併用不可判定
         // isPartDisabled が関数として渡されていることを確認
-        if (typeof isPartDisabled === 'function' && isPartDisabled(part)) return false; // 併用不可の場合
+        if (typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts)) return false; // 併用不可の場合
         if (willCauseSlotOverflow(part)) return false; // スロットオーバーの場合
         if (isPartLimitReached) return false; // パーツ数上限の場合
         if (hasSameKind(part)) return false; // kind重複の場合
@@ -196,8 +196,8 @@ const PartList = ({
                         {sortedParts.map((part) => {
                             const selected = isSelected(part);
                             const partHovered = hoveredPart && hoveredPart.name === part.name;
-                            // isPartDisabledで併用不可を判定
-                            const disabledByCombination = typeof isPartDisabled === 'function' && isPartDisabled(part) && !selected;
+                            // isPartDisabledで併用不可を判定（selectedPartsを渡す）
+                            const disabledByCombination = typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts) && !selected;
                             const disabledByKind = hasSameKind(part) && !selected;
                             const disabledByOtherReasons = !selected && !isEquipable(part) && !disabledByCombination && !disabledByKind;
 
@@ -238,8 +238,8 @@ const PartList = ({
                                 >
                                     <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                                    {/* 併用不可の表示 */}
-                                    {showMutualExclusiveOverlay && (
+                                    {/* 併用不可の表示（disabledByCombination優先） */}
+                                    {disabledByCombination && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-400 text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
                                                 <span>併 用</span>
@@ -248,8 +248,8 @@ const PartList = ({
                                         </div>
                                     )}
 
-                                    {/* 装備不可の表示 */}
-                                    {showNotEquipableOverlay && (
+                                    {/* 装備不可の表示（disabledByCombinationでない場合のみ） */}
+                                    {!disabledByCombination && showNotEquipableOverlay && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-orange text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
                                                 <span>装 備</span>
