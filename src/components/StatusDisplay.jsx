@@ -195,7 +195,7 @@ const StatusDisplay = ({
 
           <div className="grid grid-cols-7 gap-2 py-1 items-center border-b border-gray-700 last:border-b-0">
             <div className="col-span-full text-md text-right text-gray-200 pr-2">
-              <span className="font-semibold">格闘判定力：</span>
+              <span className="font-semibold">判定：</span>
               <span className="font-bold mr-8">{selectedMs["格闘判定力"] || '-'}</span>
               <span className="font-semibold">カウンター：</span>
               <span className="font-bold">{selectedMs["カウンター"] || '-'}</span>

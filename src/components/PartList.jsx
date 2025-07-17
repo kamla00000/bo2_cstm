@@ -52,7 +52,6 @@ const ImageWithFallback = ({ partName, level, className }) => {
                 src={src}
                 alt={partName}
                 className={`w-full h-full object-cover ${className || ''}`}
-                // 画像がロード済みでない場合にのみエラーハンドラを呼び出す
                 onError={hasLoaded ? null : handleError}
                 onLoad={handleLoad}
             />
@@ -74,14 +73,37 @@ const PartList = ({
     selectedMs,
     currentSlotUsage,
     onPreviewSelect,
-    isPartDisabled, // useAppDataから渡されるisPartDisabled関数
+    isPartDisabled,
 }) => {
-    if (!parts || !Array.isArray(parts)) {
-        return <p className="text-gray-200">パーツデータがありません。</p>;
-    }
-
     // 装備中判定
     const isSelected = (part) => selectedParts.some(p => p.name === part.name);
+
+    // ワンクッション用state
+    const [lastActionedPartName, setLastActionedPartName] = React.useState(null);
+    const [actionType, setActionType] = React.useState(null); // 'equip' or 'unequip'
+
+    // ★ 追加: selectedPartsが空になったらワンクッション状態をリセット
+    React.useEffect(() => {
+        if (selectedParts.length === 0 && lastActionedPartName !== null) {
+            setLastActionedPartName(null);
+            setActionType(null);
+        }
+    }, [selectedParts, lastActionedPartName]); // lastActionedPartNameも依存配列に含める
+
+    // 装備時の処理をラップ（ワンクッション動作対応）
+    const handleSelect = (part) => {
+        const currentlySelected = isSelected(part);
+
+        if (!currentlySelected) { // 今から装備する場合
+            setLastActionedPartName(part.name);
+            setActionType('equip');
+        } else { // 今から解除する場合
+            // 解除時はワンクッション状態をリセットし、通常のソート位置に戻す
+            setLastActionedPartName(null);
+            setActionType(null);
+        }
+        onSelect(part); // 親コンポーネントのonSelectを呼び出す
+    };
 
     // スロットオーバー判定
     const willCauseSlotOverflow = (part) => {
@@ -122,19 +144,14 @@ const PartList = ({
 
     // 装備可能（未装備）判定
     const isEquipable = (part) => {
-        if (isSelected(part)) return false; // 既に選択されている場合は装備可能ではない
-        // isPartDisabled は useAppData で定義されている総合的な併用不可判定
-        // isPartDisabled が関数として渡されていることを確認
-        if (typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts)) return false; // 併用不可の場合
-        if (willCauseSlotOverflow(part)) return false; // スロットオーバーの場合
-        if (isPartLimitReached) return false; // パーツ数上限の場合
-        if (hasSameKind(part)) return false; // kind重複の場合
-        if (isCategorySpecificPartDisabled(part)) return false; // カテゴリ特攻の制限
+        if (isSelected(part)) return false; // 装備済みの場合は装備可能ではない
+        if (typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts)) return false;
+        if (willCauseSlotOverflow(part)) return false;
+        if (isPartLimitReached) return false;
+        if (hasSameKind(part)) return false;
+        if (isCategorySpecificPartDisabled(part)) return false;
         return true;
     };
-
-    // 装備不能判定 (selectedPartsに含まれておらず、isEquipableでないもの)
-    const isNotEquipable = (part) => !isSelected(part) && !isEquipable(part);
 
     // 使用スロット合計
     const getSlotSum = (part) =>
@@ -143,47 +160,116 @@ const PartList = ({
     // 属性取得
     const getCategory = (part) => part.category || '';
 
-    // ソートのためのグループ分け
-    const equipableParts = parts
-        .filter(part => isEquipable(part))
-        .sort((a, b) => {
-            const slotDiff = getSlotSum(b) - getSlotSum(a);
-            if (slotDiff !== 0) return slotDiff;
-            return getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
-        });
-
-    const selectedPartsGroup = parts
-        .filter(part => isSelected(part))
-        .sort((a, b) => {
-            const slotDiff = getSlotSum(b) - getSlotSum(a);
-            if (slotDiff !== 0) return slotDiff;
-            return getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
-        });
-
-    // 「併用不可」と「装備不可」を明確に区別し、優先度を付けてソート
+    // 「併用不可」と「装備不可」の優先度付け
     const getNotEquipablePriority = (part) => {
-        if (isSelected(part)) return 3; // 選択済みは最後
-        // isPartDisabled が関数として渡されていることを確認
-        if (typeof isPartDisabled === 'function' && isPartDisabled(part)) return 0; // useAppDataのisPartDisabledで不可とされたものが最優先（併用不可扱い）
-        if (willCauseSlotOverflow(part)) return 1; // スロットオーバー
-        if (isPartLimitReached) return 1; // 装備数上限
-        if (hasSameKind(part)) return 0; // kind重複も併用不可扱い (isPartDisabledでカバーされる場合もあるが、明示的に)
-        if (isCategorySpecificPartDisabled(part)) return 1; // カテゴリ特攻の制限
-        return 2; // その他の装備不可
+        // isSelected(part)の場合はこの関数が呼ばれない前提だが、念のため
+        if (isSelected(part)) return -1; // 装備中は優先度を無視（このソートでは装備済みは別のグループになるため）
+
+        // 併用不可が最も高い優先度（最も下に表示される）
+        if (typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts)) return 0;
+        if (hasSameKind(part)) return 0; // kind重複も併用不可と同等に扱う
+
+        // スロットオーバー、カテゴリ特攻プログラムは次に高い優先度
+        if (willCauseSlotOverflow(part) || isCategorySpecificPartDisabled(part) || isPartLimitReached) return 1;
+
+        // それ以外（装備可能ではないが上記理由でないもの）は低い優先度
+        return 2;
     };
 
-    const notEquipableParts = parts
-        .filter(part => !isSelected(part) && !isEquipable(part)) // 装備可能でなく、かつ選択されていないパーツ
-        .sort((a, b) => {
-            const priorityDiff = getNotEquipablePriority(a) - getNotEquipablePriority(b);
-            if (priorityDiff !== 0) return priorityDiff;
-            const slotDiff = getSlotSum(b) - getSlotSum(a);
-            if (slotDiff !== 0) return slotDiff;
-            return getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
-        });
 
-    // 結合
-    const sortedParts = [...equipableParts, ...selectedPartsGroup, ...notEquipableParts];
+    // 最終的なソートロジック (useMemoでメモ化)
+    const sortedParts = React.useMemo(() => {
+        if (!Array.isArray(parts) || parts.length === 0) {
+            return [];
+        }
+
+        // ここで全てのパーツをソートし直す
+        return [...parts].sort((a, b) => {
+            const aSelected = isSelected(a);
+            const bSelected = isSelected(b);
+            const aEquipable = isEquipable(a);
+            const bEquipable = isEquipable(b);
+
+            // ワンクッション対象かどうかを最優先で判定
+            const aIsLastActioned = (lastActionedPartName === a.name && actionType === 'equip');
+            const bIsLastActioned = (lastActionedPartName === b.name && actionType === 'equip');
+
+            // === 1. メインのグループ分け順序 ===
+            // 優先度高: 装備直後に装備されたパーツ (その場に固定)
+            // 次: 装備可能 (未装備)
+            // 次: その他の装備済みパーツ
+            // 優先度低: 装備不可 (未装備)
+
+            let aGroup, bGroup;
+
+            if (aIsLastActioned) {
+                aGroup = 0; // 最優先グループ
+            } else if (aEquipable) {
+                aGroup = 1; // 装備可能
+            } else if (aSelected) {
+                aGroup = 2; // その他の装備済み
+            } else {
+                aGroup = 3; // 装備不可
+            }
+
+            if (bIsLastActioned) {
+                bGroup = 0; // 最優先グループ
+            } else if (bEquipable) {
+                bGroup = 1;
+            } else if (bSelected) {
+                bGroup = 2;
+            } else {
+                bGroup = 3;
+            }
+
+            if (aGroup !== bGroup) {
+                return aGroup - bGroup;
+            }
+
+            // === 2. 各グループ内での詳細ソート ===
+            // (aGroup === bGroup の場合のみ実行)
+
+            // グループ0: 装備直後パーツ (最大1つなので、この比較には通常到達しないが念のため)
+            if (aGroup === 0) {
+                 // スロット消費量降順 (このグループもソートは適用)
+                 const slotDiff = getSlotSum(b) - getSlotSum(a);
+                 if (slotDiff !== 0) return slotDiff;
+                 return a.name.localeCompare(b.name);
+            }
+
+            // グループ1: 装備可能パーツ (スロット消費量降順 -> カテゴリ順 -> 名前順)
+            if (aGroup === 1) {
+                const slotDiff = getSlotSum(b) - getSlotSum(a);
+                if (slotDiff !== 0) return slotDiff;
+                const categoryDiff = getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
+                if (categoryDiff !== 0) return categoryDiff;
+                return a.name.localeCompare(b.name);
+            }
+
+            // グループ2: その他の装備済みパーツ (スロット消費量降順 -> カテゴリ順 -> 名前順)
+            if (aGroup === 2) {
+                const slotDiff = getSlotSum(b) - getSlotSum(a);
+                if (slotDiff !== 0) return slotDiff;
+                const categoryDiff = getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
+                if (categoryDiff !== 0) return categoryDiff;
+                return a.name.localeCompare(b.name);
+            }
+
+            // グループ3: 装備不可パーツ (優先度昇順 -> スロット消費量降順 -> カテゴリ順 -> 名前順)
+            if (aGroup === 3) {
+                const priorityDiff = getNotEquipablePriority(a) - getNotEquipablePriority(b);
+                if (priorityDiff !== 0) return priorityDiff;
+                const slotDiff = getSlotSum(b) - getSlotSum(a);
+                if (slotDiff !== 0) return slotDiff;
+                const categoryDiff = getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
+                if (categoryDiff !== 0) return categoryDiff;
+                return a.name.localeCompare(b.name);
+            }
+
+            return 0; // 念のため
+        });
+    }, [parts, selectedParts, lastActionedPartName, actionType, isSelected, isEquipable, getSlotSum, getCategory, getNotEquipablePriority]);
+
 
     return (
         <div className="flex-grow w-full partlist-card-shape">
@@ -196,7 +282,6 @@ const PartList = ({
                         {sortedParts.map((part) => {
                             const selected = isSelected(part);
                             const partHovered = hoveredPart && hoveredPart.name === part.name;
-                            // isPartDisabledで併用不可を判定（selectedPartsを渡す）
                             const disabledByCombination = typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts) && !selected;
                             const disabledByKind = hasSameKind(part) && !selected;
                             const disabledByOtherReasons = !selected && !isEquipable(part) && !disabledByCombination && !disabledByKind;
@@ -204,7 +289,9 @@ const PartList = ({
                             const levelMatch = part.name.match(/_LV(\d+)/);
                             const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
-                            // 「併用不可」または「装備不可」の場合にボタンを無効化
+                            // ワンクッション表示の条件: 最後に装備したパーツであり、かつ「装備」アクションだった場合
+                            const showOneShotEffect = lastActionedPartName === part.name && actionType === 'equip';
+
                             const showMutualExclusiveOverlay = disabledByCombination || disabledByKind;
                             const showNotEquipableOverlay = disabledByOtherReasons;
                             const reallyDisabled = selected ? false : (showMutualExclusiveOverlay || showNotEquipableOverlay);
@@ -216,16 +303,16 @@ const PartList = ({
                                         w-16 h-16 aspect-square
                                         bg-gray-800
                                         ${reallyDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+                                        ${showOneShotEffect ? 'animate-pulse border-2 border-orange-400' : ''} {/* ワンクッション（装備直後） */}
+                                        ${selected && !showOneShotEffect ? '' : ''} {/* 装備中のボーダーはなし */}
                                     `}
                                     onClick={() => {
                                         if (!reallyDisabled || selected) {
-                                            onSelect(part);
+                                            handleSelect(part);
                                         }
-                                        // ホバー・装備不可でもプレビューは有効
                                         onPreviewSelect?.(part);
                                     }}
                                     onMouseEnter={() => {
-                                        // ホバー・装備不可でもプレビューは有効
                                         if (selected) {
                                             onHover?.(part, 'selectedParts');
                                         } else {
@@ -258,8 +345,8 @@ const PartList = ({
                                         </div>
                                     )}
 
-                                    {/* ホバー時のオレンジ半透明レイヤー */}
-                                    {partHovered && !selected && !showNotEquipableOverlay && !showMutualExclusiveOverlay && (
+                                    {/* ホバー時のオレンジ半透明レイヤー (ワンクッション表示と重複しないように調整) */}
+                                    {partHovered && !selected && !showNotEquipableOverlay && !showMutualExclusiveOverlay && !showOneShotEffect && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
                                                 <span>装 備</span>
@@ -268,7 +355,7 @@ const PartList = ({
                                         </div>
                                     )}
 
-                                    {/* 装備中の表示 */}
+                                    {/* 装備中の表示 (ワンクッション表示と重ねて表示) */}
                                     {selected && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
