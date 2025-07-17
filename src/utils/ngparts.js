@@ -31,18 +31,22 @@ export const isPartDisabled = (part, selectedParts) => {
 
     const hasSpecialSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpecialTurnPart(p));
     const hasSpeedOrTurnSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpeedOrTurnPart(p) && !isSpecialTurnPart(p));
-    
     const hasOtherSpecialSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpecialTurnPart(p) && p.name !== part.name);
+
+    // kind重複判定（同種パーツの重複装備不可）
+    const partKind = part.kind;
+    const hasSameKindSelected = partKind && Array.isArray(selectedParts) && selectedParts.some(p => p.kind === partKind && p.name !== part.name);
 
     if (isPartSpeedOrTurn && hasSpecialSelected && !isPartSpecial) {
         return true;
     }
-
     if (isPartSpecial && hasSpeedOrTurnSelected) {
         return true;
     }
-
     if (isPartSpecial && hasOtherSpecialSelected) {
+        return true;
+    }
+    if (hasSameKindSelected) {
         return true;
     }
 

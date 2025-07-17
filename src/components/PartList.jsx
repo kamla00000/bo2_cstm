@@ -214,7 +214,7 @@ const PartList = ({
                                     key={part.name}
                                     className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
                                         w-16 h-16 aspect-square
-                                        ${selected ? 'bg-green-700' : 'bg-gray-800'}
+                                        bg-gray-800
                                         ${reallyDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                     onClick={() => {
