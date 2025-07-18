@@ -3,7 +3,7 @@ import { ALL_CATEGORY_NAME } from '../constants/appConstants';
 
 // 画像パスを生成する関数をコンポーネントの外に定義
 const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName)}`;
-const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp']; // 試す拡張子の優先順位
+const IMAGE_EXTENSIONS = ['webp']; // webpのみ対応
 
 // 属性の並び順を定義
 const CATEGORY_ORDER = ['防御', '攻撃', '移動', '補助', '特殊', ALL_CATEGORY_NAME];
@@ -40,8 +40,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
 
     let src;
     if (currentExtIndex < IMAGE_EXTENSIONS.length) {
-        const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
-        src = `${getBaseImagePath(partName)}.${currentExt}`;
+        src = `${getBaseImagePath(partName)}.webp`;
     } else {
         src = '/images/parts/default.webp'; // デフォルト画像
     }

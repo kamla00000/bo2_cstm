@@ -75,12 +75,12 @@ const MsInfoDisplay = ({
         `}</style>
         <div className="ms-imgbox-card">
           <img
-            src={`/images/ms/${baseName}.jpg`}
+            src={`/images/ms/${baseName}.webp`}
             alt={selectedMs["MS名"]}
             className="ms-img-card cursor-pointer"
             onClick={onMsImageClick}
             onError={(e) => {
-              console.error(`MsInfoDisplay: Image load error for: /images/ms/${baseName}.jpg`);
+              console.error(`MsInfoDisplay: Image load error for: /images/ms/${baseName}.webp`);
               e.target.src = '/images/ms/default.webp';
               e.target.onerror = null;
             }}

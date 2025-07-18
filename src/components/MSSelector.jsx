@@ -216,10 +216,11 @@ const MSSelector = ({
                   >
                     <div className="ms-imgbox-card relative w-16 h-16 flex-shrink-0 overflow-hidden transition" style={{ width: '4rem', height: '4rem', position: 'relative', overflow: 'hidden' }}>
                       <img
-                        src={`/images/ms/${baseName}.jpg`}
+                        src={`/images/ms/${baseName}.webp`}
                         alt={ms["MS名"]}
                         className={`ms-img-card transition ${isSelected ? 'selected' : ''}`}
                         onError={(e) => {
+                          console.error(`MSSelector: Image load error for: /images/ms/${baseName}.webp`);
                           e.target.src = '/images/ms/default.webp';
                           e.target.onerror = null;
                         }}

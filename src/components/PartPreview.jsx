@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 // 画像パスを生成する関数
 const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName || '')}`;
-const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp'];
+const IMAGE_EXTENSIONS = ['webp'];
 
 const ImageWithFallback = ({ partName, className }) => {
   const [currentExtIndex, setCurrentExtIndex] = useState(0);
@@ -13,10 +13,9 @@ const ImageWithFallback = ({ partName, className }) => {
 
   let src;
   if (currentExtIndex < IMAGE_EXTENSIONS.length) {
-    const currentExt = IMAGE_EXTENSIONS[currentExtIndex];
-    src = `${getBaseImagePath(partName)}.${currentExt}`;
+    src = `${getBaseImagePath(partName)}.webp`;
   } else {
-    src = '/images/parts/default.webp'; // 全ての拡張子で画像が見つからない場合のフォールバック
+    src = '/images/parts/default.webp';
   }
 
   const handleError = () => {
