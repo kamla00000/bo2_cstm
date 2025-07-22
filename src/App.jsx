@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import PickedMs from './components/PickedMs';
 import PartSelectionSection from './components/PartSelectionSection';
 import { useAppData } from './hooks/useAppData';
@@ -212,10 +212,10 @@ function App() {
             </button>
             {/* X（旧Twitter）アイコン */}
             <a
-              href="#"
+              href="https://x.com/GBO2CSTM"
               className="ml-4 w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"
               style={{ zIndex: 2, borderRadius: 0 }}
-              aria-label="Xでシェア"
+              aria-label="Xでシェア" target="_blank"
             >
               {/* 新しいXアイコン（黒背景に白X） */}
               <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
