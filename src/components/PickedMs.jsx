@@ -29,6 +29,10 @@ const PickedMs = ({
     onSelectedPartDisplayLeave,
     showSelector,
     setShowSelector,
+    filterType,
+    setFilterType,
+    filterCost,
+    setFilterCost,
 }) => {
     const baseName = selectedMs
         ? selectedMs["MS名"]
@@ -89,6 +93,10 @@ const PickedMs = ({
                         msData={msData}
                         onSelect={handleSelectMs}
                         selectedMs={selectedMs}
+                        filterType={filterType}
+                        setFilterType={setFilterType}
+                        filterCost={filterCost}
+                        setFilterCost={setFilterCost}
                     />
                 )}
 

@@ -13,9 +13,11 @@ const MSSelector = ({
   msData,
   onSelect,
   selectedMs,
+  filterType,
+  setFilterType,
+  filterCost,
+  setFilterCost,
 }) => {
-  const [filterType, setFilterType] = useState('');
-  const [filterCost, setFilterCost] = useState('');
   const [searchText, setSearchText] = useState('');
   const [filteredMs, setFilteredMs] = useState([]);
 
@@ -37,11 +39,11 @@ const MSSelector = ({
       // 名前検索（部分一致・大文字小文字・全角半角・ひらがなカタカナ区別なし）
       const toHiragana = (str) => str.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
       const normalize = (str) => toHiragana(str.toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC'));
-      const matchesSearch =
-        !searchText ||
-        normalize(msName).includes(normalize(searchText));
+        const matchesSearch =
+          !searchText ||
+          normalize(msName).includes(normalize(searchText));
 
-      return matchesType && matchesCost && matchesSearch;
+        return matchesType && matchesCost && matchesSearch;
     });
 
     // 重複排除（スクロール挙動確認用に一時コメントアウト）

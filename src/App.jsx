@@ -41,6 +41,9 @@ function App() {
     isPartDisabled, // ★★★ ここに isPartDisabled を追加！ ★★★
   } = useAppData();
 
+  // 属性・コスト絞り込みをAppで管理
+  const [filterType, setFilterType] = useState('');
+  const [filterCost, setFilterCost] = useState('');
   const [showSelector, setShowSelector] = useState(!selectedMs);
   const PickedMsRef = useRef(null);
   const [PickedMsHeight, setPickedMsHeight] = useState(0);
@@ -253,6 +256,10 @@ function App() {
             onSelectedPartDisplayLeave={() => handlePartHover(null, null)}
             showSelector={showSelector}
             setShowSelector={setShowSelector}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            filterCost={filterCost}
+            setFilterCost={setFilterCost}
           />
         </div>
         {selectedMs && !showSelector && (
