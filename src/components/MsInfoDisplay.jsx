@@ -24,10 +24,22 @@ const MsInfoDisplay = ({
   expansionOptions,
   expansionDescriptions,
   onMsImageClick, // 画像クリック時のハンドラ
+  msData,
+  handleMsSelect,
 }) => {
   if (!selectedMs) {
     return null;
   }
+
+  // 同名・同属性の他レベル（コスト違い）MSを抽出
+  const baseMsName = (selectedMs["MS名"] ?? '').replace(/_LV\d+$/, '').trim();
+  const msType = selectedMs.属性;
+  const relatedMsList = (msData || []).filter(ms => {
+    const name = (ms["MS名"] ?? '').replace(/_LV\d+$/, '').trim();
+    return name === baseMsName && ms.属性 === msType;
+  }).sort((a, b) => Number(a.コスト) - Number(b.コスト));
+  // コスト順で並べる
+  const currentCost = String(selectedMs.コスト);
 
   return (
     <>
@@ -89,26 +101,58 @@ const MsInfoDisplay = ({
         </div>
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 mb-1">
-            <span
-              className="ms-badge-hex text-base flex-shrink-0"
-              data-type={selectedMs.属性}
-            >
-              {selectedMs.属性}：{selectedMs.コスト}
-            </span>
+            {/* コスト選択六角形群（外観調整） */}
+            {relatedMsList.map(ms => {
+              const costStr = String(ms.コスト);
+              const isCurrent = costStr === currentCost;
+              // アクティブなコストのみ属性＋上下ボーダー＋色付き
+              // 非アクティブはコストのみ・ボーダーなし・文字小さめ・抑揚強化
+              // 属性ごとにボーダー色を決定
+              let borderTop = '', borderBottom = '';
+              if (isCurrent) {
+                if (ms.属性 === '強襲') {
+                  borderTop = borderBottom = '#ef4444';
+                } else if (ms.属性 === '汎用') {
+                  borderTop = borderBottom = '#3b82f6';
+                } else if (ms.属性 === '支援' || ms.属性 === '支援攻撃') {
+                  borderTop = borderBottom = '#facc15';
+                }
+              }
+              return (
+                <button
+                  key={costStr}
+                  className={`ms-badge-hex flex-shrink-0 ${isCurrent ? 'hex-main' : 'hex-side'}`}
+                  data-type={isCurrent ? ms.属性 : ''}
+                  style={{
+                    opacity: isCurrent ? 1 : 0.7,
+                    border: 'none',
+                    background: isCurrent ? '#353942' : '#23272e',
+                    cursor: isCurrent ? 'default' : 'pointer',
+                    minWidth: isCurrent ? 0 : 28,
+                    padding: isCurrent ? '0.2em 1.1em' : '0.08em 0.7em',
+                    boxShadow: isCurrent ? '0 2px 8px #0003' : '0 1px 4px #0002',
+                    color: '#fff',
+                    borderTop: isCurrent ? `3px solid ${borderTop}` : 'none',
+                    borderBottom: isCurrent ? `3px solid ${borderBottom}` : 'none',
+                    fontSize: isCurrent ? undefined : '1em',
+                  }}
+                  disabled={isCurrent}
+                  onClick={() => !isCurrent && handleMsSelect(ms)}
+                  title={isCurrent ? '選択中' : `${costStr}`}
+                >
+                  {isCurrent ? `${ms.属性}：${costStr}` : costStr}
+                </button>
+              );
+            })}
             <style>{`
               .ms-badge-hex {
                 display: inline-block;
-                padding: 0.2em 1.1em;
                 clip-path: polygon(18% 0%, 82% 0%, 100% 50%, 82% 100%, 18% 100%, 0% 50%);
                 margin: 0 2px;
-                box-shadow: 0 2px 8px #0003;
                 letter-spacing: 0.05em;
-                background: #353942;
-                color: #fff;
-                border-top: 3px solid transparent;
-                border-bottom: 3px solid transparent;
                 transition: box-shadow 0.18s, background 0.18s, color 0.18s, transform 0.18s;
               }
+              /* アクティブのみ上下ボーダー色付き */
               .ms-badge-hex[data-type="強襲"] {
                 border-top: 3px solid #ef4444;
                 border-bottom: 3px solid #ef4444;
@@ -121,6 +165,24 @@ const MsInfoDisplay = ({
               .ms-badge-hex[data-type="支援攻撃"] {
                 border-top: 3px solid #facc15;
                 border-bottom: 3px solid #facc15;
+              }
+              .hex-main {
+                font-size: 1.15em;
+                font-weight: bold;
+                z-index: 2;
+              }
+              .hex-side {
+                font-size: 1em;
+                z-index: 1;
+                color: #fff;
+                transition: background 0.25s, color 0.25s, box-shadow 0.25s, border 0.25s;
+              }
+              .hex-side:not(:disabled):hover {
+                background: #fb923c !important;
+                color: #fff !important;
+                box-shadow: 0 0 16px #fb923c, 0 2px 12px #0008;
+                border: 2px solid #fb923c;
+                outline: none;
               }
             `}</style>
           </div>
