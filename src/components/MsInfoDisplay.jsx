@@ -176,6 +176,12 @@ const MsInfoDisplay = ({
                 z-index: 1;
                 color: #fff;
                 transition: background 0.25s, color 0.25s, box-shadow 0.25s, border 0.25s;
+                animation: hexSideBlink 2.2s infinite linear;
+              }
+              @keyframes hexSideBlink {
+                0% { background: #181a20; }
+                50% { background: #fb923c; }
+                100% { background: #181a20; }
               }
               .hex-side:not(:disabled):hover {
                 background: #fb923c !important;
