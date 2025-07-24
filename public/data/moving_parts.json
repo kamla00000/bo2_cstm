@@ -61,8 +61,8 @@
     "mid": 4,
     "long": 3,
     "thruster": 10,
-    "highSpeedMovement": 1,
-    "description": "高速移動が1増加。スラスターが10増加。"
+    "highSpeedMovement": 5,
+    "description": "高速移動が5増加。スラスターが10増加。"
   },
   {
     "name": "オーバーチューン[機動]_LV1",
