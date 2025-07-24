@@ -153,6 +153,8 @@
     "close": 2,
     "mid": 3,
     "long": 3,
+    "turnPerformanceGround": 3,
+    "turnPerformanceSpace": 3,
     "description": "サイコミュ兵装のロックオン時間を25%短縮。機体HPの受けるダメージを3%軽減。MSの旋回性能が3増加"
   },
   {
