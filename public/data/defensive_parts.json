@@ -440,10 +440,9 @@
     "close": 5,
     "mid": 4,
     "long": 3,
-    "hp": 0,
-    "armor_melee": 1,
-    "armor_range": 1,
-    "armor_beam": 1,
+    "armorRangeByLevel": [1, 4, 7, 10, 10, 10],
+    "armorBeamByLevel":  [1, 4, 7, 10, 10, 10],
+    "armorMeleeByLevel": [1, 4, 7, 10, 10, 10],
     "description": "耐実弾、耐ビーム、耐格闘の各補正が1増加。\n機体LVが1上昇するごとにさらに3増加。\n同一のパーツ効果による最大上昇値は10。"
   },
   {
