@@ -523,7 +523,7 @@
     "armor_range": 9,
     "armor_beam": 9,
     "hp_percent": 5,
-    "kind":"特殊強化",
+    "kind":"特殊強化フレーム",
     "description": "機体HPが5%増加。\n耐実弾補正と耐ビーム補正が9増加。\n特殊強化フレーム系パーツは複数装備できない。"
   },
   {
@@ -537,7 +537,7 @@
     "armor_range": 0,
     "armor_beam": 0,
     "hp_percent": 5,
-    "kind":"特殊強化",
+    "kind":"特殊強化フレーム",
     "description": "機体HPが5%増加。\n耐格闘補正が18増加。\n特殊強化フレーム系パーツは複数装備できない。"
   },
   {
