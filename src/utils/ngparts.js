@@ -16,7 +16,11 @@ export const isSpeedOrTurnPart = (part) => {
     const isTurnGroundPositive = typeof part.turnPerformanceGround === 'number' && part.turnPerformanceGround > 0;
     const isTurnSpacePositive = typeof part.turnPerformanceSpace === 'number' && part.turnPerformanceSpace > 0;
 
-    const result = isSpeedPositive || isTurnGroundPositive || isTurnSpacePositive;
+    // レベル依存の旋回性能上昇パーツも判定
+    const isTurnGroundByLevelPositive = Array.isArray(part.turnPerformanceGroundByLevel) && part.turnPerformanceGroundByLevel.some(v => typeof v === 'number' && v > 0);
+    const isTurnSpaceByLevelPositive = Array.isArray(part.turnPerformanceSpaceByLevel) && part.turnPerformanceSpaceByLevel.some(v => typeof v === 'number' && v > 0);
+
+    const result = isSpeedPositive || isTurnGroundPositive || isTurnSpacePositive || isTurnGroundByLevelPositive || isTurnSpaceByLevelPositive;
     return result;
 };
 

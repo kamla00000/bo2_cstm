@@ -222,6 +222,12 @@
     "close": 3,
     "mid": 3,
     "long": 1,
+    "meleeCorrectionByLevel": [1, 2, 3, 4, 5, 5],
+    "armorMeleeByLevel": [1, 2, 3, 4, 5, 5],
+    "highSpeedMovementByLevel": [1, 2, 3, 4, 5, 5],
+    "thrusterByLevel": [1, 2, 3, 4, 5, 5],
+    "turnPerformanceGroundByLevel": [1, 2, 3, 4, 5, 5],   
+    "turnPerformanceSpaceByLevel": [1, 2, 3, 4, 5, 5],
     "description": "格闘補正、耐格闘補正、高速移動、スラスター、MSの旋回性能が1増加する。\n機体LVが1上昇するごとに、さらに1増加。\n本パーツによる最大上昇は機体LV5まで。"
   },
   {
