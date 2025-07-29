@@ -35,7 +35,10 @@ const MSSelector = ({
       // タイプフィルタ
       const matchesType = !filterType || msType === filterType;
       // コストフィルタ
-      const matchesCost = !filterCost || msCost === filterCost;
+      const matchesCost =
+        !filterCost ||
+        msCost === filterCost ||
+        (filterCost === 'low' && Number(msCost) <= 400);
       // 名前検索（部分一致・大文字小文字・全角半角・ひらがなカタカナ区別なし）
       const toHiragana = (str) => str.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
       const normalize = (str) => toHiragana(str.toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC'));
@@ -120,6 +123,11 @@ const MSSelector = ({
               className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
             >{cost}</button>
           ))}
+          <button
+            onClick={() => setFilterCost('low')}
+            className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
+            style={{ minWidth: 0 }}
+          >低</button>
           <div className="ml-auto relative flex items-center">
             <input
               type="text"
@@ -127,7 +135,7 @@ const MSSelector = ({
               onChange={e => setSearchText(e.target.value)}
               placeholder="MS名で検索"
               className="search-input px-2 py-1 text-lg sm:text-xl bg-gray-900 text-gray-200 border border-gray-600 pr-8"
-              style={{ minWidth: 152, maxWidth: 232, textDecoration: 'none' }}
+              style={{ minWidth: 152, maxWidth: 170, textDecoration: 'none' }}
             />
             {searchText && (
               <button
