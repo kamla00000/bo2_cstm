@@ -317,6 +317,15 @@ export const calculateMSStatsLogic = (
   currentLimits.thruster += 20;
   limitChangedFlags.thruster = true;
   break;
+  case "パーツ拡張[スラスター]": {
+    const specialParts = allPartsCacheForExpansion?.['特殊'] || [];
+    const specialPartsCount = parts.filter(p =>
+      specialParts.some(sp => sp.name === p.name)
+    ).length;
+    expansionBonus.thruster += specialPartsCount * 5;
+    expansionBonus.thruster = Math.max(expansionBonus.thruster, 0);
+    break;
+  }
   case "パーツ拡張[HP]": {
     const offensiveParts = allPartsCacheForExpansion?.['攻撃'] || [];
     const offensivePartsCountHP = parts.filter(p =>
