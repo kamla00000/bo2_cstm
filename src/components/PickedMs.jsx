@@ -56,7 +56,18 @@ const PickedMs = ({
     };
 
     // MS選択ボタン押下時
-    const handleOpenSelector = () => setShowSelector(true);
+    const handleOpenSelector = () => {
+        setShowSelector(true);
+        if (typeof window !== "undefined" && window.history && window.location) {
+            // React Routerのnavigateをpropsで受け取っていればそれを使う
+            if (typeof navigate === "function") {
+                navigate('/');
+            } else {
+                // fallback: window.history.pushStateでURLだけ変更
+                window.history.pushState({}, '', '/');
+            }
+        }
+    };
 
     // MSSelectorでMSを選択した時
     const handleSelectMs = (ms) => {

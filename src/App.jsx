@@ -175,7 +175,10 @@ function AppContent() {
                                 padding: 0,
                                 minWidth: 0,
                             }}
-                            onClick={() => setShowSelector(true)}
+                            onClick={() => {
+                                setShowSelector(true);
+                                navigate && navigate('/');
+                            }}
                         >
                             {/* ストライプ背景 */}
                             <svg
