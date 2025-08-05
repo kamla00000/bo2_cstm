@@ -100,42 +100,46 @@ const MSSelector = ({
     >
       <div className="w-full flex flex-col gap-6">
         {/* フィルター：属性・コスト・検索を1行に統合 */}
-        <div className="w-full flex flex-row flex-wrap gap-1 items-center mb-2">
-          <button
-            onClick={() => setFilterType('')}
-            className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === '' ? 'hex-filter-btn-active' : ''}`}
-          >全属性</button>
-          {TYPES.map((type) => (
+        <div className="w-full msselector-filter-row flex flex-row flex-wrap gap-1 items-center mb-2">
+          <div className="msselector-filter-group">
             <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === type ? 'hex-filter-btn-active' : ''}`}
-            >{type}</button>
-          ))}
-          <button
-            onClick={() => setFilterCost('')}
-            className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === '' ? 'hex-filter-btn-active' : ''}`}
-          >全コスト</button>
-          {COSTS.map((cost) => (
+              onClick={() => setFilterType('')}
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === '' ? 'hex-filter-btn-active' : ''}`}
+            >全属性</button>
+            {TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === type ? 'hex-filter-btn-active' : ''}`}
+              >{type}</button>
+            ))}
+          </div>
+          <div className="msselector-filter-group cost">
             <button
-              key={cost}
-              onClick={() => setFilterCost(String(cost))}
-              className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
-            >{cost}</button>
-          ))}
-          <button
-            onClick={() => setFilterCost('low')}
-            className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
-            style={{ minWidth: 0 }}
-          >低</button>
-          <div className="ml-auto relative flex items-center">
+              onClick={() => setFilterCost('')}
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === '' ? 'hex-filter-btn-active' : ''}`}
+            >全コスト</button>
+            {COSTS.map((cost) => (
+              <button
+                key={cost}
+                onClick={() => setFilterCost(String(cost))}
+                className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
+              >{cost}</button>
+            ))}
+            <button
+              onClick={() => setFilterCost('low')}
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
+              style={{ minWidth: 0 }}
+            >低</button>
+          </div>
+          <div className="msselector-search-box ml-2 relative flex items-center">
             <input
               type="text"
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               placeholder="MS名で検索"
               className="search-input px-2 py-1 text-lg sm:text-xl bg-gray-900 text-gray-200 border border-gray-600 pr-8"
-              style={{ minWidth: 152, maxWidth: 170, textDecoration: 'none' }}
+              style={{ minWidth: 120, maxWidth: 155, textDecoration: 'none' }}
             />
             {searchText && (
               <button
