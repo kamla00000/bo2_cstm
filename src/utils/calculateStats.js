@@ -125,6 +125,16 @@ export const calculateMSStatsLogic = (
       return; // 通常のmelee加算処理をスキップ
     }
 
+    if (part.name === "レベルリンクシステム[射撃]_LV1") {
+      // LV1: melee+3, LV2: melee+5, LV3: melee+7, LV4: melee+9, LV5: melee+11...
+      const level = msLevel || 1;
+      const shootBase = typeof part.shoot === 'number' ? part.shoot : 0;
+      const bonus = shootBase + (level * 2 + 1);
+      partBonus.shoot += bonus;
+      console.log(`[calculateMSStatsLogic] レベルリンクシステム[射撃]_LV1: msLevel=${level}, shootBase=${shootBase}, bonus=${bonus}`);
+      return; // 通常のshoot加算処理をスキップ
+    }
+
     // ★レベル依存パーツの処理（各ByLevelプロパティを優先）
     Object.entries(byLevelKeys).forEach(([statKey, byLevelProp]) => {
       if (Array.isArray(part[byLevelProp])) {
