@@ -19810,15 +19810,15 @@
   "fullst": [
     {
       "name": "強行出撃",
-      "level": "1"
+      "level": 1
     },
     {
       "name": "AD-FCS",
-      "level": "1"
+      "level": 1
     },
     {
       "name": "冷却補助システム",
-      "level": "1"
+      "level": 1
     },
     {
         "name": "複合拡張パーツスロット",
@@ -19826,11 +19826,11 @@
       },
     {
       "name": "AD-FCS",
-      "level": "4"
+      "level": 4
     },
     {
       "name": "緊急射撃防御機構",
-      "level": "1"
+      "level": 1
     }
   ]
 }
