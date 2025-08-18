@@ -30,7 +30,7 @@ export const isPartDisabled = (part, selectedParts) => {
     const isSupplyPack = part.name && part.name.includes("大容量補給パック");
     const isReloadOrOH = part.description && (part.description.includes("リロード") || part.description.includes("兵装のオーバーヒート"));
     const hasSupplyPackSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name && p.name.includes("大容量補給パック"));
-    const hasReloadOrOHSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.description && (p.description.includes("リロード") || p.description.includes("オーバーヒート")));
+    const hasReloadOrOHSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.description && (p.description.includes("リロード") || p.description.includes("兵装のオーバーヒート")));
 
     if ((isSupplyPack && hasReloadOrOHSelected) || (isReloadOrOH && hasSupplyPackSelected)) {
         return true;
