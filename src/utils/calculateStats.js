@@ -114,25 +114,52 @@ export const calculateMSStatsLogic = (
     // console.groupCollapsed(`[calculateMSStatsLogic] Processing Part: ${part.name}`);
     // console.log(`Part data for ${part.name}:`, JSON.parse(JSON.stringify(part)));
 
-    // レベルリンクシステム[格闘]_LV1の特殊処理
-    if (part.name === "レベルリンクシステム[格闘]_LV1") {
-      // LV1: melee+3, LV2: melee+5, LV3: melee+7, LV4: melee+9, LV5: melee+11...
+    // レベルリンクシステムの特殊処理
+    const levelLinkMatch = part.name.match(/^レベルリンクシステム\[(.+)\]_LV1$/);
+    if (levelLinkMatch) {
+      const systemType = levelLinkMatch[1];
       const level = msLevel || 1;
-      const meleeBase = typeof part.melee === 'number' ? part.melee : 0;
-      const bonus = meleeBase + (level * 2 + 1);
-      partBonus.meleeCorrection += bonus;
-      console.log(`[calculateMSStatsLogic] レベルリンクシステム[格闘]_LV1: msLevel=${level}, meleeBase=${meleeBase}, bonus=${bonus}`);
-      return; // 通常のmelee加算処理をスキップ
-    }
-
-    if (part.name === "レベルリンクシステム[射撃]_LV1") {
-      // LV1: melee+3, LV2: melee+5, LV3: melee+7, LV4: melee+9, LV5: melee+11...
-      const level = msLevel || 1;
-      const shootBase = typeof part.shoot === 'number' ? part.shoot : 0;
-      const bonus = shootBase + (level * 2 + 1);
-      partBonus.shoot += bonus;
-      console.log(`[calculateMSStatsLogic] レベルリンクシステム[射撃]_LV1: msLevel=${level}, shootBase=${shootBase}, bonus=${bonus}`);
-      return; // 通常のshoot加算処理をスキップ
+      
+      switch (systemType) {
+        case "格闘": {
+          // LV1: melee+3, LV2: melee+5, LV3: melee+7, LV4: melee+9, LV5: melee+11...
+          const meleeBase = typeof part.melee === 'number' ? part.melee : 0;
+          const bonus = meleeBase + (level * 2 + 1);
+          partBonus.meleeCorrection += bonus;
+          console.log(`[calculateMSStatsLogic] レベルリンクシステム[格闘]_LV1: msLevel=${level}, meleeBase=${meleeBase}, bonus=${bonus}`);
+          return; // 通常のmelee加算処理をスキップ
+        }
+        case "射撃": {
+          // LV1: shoot+3, LV2: shoot+5, LV3: shoot+7, LV4: shoot+9, LV5: shoot+11...
+          const shootBase = typeof part.shoot === 'number' ? part.shoot : 0;
+          const bonus = shootBase + (level * 2 + 1);
+          partBonus.shoot += bonus;
+          console.log(`[calculateMSStatsLogic] レベルリンクシステム[射撃]_LV1: msLevel=${level}, shootBase=${shootBase}, bonus=${bonus}`);
+          return; // 通常のshoot加算処理をスキップ
+        }
+        case "装甲": {
+          // LV1: +4, LV2: +5, LV3: +6, LV4: +7, LV5: +8
+          const levelBonusTable = [4, 5, 6, 7, 8]; // LV1～LV5対応
+          const bonusIndex = Math.min(level - 1, levelBonusTable.length - 1);
+          const levelBonus = levelBonusTable[bonusIndex];
+          
+          // 装甲系のベース値を取得
+          const armorRangeBase = typeof part.armor_range === 'number' ? part.armor_range : 0;
+          const armorBeamBase = typeof part.armor_beam === 'number' ? part.armor_beam : 0;
+          const armorMeleeBase = typeof part.armor_melee === 'number' ? part.armor_melee : 0;
+          
+          // ベース値 + レベルボーナスを各装甲補正に加算
+          partBonus.armorRange += armorRangeBase + levelBonus;
+          partBonus.armorBeam += armorBeamBase + levelBonus;
+          partBonus.armorMelee += armorMeleeBase + levelBonus;
+          
+          console.log(`[calculateMSStatsLogic] レベルリンクシステム[装甲]_LV1: msLevel=${level}, levelBonus=${levelBonus}, armorRangeBase=${armorRangeBase}, armorBeamBase=${armorBeamBase}, armorMeleeBase=${armorMeleeBase}`);
+          return; // 通常の装甲加算処理をスキップ
+        }
+        default:
+          console.warn(`[calculateMSStatsLogic] 未対応のレベルリンクシステム: ${systemType}`);
+          break;
+      }
     }
 
     // ★レベル依存パーツの処理（各ByLevelプロパティを優先）
