@@ -552,5 +552,17 @@
     "armor_range": 7,
     "armor_beam": 0,
     "description": "耐実弾補正が7増加。\n兵装による爆風ダメージを15%軽減。\nMSの爆破によるリアクションを軽減。"
+  },
+  {
+    "name": "レベルリンクシステム[装甲]_LV1",
+    "category": "防御",
+    "close": 3,
+    "mid": 0,
+    "long": 3,
+    "armor_melee": 2,
+    "armor_range": 2,
+    "armor_beam": 2,
+    "kind": "レベルリンク",
+    "description": "耐実弾、耐ビーム、耐格闘補正が2増加。機体と主兵装のLVが一致すると効果量が上昇し、LVが高いほど効果量も高くなる。同系統のパーツは複数装備不可。"
   }
 ]
