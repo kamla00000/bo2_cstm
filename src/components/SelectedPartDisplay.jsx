@@ -10,6 +10,9 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
     
     // 装備解除レイヤー表示用state（タップ・クリック時に表示）
     const [removeLayerPart, setRemoveLayerPart] = React.useState(null);
+    
+    // タイマーID管理用ref
+    const layerDisplayTimerRef = React.useRef(null);
 
     // 右フリックで解除
     useRemoveFlick(
@@ -28,6 +31,10 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
             const part = parts.find(p => p.name === partName);
             if (part) {
                 // フリック解除の場合、遅延レイヤー表示をキャンセル
+                if (layerDisplayTimerRef.current) {
+                    clearTimeout(layerDisplayTimerRef.current);
+                    layerDisplayTimerRef.current = null;
+                }
                 setRemovePreviewPart(null);
                 onRemove(part);
                 setRemoveLayerPart(null); // フリック解除時は装備解除レイヤーもリセット
@@ -43,6 +50,16 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
         }
     }, []);
 
+    // コンポーネントアンマウント時のクリーンアップ
+    React.useEffect(() => {
+        return () => {
+            if (layerDisplayTimerRef.current) {
+                clearTimeout(layerDisplayTimerRef.current);
+                layerDisplayTimerRef.current = null;
+            }
+        };
+    }, []);
+
     // グローバルpreviewPart変更を監視して装備解除レイヤーをクリア
     React.useEffect(() => {
         const handlePreviewChange = () => {
@@ -56,6 +73,30 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
             return () => window.removeEventListener('previewPartChanged', handlePreviewChange);
         }
     }, []);
+
+    // パーツ装備の変更を監視して装備解除レイヤーをクリア
+    const prevPartsRef = React.useRef(parts);
+    React.useEffect(() => {
+        // 初回レンダリングは除外
+        if (prevPartsRef.current === parts) {
+            prevPartsRef.current = parts;
+            return;
+        }
+        
+        // パーツが変更された場合、装備解除レイヤーを非表示にする
+        if (removeLayerPart !== null) {
+            setRemoveLayerPart(null);
+        }
+        // タイマーもクリア
+        if (layerDisplayTimerRef.current) {
+            clearTimeout(layerDisplayTimerRef.current);
+            layerDisplayTimerRef.current = null;
+        }
+        setRemovePreviewPart(null);
+        
+        // 前回の参照を更新
+        prevPartsRef.current = parts;
+    }, [parts, removeLayerPart]); // partsとremoveLayerPartが変更されるたびに実行
 
     // 装備解除レイヤー状態をグローバルに共有
     React.useEffect(() => {
@@ -121,14 +162,20 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                 onTouchStart={(e) => {
                     // タッチ開始時の処理（モバイルのみ）
                     if (window.innerWidth <= 1024 && part) {
-                        // フリック用の情報を保存（解除レイヤーは表示しない）
+                        // 既存のタイマーがあればクリア
+                        if (layerDisplayTimerRef.current) {
+                            clearTimeout(layerDisplayTimerRef.current);
+                        }
+                        
+                        // フリック用の情報を保存
                         setRemovePreviewPart(part.name);
+                        
                         // 解除レイヤー表示は遅延実行（フリックされた場合はキャンセル）
-                        setTimeout(() => {
-                            // フリックが発生していない場合のみレイヤーを表示
-                            if (removePreviewPart === part.name) {
-                                setRemoveLayerPart(part.name);
-                            }
+                        const currentPartName = part.name;
+                        layerDisplayTimerRef.current = setTimeout(() => {
+                            // タイマーがクリアされていない場合のみレイヤーを表示
+                            setRemoveLayerPart(currentPartName);
+                            layerDisplayTimerRef.current = null;
                         }, 150); // 150ms後に表示（フリックには十分な時間）
                     }
                 }}
