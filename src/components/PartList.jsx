@@ -1,5 +1,10 @@
+import { usePartFlick } from '../hooks/usePartFlick';
+import { useRemoveFlick } from '../hooks/useRemoveFlick';
+import { useGlobalPartFlick } from '../hooks/useGlobalPartFlick';
+import { useGlobalRemoveFlick } from '../hooks/useGlobalRemoveFlick';
 import React from 'react';
 import { ALL_CATEGORY_NAME } from '../constants/appConstants';
+import styles from './PickedMs.module.css';
 
 // 画像パスを生成する関数をコンポーネントの外に定義
 const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName)}`;
@@ -74,34 +79,114 @@ const PartList = ({
     onPreviewSelect,
     isPartDisabled,
 }) => {
+    // プレビュー中パーツ名をstateで管理
+    const [previewPart, setPreviewPart] = React.useState(null);
+
+    // プレビュー状態をグローバルに共有（装備解除レイヤーとの排他制御用）
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.globalPreviewPart = previewPart;
+            // イベント発火で他コンポーネントに通知
+            window.dispatchEvent(new CustomEvent('previewPartChanged'));
+        }
+    }, [previewPart]);
+
+    // 装備解除レイヤー変更を監視してプレビューをクリア
+    React.useEffect(() => {
+        const handleRemoveLayerChange = () => {
+            if (typeof window !== 'undefined' && window.globalRemoveLayerPart) {
+                setPreviewPart(null);
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('removeLayerChanged', handleRemoveLayerChange);
+            return () => window.removeEventListener('removeLayerChanged', handleRemoveLayerChange);
+        }
+    }, []);
+
+    // 右フリックで装着（プレビュー中パーツ）
+    usePartFlick(
+        null,
+        (partName) => {
+            const part = parts.find(p => p.name === partName);
+            if (part && !isSelected(part)) {
+                handleSelect(part);
+            }
+        },
+        previewPart
+    );
+
+    // 右フリックで装備解除（選択中パーツ）
+    useRemoveFlick(
+        (partName) => {
+            const part = parts.find(p => p.name === partName);
+            if (part && isSelected(part)) {
+                handleSelect(part); // 装備済みパーツをもう一度選択すると解除される
+            }
+        },
+        selectedParts.map(p => p.name) // 選択中の全パーツ名の配列を渡す
+    );
+
+    // 全パーツボタンで「タップせずにフリック」装着を許可
+    useGlobalPartFlick(
+        (partName) => {
+            const part = parts.find(p => p.name === partName);
+            if (part && isEquipable(part)) {
+                handleSelect(part);
+            }
+        },
+        parts ? parts.map(p => p.name) : []
+    );
+
+    // 全装備済みパーツで「タップせずにフリック」解除を許可
+    useGlobalRemoveFlick(
+        (partName) => {
+            const part = parts.find(p => p.name === partName);
+            if (part && isSelected(part)) {
+                handleSelect(part); // 装備済みパーツをもう一度選択すると解除される
+            }
+        },
+        selectedParts ? selectedParts.map(p => p.name) : []
+    );
     // 装備中判定
     const isSelected = (part) => selectedParts.some(p => p.name === part.name);
 
     // ワンクッション用state
     const [lastActionedPartName, setLastActionedPartName] = React.useState(null);
     const [actionType, setActionType] = React.useState(null); // 'equip' or 'unequip'
+    const [lastActionedPartIndex, setLastActionedPartIndex] = React.useState(null); // 装備直前の表示インデックス
 
     // ★ 追加: selectedPartsが空になったらワンクッション状態をリセット
     React.useEffect(() => {
         if (selectedParts.length === 0 && lastActionedPartName !== null) {
             setLastActionedPartName(null);
             setActionType(null);
+            setLastActionedPartIndex(null);
         }
-    }, [selectedParts, lastActionedPartName]); // lastActionedPartNameも依存配列に含める
+    }, [selectedParts, lastActionedPartName]);
 
     // 装備時の処理をラップ（ワンクッション動作対応）
     const handleSelect = (part) => {
         const currentlySelected = isSelected(part);
-
-        if (!currentlySelected) { // 今から装備する場合
+        // 装備直前の表示インデックスを記録
+        if (!currentlySelected) {
+            // parts配列の現在の並びでインデックスを取得
+            const currentIndex = sortedParts.findIndex(p => p.name === part.name);
+            setLastActionedPartIndex(currentIndex);
             setLastActionedPartName(part.name);
             setActionType('equip');
-        } else { // 今から解除する場合
-            // 解除時はワンクッション状態をリセットし、通常のソート位置に戻す
+        } else {
             setLastActionedPartName(null);
             setActionType(null);
+            setLastActionedPartIndex(null);
         }
-        onSelect(part); // 親コンポーネントのonSelectを呼び出す
+        onSelect(part);
+        if (window.innerWidth <= 1279) {
+            if (typeof window.setSelectedPreviewPart === 'function') {
+                window.setSelectedPreviewPart(null);
+            }
+        }
     };
 
     // スロットオーバー判定
@@ -181,80 +266,41 @@ const PartList = ({
         if (!Array.isArray(parts) || parts.length === 0) {
             return [];
         }
-
-        // ここで全てのパーツをソートし直す
-        return [...parts].sort((a, b) => {
+        // ワンクッションパーツのインデックスをlastActionedPartIndexで固定
+        const fixedIndex = (lastActionedPartName && actionType === 'equip' && lastActionedPartIndex !== null) ? lastActionedPartIndex : -1;
+        const fixedPart = (fixedIndex !== -1) ? parts.find(p => p.name === lastActionedPartName) : null;
+        // ワンクッションパーツ以外をソート
+        const filtered = parts.filter(p => !(fixedPart && p.name === fixedPart.name));
+        const sorted = filtered.sort((a, b) => {
             const aSelected = isSelected(a);
             const bSelected = isSelected(b);
             const aEquipable = isEquipable(a);
             const bEquipable = isEquipable(b);
-
-            // ワンクッション対象かどうかを最優先で判定
-            const aIsLastActioned = (lastActionedPartName === a.name && actionType === 'equip');
-            const bIsLastActioned = (lastActionedPartName === b.name && actionType === 'equip');
-
-            // === 1. メインのグループ分け順序 ===
-            // 優先度高: 装備直後に装備されたパーツ (その場に固定)
-            // 次: 装備可能 (未装備)
-            // 次: その他の装備済みパーツ
-            // 優先度低: 装備不可 (未装備)
-
             let aGroup, bGroup;
-
-            if (aIsLastActioned) {
-                aGroup = 0; // 最優先グループ
-            } else if (aEquipable) {
-                aGroup = 1; // 装備可能
+            if (aEquipable) {
+                aGroup = 1;
             } else if (aSelected) {
-                aGroup = 2; // その他の装備済み
+                aGroup = 2;
             } else {
-                aGroup = 3; // 装備不可
+                aGroup = 3;
             }
-
-            if (bIsLastActioned) {
-                bGroup = 0; // 最優先グループ
-            } else if (bEquipable) {
+            if (bEquipable) {
                 bGroup = 1;
             } else if (bSelected) {
                 bGroup = 2;
             } else {
                 bGroup = 3;
             }
-
             if (aGroup !== bGroup) {
                 return aGroup - bGroup;
             }
-
-            // === 2. 各グループ内での詳細ソート ===
-            // (aGroup === bGroup の場合のみ実行)
-
-            // グループ0: 装備直後パーツ (最大1つなので、この比較には通常到達しないが念のため)
-            if (aGroup === 0) {
-                 // スロット消費量降順 (このグループもソートは適用)
-                 const slotDiff = getSlotSum(b) - getSlotSum(a);
-                 if (slotDiff !== 0) return slotDiff;
-                 return a.name.localeCompare(b.name);
-            }
-
-            // グループ1: 装備可能パーツ (スロット消費量降順 -> カテゴリ順 -> 名前順)
-            if (aGroup === 1) {
+            if (aGroup === 1 || aGroup === 2) {
                 const slotDiff = getSlotSum(b) - getSlotSum(a);
                 if (slotDiff !== 0) return slotDiff;
                 const categoryDiff = getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
                 if (categoryDiff !== 0) return categoryDiff;
                 return a.name.localeCompare(b.name);
             }
-
-            // グループ2: その他の装備済みパーツ (スロット消費量降順 -> カテゴリ順 -> 名前順)
-            if (aGroup === 2) {
-                const slotDiff = getSlotSum(b) - getSlotSum(a);
-                if (slotDiff !== 0) return slotDiff;
-                const categoryDiff = getCategoryOrder(getCategory(a)) - getCategoryOrder(getCategory(b));
-                if (categoryDiff !== 0) return categoryDiff;
-                return a.name.localeCompare(b.name);
-            }
-
-            // グループ3: 装備不可パーツ (優先度昇順 -> スロット消費量降順 -> カテゴリ順 -> 名前順)
             if (aGroup === 3) {
                 const priorityDiff = getNotEquipablePriority(a) - getNotEquipablePriority(b);
                 if (priorityDiff !== 0) return priorityDiff;
@@ -264,10 +310,14 @@ const PartList = ({
                 if (categoryDiff !== 0) return categoryDiff;
                 return a.name.localeCompare(b.name);
             }
-
-            return 0; // 念のため
+            return 0;
         });
-    }, [parts, selectedParts, lastActionedPartName, actionType, isSelected, isEquipable, getSlotSum, getCategory, getNotEquipablePriority]);
+        // ワンクッションパーツを装備直前の位置に挿入
+        if (fixedPart && fixedIndex !== -1) {
+            sorted.splice(fixedIndex, 0, fixedPart);
+        }
+        return sorted;
+    }, [parts, selectedParts, lastActionedPartName, actionType, lastActionedPartIndex, isSelected, isEquipable, getSlotSum, getCategory, getNotEquipablePriority]);
 
 
     return (
@@ -277,7 +327,7 @@ const PartList = ({
                 {sortedParts.length === 0 ? (
                     <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
                 ) : (
-                    <div className="w-full grid" style={{ gridTemplateColumns: 'repeat(auto-fit, 64px)' }}>
+                    <div className={styles.partListGrid}>
                         {sortedParts.map((part) => {
                             const selected = isSelected(part);
                             const partHovered = hoveredPart && hoveredPart.name === part.name;
@@ -298,18 +348,24 @@ const PartList = ({
                             return (
                                 <button
                                     key={part.name}
-                                    className={`relative transition-all duration-200 p-0 m-0 overflow-hidden
-                                        w-16 h-16 aspect-square
-                                        bg-gray-800
+                                    data-part-name={part.name}
+                                    data-selected-part-name={selected ? part.name : undefined}
+                                    className={`${styles.partListButton} relative transition-all duration-200 p-0 m-0 overflow-hidden bg-gray-800
                                         ${reallyDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-                                        ${showOneShotEffect ? 'animate-pulse border-2 border-orange-400' : ''} {/* ワンクッション（装備直後） */}
-                                        ${selected && !showOneShotEffect ? '' : ''} {/* 装備中のボーダーはなし */}
+                                        ${showOneShotEffect ? 'animate-pulse border-2 border-orange-400' : ''}
+                                        ${selected && !showOneShotEffect ? '' : ''}
                                     `}
                                     onClick={() => {
-                                        if (!reallyDisabled || selected) {
-                                            handleSelect(part);
+                                        if (window.innerWidth <= 1024) {
+                                            setPreviewPart(part.name);
+                                            onPreviewSelect?.(part);
+                                            // タップでは装着しない
+                                        } else {
+                                            if (!reallyDisabled || selected) {
+                                                handleSelect(part);
+                                            }
+                                            onPreviewSelect?.(part);
                                         }
-                                        onPreviewSelect?.(part);
                                     }}
                                     onMouseEnter={() => {
                                         if (selected) {
@@ -345,7 +401,7 @@ const PartList = ({
                                     )}
 
                                     {/* ホバー時のオレンジ半透明レイヤー (ワンクッション表示と重複しないように調整) */}
-                                    {partHovered && !selected && !showNotEquipableOverlay && !showMutualExclusiveOverlay && !showOneShotEffect && (
+                                    {((partHovered && window.innerWidth > 1024) || (previewPart === part.name && window.innerWidth <= 1024)) && !selected && !showNotEquipableOverlay && !showMutualExclusiveOverlay && !showOneShotEffect && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
                                                 <span>装 備</span>

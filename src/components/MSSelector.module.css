@@ -1,0 +1,139 @@
+/* 1280px以上 */
+@media (min-width: 1280px) {
+  h1{
+    margin:20px 0!important;
+  }
+}
+
+/* 1280px未満 */
+@media (max-width: 1279px) {
+    h1{
+        font-size: 30px!important;
+        margin:20px 0!important;
+    }
+  div.msselector-filter-row {
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2rem 0.25rem!important;
+  }
+  .msselector-filter-group {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    width: auto;
+    margin-bottom: 0.3rem;
+    gap: 0.3rem;
+  }
+  .cost {
+    order: 2;
+    margin-bottom: 0;
+  }
+  .msselector-filter-group > * {
+    margin-right: 0.3rem;
+    margin-bottom: 0.3rem;
+  }
+  .msselector-filter-group button{
+    font-size:1.2rem;
+  }
+  .msselector-search-box {
+    display: inline-flex;
+    width: auto;
+    vertical-align: middle;
+    margin-left: auto;
+    order: 1;
+  }
+  .ms-list-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+  }
+  .msselector-search-box {
+    margin-left: auto !important;
+  }
+}
+
+/* 768px未満 */
+@media (max-width: 767px) {
+    h1{
+        margin-bottom: 10px!important;
+        font-size:20px!important;
+        margin:10px 0!important;
+    }
+    .appMainRoot{
+      padding-top: 0!important;
+    }
+
+    .msselector-filter-group{
+      overflow-x: scroll;
+    }
+    .zokusei,.cost,.kensaku{
+      width: fit-content;
+      button{
+        font-size:15px;
+        flex:none;
+        height: auto;
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: center;
+        align-items: center;
+        height: 35px;
+      }
+    }
+    .zokusei{    
+      flex-flow: row nowrap;
+      overflow-x: auto;
+    }
+    .cost{
+      flex-flow: row nowrap;
+      overflow-x: auto;
+    }
+    .kensaku{
+      margin:0!important;
+      margin-top: 10px!important;
+      width: 100%;
+      overflow-x: auto;
+      order:3;
+      input{
+        max-width: 100%!important;
+        width: 100%;
+        margin:0;
+      }
+    }
+    .msListOuter{
+      height: calc(100dvh - 218px)!important;
+      overflow: hidden!important;
+      overflow-y: auto!important;
+    }
+    .ms-list-container {
+      display: grid !important;
+      grid-template-columns: 50% 50% !important;
+      gap: 5px !important;
+      padding: 0 !important;
+    }
+
+    .ms-row-card-mecha {
+      width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+    }
+    .msName {
+      font-size: 13px !important;
+      line-height: 1.2 !important;
+      height: 2.4em !important; /* 2行分の高さ */
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: normal !important;
+      word-break: break-all !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      text-align: left !important;
+    }
+}

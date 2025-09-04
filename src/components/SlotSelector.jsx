@@ -1,5 +1,6 @@
 import React from 'react';
 import SlotBar from './SlotBar'; // SlotBar コンポーネントをインポート
+import styles from './PickedMs.module.css';
 
 const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) => {
     // usage は usageWithPreview オブジェクト全体を指す (プレビュー含む使用量と最大値)
@@ -37,12 +38,12 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
     const originalMaxLong = safeBaseUsage.baseLong ?? 0;
 
     return (
-        // flexコンテナとしての設定と、パディングをなくすための調整
-        // inline-flex に変更し、内容に応じた幅にする
-        <div className="msrow-card-shape inline-flex flex-col p-3 pr-10"> 
+    // flexコンテナとしての設定と、パディングをなくすための調整
+    // CSS Modulesでスタイル適用
+    <div className={`${styles.slotSelectorCard} msrow-card-shape`}> 
             <div className="space-y-3"> {/* SlotBarの行全体にパディングを適用 */}
                 {/* 近距離スロット */}
-                <div className="flex items-center text-sm font-medium">
+                <div className={`${styles.slotRow} flex items-center text-sm font-medium`}>
                     <span className="text-gray-200 whitespace-nowrap">近距離</span>
                     <span className={`text-base flex-shrink-0 ${
                             (safeUsage.close ?? 0) > closeMax ? 'text-red-500' : 'text-gray-200'
@@ -67,7 +68,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                 </div>
 
                 {/* 中距離スロット */}
-                <div className="flex items-center text-sm font-medium">
+                <div className={`${styles.slotRow} flex items-center text-sm font-medium`}>
                     <span className="text-gray-200 whitespace-nowrap">中距離</span>
                     <span
                         className={`text-base flex-shrink-0 ${
@@ -94,7 +95,7 @@ const SlotSelector = ({ usage, baseUsage, currentStats, hoveredOccupiedSlots }) 
                 </div>
 
                 {/* 遠距離スロット */}
-                <div className="flex items-center text-sm font-medium">
+                <div className={`${styles.slotRow} flex items-center text-sm font-medium`}>
                     <span className="text-gray-200 whitespace-nowrap">遠距離</span>
                     <span
                         className={`text-base flex-shrink-0 ${

@@ -31,7 +31,14 @@ export const isPartDisabled = (part, selectedParts) => {
     const isReloadOrOH = part.description && (part.description.includes("リロード") || part.description.includes("兵装のオーバーヒート"));
     const hasSupplyPackSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name && p.name.includes("大容量補給パック"));
     const hasReloadOrOHSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.description && (p.description.includes("リロード") || p.description.includes("兵装のオーバーヒート")));
-
+// 火器管制最適化システムとASL/兵装の収束時間系パーツは併用不可
+    const isFireControlSystem = part.name && part.name.includes("火器管制最適化システム");
+    const isASLOrConverge = part.description && (part.description.includes("ASL") || part.description.includes("兵装の集束時間"));
+    const hasFireControlSystemSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name && p.name.includes("火器管制最適化システム"));
+    const hasASLOrConvergeSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.description && (p.description.includes("ASL") || p.description.includes("兵装の集束時間")));
+    if ((isFireControlSystem && hasASLOrConvergeSelected) || (isASLOrConverge && hasFireControlSystemSelected)) {
+        return true;
+    }
     if ((isSupplyPack && hasReloadOrOHSelected) || (isReloadOrOH && hasSupplyPackSelected)) {
         return true;
     }

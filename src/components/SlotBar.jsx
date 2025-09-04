@@ -20,7 +20,7 @@ const SlotBar = ({
 
     const bars = [];
     for (let i = 1; i <= actualDisplayBars; i++) {
-        let barClass = 'flex-none w-1.5 h-5 mr-0.5'; 
+        let barClass = 'flex-none w-1 h-5 mr-0.5'; 
         const slotIndex = i;
 
         const isOverflow = slotIndex > totalMax && slotIndex <= previewedUsageAmount;

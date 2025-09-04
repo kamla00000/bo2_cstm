@@ -31,6 +31,14 @@ const ImageWithFallback = ({ partName, level, className }) => {
                 alt={partName}
                 className={`w-full h-full object-cover ${className || ''}`}
                 onError={handleError}
+                draggable={false}
+                onTouchStart={(e) => {
+                    // タッチ時のデフォルト動作を防止してドラッグを回避
+                    if (window.innerWidth <= 1024) {
+                        e.preventDefault();
+                    }
+                }}
+                style={{ userSelect: 'none' }}
             />
             {level !== undefined && level !== null && (
                 <div className="absolute bottom-0 right-0 bg-gray-900 bg-opacity-75 text-gray-200 text-xs px-1 py-0.5 z-10 pointer-events-none">

@@ -196,9 +196,8 @@ export const useAppData = () => {
     const handlePartHover = useCallback((part, source) => {
         setHoveredPart(part);
         setHoverSource(source);
-        if (!part) {
-            setSelectedPreviewPart(null); 
-        }
+        // プレビュー解除はパーツ一覧・装着中パーツ一覧のパーツをタップした時のみ
+        // ここではsetSelectedPreviewPart(null)を呼ばない
     }, []);
     // プレビュー固定用
     const handlePartPreviewSelect = useCallback((part) => {

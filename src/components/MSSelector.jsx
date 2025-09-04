@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import styles from './MSSelector.module.css';
 const COSTS = [750, 700, 650, 600, 550, 500, 450];
 const TYPES = ['強襲', '汎用', '支援'];
 
@@ -96,12 +96,10 @@ const MSSelector = ({
 
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-start"
-    >
-      <div className="w-full flex flex-col gap-6">
-        {/* フィルター：属性・コスト・検索を1行に統合 */}
-        <div className="w-full msselector-filter-row flex flex-row flex-wrap gap-1 items-center mb-2">
-          <div className="msselector-filter-group">
+      className={`w-full h-full flex flex-col items-center justify-start ${styles.msselectorRoot}`}> 
+  <div className={`w-full flex flex-col gap-6 px-[10px] ${styles.msselectorMainInner}`}> 
+  <div className={`w-full msselector-filter-row flex flex-row flex-wrap gap-3 items-center mb-2 ${styles.msselectorFilterRow}`}> 
+          <div className={`${styles['msselector-filter-group']} ${styles.zokusei}`}> 
             <button
               onClick={() => setFilterType('')}
               className={`hex-filter-btn text-lg sm:text-xl transition ${filterType === '' ? 'hex-filter-btn-active' : ''}`}
@@ -114,7 +112,7 @@ const MSSelector = ({
               >{type}</button>
             ))}
           </div>
-          <div className="msselector-filter-group cost">
+          <div className={`${styles['msselector-filter-group']} ${styles.cost}`}> 
             <button
               onClick={() => setFilterCost('')}
               className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === '' ? 'hex-filter-btn-active' : ''}`}
@@ -132,7 +130,7 @@ const MSSelector = ({
               style={{ minWidth: 0 }}
             >低</button>
           </div>
-          <div className="msselector-search-box ml-2 relative flex items-center">
+          <div className={`${styles['msselector-filter-group']} ${styles.kensaku} msselector-search-box ml-2 relative flex items-center`}>
             <input
               type="text"
               value={searchText}
@@ -206,8 +204,11 @@ const MSSelector = ({
           `}</style>
         </div>
         {/* MSリスト：複数列表示に更新 */}
-        <div className="w-full h-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto custom-scrollbar w-full">
+  <div className={`w-full h-full ${styles.msListOuter}`}> 
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[75vh] custom-scrollbar ${styles['ms-list-container']}`}
+            style={{ width: '100%', maxWidth: 'calc(100vw - 20px)', boxSizing: 'border-box', margin: '0 auto', overflowY: 'auto' }}
+          >
             {filteredMs.length > 0 ? (
               filteredMs.map((ms) => {
                 const isSelected = selectedMs && selectedMs["MS名"] === ms["MS名"];
@@ -243,7 +244,7 @@ const MSSelector = ({
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
                         <span
-                          className={`ms-badge-hex text-sm flex-shrink-0 text-right`}
+                          className={`ms-badge-hex flex-shrink-0 text-right`}
                           data-type={ms.属性}
                         >
                           {`${ms.属性}：${ms.コスト}`}
@@ -325,7 +326,7 @@ const MSSelector = ({
                           }
                         `}</style>
                       </div>
-                      <span className="block truncate text-white text-base ms-name" style={{
+                      <span className={`block truncate text-white ${styles.msName}`} style={{
                         textShadow: '0 3px 16px #000, 0 0 0px #000, 0 1px 0 #000'
                       }}>{ms["MS名"]}</span>
                     </div>

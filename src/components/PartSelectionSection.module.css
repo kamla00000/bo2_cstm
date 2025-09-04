@@ -1,0 +1,159 @@
+/* PartSelectionSection.module.css */
+.partselectCardShape {
+  background: rgba(0,0,0,0.5);
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+  transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+  padding: 16px;
+}
+.categoryBtnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.categoryBtn {
+  position: relative;
+  background: rgba(34,34,40,0.8);
+  color: #e5e7eb;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  z-index: 1;
+  overflow: visible;
+  transition: background 0.18s, color 0.18s;
+  cursor: pointer;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-weight: bold;
+}
+.categoryBtn:hover,
+.categoryBtn:focus,
+.selected {
+  background: #b85c00 !important;
+  color: #fff !important;
+}
+.hexLabel {
+  position: relative;
+  z-index: 3;
+}
+.partselectCardShape{
+  margin-top: 20px;
+}
+@media (max-width: 1279px) {
+  .partselectCardShape {
+    padding: 12px !important;
+  }
+  .statusListWrapper {
+    display: none !important;
+  }
+  .statusTitle {
+    display: none !important;
+  }
+  .msReselectBar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 0.7rem !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #222 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    /* ナナメボーダー削除 */
+    background-image: none !important;
+  }
+  .msReselectBar .msReselectText {
+    font-size: 0.6rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .categoryBtnRow{
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .partselectCardShape {
+    padding: 8px !important;
+    margin-top: 5px !important;
+  }
+  .categoryBtnRow {
+    gap: 6px !important;
+  }
+  .categoryBtn {
+    min-width: 48px !important;
+    font-size: 0.95rem !important;
+    padding: 6px 10px !important;
+  }
+}
+@media (max-width: 425px) {
+  .partselectCardShape {
+    padding: 4px !important;
+  }
+  .categoryBtn {
+    min-width: 40px !important;
+    font-size: 0.85rem !important;
+    padding: 4px 6px !important;
+  }
+}
+
+/* 六角形装飾をカテゴリボタンに追加 */
+.hexBtnOrangeBorder {
+  position: relative;
+  background: rgba(0,0,0,0.5);
+  clip-path: polygon(12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%, 0 50%);
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  z-index: 1;
+  overflow: visible;
+  transition: background-color 0.18s, color 0.18s;
+}
+.hexBtnOrangeBorder::before,
+.hexBtnOrangeBorder::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 3px;
+  background: #fb923c !important;
+  z-index: 2;
+  border-radius: 2px;
+}
+.hexBtnOrangeBorder::before {
+  top: 0;
+}
+.hexBtnOrangeBorder::after {
+  bottom: 0;
+}
+.hexBtnOrangeBorder:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #fb923c !important;
+}
+.hexBtn {
+  position: relative;
+  background: rgba(34,34,40,0.8);
+  color: #e5e7eb;
+  clip-path: polygon(12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%, 0 50%);
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  z-index: 1;
+  overflow: visible;
+  transition: background 0.18s, color 0.18s;
+  cursor: pointer;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-weight: bold;
+}
+.hexBtn:hover,
+.hexBtn:focus,
+.selected {
+  background: #b85c00 !important;
+  color: #fff !important;
+}

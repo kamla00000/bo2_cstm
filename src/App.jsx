@@ -1,5 +1,6 @@
 ﻿import { CATEGORY_NAMES, ALL_CATEGORY_NAME } from './constants/appConstants';
 import PartSelectionSection from './components/PartSelectionSection';
+import styles from './components/PickedMs.module.css';
 import PickedMs from './components/PickedMs';
 import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
@@ -145,7 +146,7 @@ function AppContent() {
   }
 
     const mainUI = (
-        <div className="min-h-screen bg-transparent flex flex-col items-center pt-10 max-w-[1280px] w-full mx-auto">
+    <div className={`min-h-screen bg-transparent flex flex-col items-center max-w-[1280px] w-full mx-auto appMainRoot`}>
             {/* フル強化解除警告モーダル */}
             <FullStrengthenWarningModal
                 open={showFullStrengthenWarning}
@@ -154,13 +155,11 @@ function AppContent() {
             />
 
             {showSelector && (
-                <h1 className="text-5xl font-extrabold tracking-wide text-gray-200 drop-shadow-lg mb-8">
-                    GBO2-CSTM
-                </h1>
+                <h1 className="text-5xl font-extrabold tracking-wide text-gray-200 drop-shadow-lg">GBO2-CSTM</h1>
             )}
             {/* MS再選択バー */}
             {!showSelector && (
-                <div className="w-full flex justify-center mb-4">
+                <div className="w-full flex justify-center">
                     <div
                         className="flex items-center"
                         style={{ maxWidth: '1280px', width: '100%' }}
@@ -228,7 +227,7 @@ function AppContent() {
                                 />
                             </div>
                             {/* テキスト */}
-                            <span className="relative z-10 font-extrabold text-white text-4xl ml-4"
+                            <span className={"relative z-10 font-extrabold text-white text-4xl ml-4 " + styles.headingTextMobile}
                                 style={{ textShadow: '2px 2px 8px #000, 0 0 4px #000' }}
                             >
                                 M　S　再　選　択
@@ -237,7 +236,7 @@ function AppContent() {
                         {/* X（旧Twitter）アイコン */}
                         <a
                             href="https://x.com/GBO2CSTM"
-                            className="ml-4 w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"
+                            className={styles.xIcon + " w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"}
                             style={{ zIndex: 2, borderRadius: 0 }}
                             aria-label="Xでシェア" target="_blank"
                         >

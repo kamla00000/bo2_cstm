@@ -1,11 +1,14 @@
-import React from 'react';
+import { useFlick } from '../hooks/useFlick';
+import React, { useState, useEffect } from 'react';
 import MSSelector from './MSSelector';
 import StatusDisplay from './StatusDisplay';
+import pickedMsStyles from './PickedMs.module.css';
 import SlotSelector from './SlotSelector';
 import SelectedPartDisplay from './SelectedPartDisplay';
 import MsInfoDisplay from './MsInfoDisplay';
 import PartPreview from './PartPreview';
 import { EXPANSION_OPTIONS, EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
+import styles from './PickedMs.module.css';
 
 const PickedMs = ({
     msData,
@@ -34,6 +37,56 @@ const PickedMs = ({
     filterCost,
     setFilterCost,
 }) => {
+    // 右カラムの表示状態管理（767px以下のみ）
+    const [showRightColumn, setShowRightColumn] = useState(false);
+    const [isHiding, setIsHiding] = useState(false);
+
+    // アニメーション付きで右カラムを表示
+    const showRightColumnWithAnimation = () => {
+        setIsHiding(false);
+        setShowRightColumn(true);
+    };
+
+    // アニメーション付きで右カラムを非表示
+    const hideRightColumnWithAnimation = () => {
+        setIsHiding(true);
+        // 0.1秒後（アニメーション完了後）に実際に非表示にする
+        setTimeout(() => {
+            setShowRightColumn(false);
+            setIsHiding(false);
+        }, 100); // 0.1秒 = 100ms
+    };
+
+    // 画面サイズの監視
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 767) {
+                // 768px以上：モバイルステータスを非表示
+                setShowRightColumn(false);
+                setIsHiding(false);
+            }
+            // 767px以下に戻った時は、状態はそのまま（左フリックで再度表示可能）
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // 767px以下での左フリック機能
+    useFlick(
+        () => { 
+            // 左フリック：767px以下でのみ右カラムを表示
+            if (window.innerWidth <= 767) {
+                showRightColumnWithAnimation();
+            }
+        },
+        () => { 
+            // 右フリック：767px以下でのみ右カラムを非表示
+            if (window.innerWidth <= 767) {
+                hideRightColumnWithAnimation();
+            }
+        }
+    );
     const baseName = selectedMs
         ? selectedMs["MS名"]
             .replace(/_LV\d+$/, '')
@@ -49,7 +102,7 @@ const PickedMs = ({
                 return 'bg-blue-500 text-gray-200';
             case '支援':
             case '支援攻撃':
-                return 'bg-yellow-500 text-black';
+        const leftColClass = `${pickedMsStyles.flexRowPadded} space-y-4 flex flex-col flex-shrink-0 ${showSelector ? 'w-full' : ''}`;
             default:
                 return 'bg-gray-500 text-gray-200';
         }
@@ -83,19 +136,8 @@ const PickedMs = ({
 
     return (
         <div
-            className={`flex flex-row gap-6 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
+            className={`${styles.pickedmsMainContainer} pickedms-main-container flex flex-row gap-6 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
         >
-            <style>{`
-              .pickedms-card {
-                background: rgba(0,0,0,0.5);
-                border: none;
-                box-shadow: none;
-                border-radius: 0;
-                /* 右上の角を45度でカット（小さめ） */
-                clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
-                transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
-              }
-            `}</style>
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
                 {/* MSSelectorのみ表示 */}
@@ -114,28 +156,30 @@ const PickedMs = ({
                 {/* MS詳細表示・パーツ一覧などは「selectedMs && !showSelector」の時だけ表示 */}
                 {selectedMs && !showSelector && (
                     <>
-                        <MsInfoDisplay
-                            selectedMs={selectedMs}
-                            baseName={baseName}
-                            isFullStrengthened={isFullStrengthened}
-                            setIsFullStrengthened={setIsFullStrengthened}
-                            expansionType={expansionType}
-                            setExpansionType={setExpansionType}
-                            expansionOptions={EXPANSION_OPTIONS}
-                            expansionDescriptions={EXPANSION_DESCRIPTIONS}
-                            getTypeColor={getTypeColor}
-                            onMsImageClick={handleOpenSelector}
-                            msData={msData}
-                            handleMsSelect={handleMsSelect}
-                        />
+                                                <div className={pickedMsStyles.msInfoWrapper}>
+                                                    <MsInfoDisplay
+                                                            selectedMs={selectedMs}
+                                                            baseName={baseName}
+                                                            isFullStrengthened={isFullStrengthened}
+                                                            setIsFullStrengthened={setIsFullStrengthened}
+                                                            expansionType={expansionType}
+                                                            setExpansionType={setExpansionType}
+                                                            expansionOptions={EXPANSION_OPTIONS}
+                                                            expansionDescriptions={EXPANSION_DESCRIPTIONS}
+                                                            getTypeColor={getTypeColor}
+                                                            onMsImageClick={handleOpenSelector}
+                                                            msData={msData}
+                                                            handleMsSelect={handleMsSelect}
+                                                    />
+                                                </div>
 
                         {/* スロットバー、装着済みパーツ一覧、装備選択を配置するメインの横並びコンテナ */}
-                        <div className="flex flex-row gap-6 items-end w-full">
-                            {/* 左サブカラム: スロットバーと装着済みパーツ一覧 (縦並び) */}
-                            <div className="flex flex-col gap-6 flex-grow" style={{ maxWidth: '400px' }}>
+                        <div className={pickedMsStyles.slotPartsWrapper + " flex flex-row gap-6 items-end w-full"}>
+                            {/* 左サブカラム: スロットバー・装着済みパーツ・装備プレビュー（縦並び） */}
+                            <div className={pickedMsStyles['slotparts-leftcol']}>
                                 {/* スロットバー */}
-                                <div className="flex flex-col gap-2">
-                                    <div className="w-fit">
+                                <div className={styles.slotBarSection}>
+                                    <div className={styles.slotBarWrapper}>
                                         <SlotSelector
                                             usage={usageWithPreview}
                                             baseUsage={slotUsage}
@@ -146,21 +190,36 @@ const PickedMs = ({
                                 </div>
 
                                 {/* 装着済みパーツ一覧 */}
-                                <div className="flex flex-col gap-2 w-full">
-                                    <SelectedPartDisplay
-                                        parts={selectedParts}
-                                        onRemove={handlePartRemove}
-                                        onClearAllParts={handleClearAllParts}
-                                        onHoverPart={onSelectedPartDisplayHover}
-                                        onLeavePart={onSelectedPartDisplayLeave}
-                                    />
+                                <SelectedPartDisplay
+                                    parts={selectedParts}
+                                    onRemove={handlePartRemove}
+                                    onClearAllParts={handleClearAllParts}
+                                    onHoverPart={onSelectedPartDisplayHover}
+                                    onLeavePart={onSelectedPartDisplayLeave}
+                                />
+
+                                {/* 装備プレビュー */}
+                                <div className={styles.partPreviewArea}>
+                                    <PartPreview part={hoveredPart || selectedPreviewPart} />
                                 </div>
                             </div>
 
-                            {/* 右サブカラム: 装備選択 (PartPreview) */}
-                            <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '220px' }}>
-                                <PartPreview part={hoveredPart || selectedPreviewPart} />
-                            </div>
+                            {/* 右サブカラム: ステータス一覧（1279px以下のみ） */}
+                             <div className={`${pickedMsStyles['slotparts-rightcol']} ${
+                                 showRightColumn && !isHiding ? pickedMsStyles.showRightColumn : ''
+                             } ${isHiding ? pickedMsStyles.isHiding : ''}`}>
+                                 <div className={pickedMsStyles['slotparts-status-mobile']}>
+                                     <StatusDisplay
+                                         stats={currentStats}
+                                         selectedMs={selectedMs}
+                                         hoveredPart={hoveredPart}
+                                         isFullStrengthened={isFullStrengthened}
+                                         isModified={currentStats.isModified}
+                                         isMobile={true}
+                                         onClose={hideRightColumnWithAnimation}
+                                     />
+                                 </div>
+                             </div>
                         </div>
                     </>
                 )}
@@ -168,7 +227,7 @@ const PickedMs = ({
 
             {/* 右側のカラム: ステータス一覧（MS詳細時のみ表示、幅を広く使う） */}
             {selectedMs && !showSelector && (
-                <div className="space-y-4 flex flex-col flex-grow w-full h-full justify-end items-end" style={{ width: '40%', display: 'flex' }}>
+                <div className={pickedMsStyles.statusListWrapper + " space-y-4 flex flex-col flex-grow w-full h-full justify-end items-end"}>
                     <StatusDisplay
                         stats={currentStats}
                         selectedMs={selectedMs}

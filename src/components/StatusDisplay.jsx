@@ -1,3 +1,4 @@
+import styles from './StatusDisplay.module.css';
 import React from 'react';
 
 // calculateMSStatsLogicの初期上限値と合わせる
@@ -22,6 +23,8 @@ const StatusDisplay = ({
   isFullStrengthened,
   isModified,
   expansionType,
+  isMobile = false,
+  onClose,
 }) => {
   console.log("[StatusDisplay] props.stats:", stats);
 
@@ -55,51 +58,25 @@ const StatusDisplay = ({
     if (statKey.toUpperCase() in obj) return Number(obj[statKey.toUpperCase()] || 0);
     return 0;
   };
-
+  
+  // A placeholder function to avoid errors. You need to define the actual logic.
+  const formatBonus = (value) => {
+    if (value > 0) return `+${formatNumber(value)}`;
+    if (value < 0) return `-${formatNumber(Math.abs(value))}`;
+    return '0';
+  };
+  
   const renderStatRow = (label, statKey) => {
-  const baseValue = getBonusValue(base, statKey);
-  const partBonusValue = getBonusValue(partBonus, statKey);
-  const fullStrengthenBonusValue = getBonusValue(fullStrengthenBonus, statKey);
-  const expansionBonusValue = getBonusValue(expansionBonus, statKey);
-  const partLimitBonusValue = getBonusValue(partLimitBonus, statKey);
-  const rawTotalValue = getBonusValue(rawTotal, statKey);
-  const totalValue = getBonusValue(total, statKey);
-
-  // HP特殊強化フレーム判定
-  const isSpecialFrameA =
-    (expansionType && expansionType.includes('特殊強化フレーム')) ||
-    (selectedMs?.拡張選択 && selectedMs.拡張選択.includes('特殊強化フレーム')) ||
-    (selectedMs?.拡張スロット && selectedMs.拡張スロット.includes('特殊強化フレーム'));
-
-  // 補正値 = パーツ + 拡張（スラスター拡張も常に加算する）
-  let combinedBonusValue = partBonusValue + expansionBonusValue;
-
-  // HP特殊強化フレーム時はHP5%増加分を補正値に加算して表示
-  let isSpecialHpBonus = false;
-  if ((statKey === 'hp' || statKey === 'HP') && isSpecialFrameA) {
-    const hp5Bonus = Math.floor(baseValue * 0.05);
-    combinedBonusValue = partBonusValue + expansionBonusValue + hp5Bonus;
-    if (hp5Bonus !== 0) isSpecialHpBonus = true;
-  } else if (
-    statKey === 'thruster' &&
-    expansionBonusValue !== 0
-  ) {
-    // --- スラスター拡張時も必ずexpansionBonusを補正値に加算する ---
-    combinedBonusValue = partBonusValue + expansionBonusValue;
-  }
-
-    const formatBonus = (value) => {
-      // HP特殊強化フレーム時、5%分があれば必ず表示。0なら-。
-      if ((statKey === 'hp' || statKey === 'HP') && isSpecialFrameA) {
-        if (isSpecialHpBonus || value !== 0) {
-          return value > 0 ? `+${formatNumber(value)}` : `${formatNumber(value)}`;
-        } else {
-          return '-';
-        }
-      }
-      if (value === 0) return '-';
-      return value > 0 ? `+${formatNumber(value)}` : `${formatNumber(value)}`;
-    };
+    const baseValue = getBonusValue(base, statKey);
+    const partBonusValue = getBonusValue(partBonus, statKey);
+    const fullStrengthenBonusValue = getBonusValue(fullStrengthenBonus, statKey);
+    const expansionBonusValue = getBonusValue(expansionBonus, statKey);
+    const partLimitBonusValue = getBonusValue(partLimitBonus, statKey);
+    const rawTotalValue = getBonusValue(rawTotal, statKey);
+    const totalValue = getBonusValue(total, statKey);
+    
+  // 補正値: パーツ補正 + 拡張パーツ補正
+  const combinedBonusValue = partBonusValue + expansionBonusValue;
 
     const displayNumericValue = (value) => {
       if (value === null || value === undefined || isNaN(value)) {
@@ -133,18 +110,22 @@ const StatusDisplay = ({
     const totalValueColorClass = isStatModified ? 'text-orange-500' : 'text-gray-200';
 
     return (
-      <div key={statKey} className="grid grid-cols-7 gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center">
+      <div key={statKey} className={`grid gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center ${isMobile ? 'grid-cols-5' : 'grid-cols-7'}`}>
         <div className="text-gray-200 text-sm whitespace-nowrap">{label}</div>
         <div className="text-gray-200 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
         <div className={`text-sm text-right whitespace-nowrap ${combinedBonusValue > 0 ? 'text-orange-300' : (combinedBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(combinedBonusValue)}
         </div>
-        <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-orange-300' : (fullStrengthenBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
-          {formatBonus(fullStrengthenBonusValue)}
-        </div>
-        <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-orange-300' : (totalLimitBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
-          {formatBonus(totalLimitBonusValue)}
-        </div>
+        {!isMobile && (
+          <div className={`text-sm text-right whitespace-nowrap ${fullStrengthenBonusValue > 0 ? 'text-orange-300' : (fullStrengthenBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
+            {formatBonus(fullStrengthenBonusValue)}
+          </div>
+        )}
+        {!isMobile && (
+          <div className={`text-sm text-right whitespace-nowrap ${totalLimitBonusValue > 0 ? 'text-orange-300' : (totalLimitBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
+            {formatBonus(totalLimitBonusValue)}
+          </div>
+        )}
         <div className="text-sm text-right flex flex-col items-end justify-center">
           <span className={
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
@@ -164,18 +145,36 @@ const StatusDisplay = ({
       </div>
     );
   };
+  
 
   return (
-    <div className="pickedms-card p-4 flex-grow flex flex-col justify-end pb-0.5">
-      <h2 className="text-xl mb-3 text-gray-200">ステータス一覧</h2>
+  <div className={`${styles.pickedmsCard} pickedms-card p-2 flex-grow flex flex-col justify-end pb-0.5`}>
+      {/* <h2 className="text-xl mb-3 text-gray-200 statusTitle">ステータス一覧</h2> */}
       {selectedMs ? (
         <div className="space-y-1">
-          <div className="grid grid-cols-7 gap-2 pb-2 border-b border-gray-600 text-gray-200">
-            <div className="whitespace-nowrap">項目</div>
+          {/* モバイル用格納ボタン */}
+          {isMobile && onClose && (
+            <div 
+              onClick={onClose}
+              className="mobile-close-button flex justify-center items-center py-2 cursor-pointer text-gray-200 hover:text-white mb-1"
+            >
+              <span className="flex items-center gap-1">
+                <span className="triangle-blink-1">▶</span>
+                <span className="triangle-blink-2">▶</span>
+                <span className="triangle-blink-3">▶</span>
+                <span className="mx-2">格　納</span>
+                <span className="triangle-blink-4">▶</span>
+                <span className="triangle-blink-5">▶</span>
+                <span className="triangle-blink-6">▶</span>
+              </span>
+            </div>
+          )}
+          <div className={`grid gap-2 pb-2 border-b border-gray-600 text-gray-200 ${isMobile ? 'grid-cols-5' : 'grid-cols-7'}`}>
+            <div className="whitespace-nowrap">項目名</div>
             <div className="text-right whitespace-nowrap">初期値</div>
-            <div className="text-right whitespace-nowrap">補正値</div>
-            <div className="text-right whitespace-nowrap">フル強化</div>
-            <div className="text-right whitespace-nowrap">上限増</div>
+            <div className="text-right whitespace-nowrap">補正</div>
+            {!isMobile && <div className="text-right whitespace-nowrap">フル強化</div>}
+            {!isMobile && <div className="text-right whitespace-nowrap">上限増</div>}
             <div className="text-right whitespace-nowrap">合計値</div>
             <div className="text-right whitespace-nowrap">上限合計</div>
           </div>
@@ -193,10 +192,10 @@ const StatusDisplay = ({
           {renderStatRow('旋回(地上)', 'turnPerformanceGround')}
           {renderStatRow('旋回(宇宙)', 'turnPerformanceSpace')}
 
-          <div className="grid grid-cols-7 gap-2 py-1 items-center border-b border-gray-700 last:border-b-0">
-            <div className="col-span-full text-md text-right text-gray-200 pr-2">
+          <div className={`grid grid-cols-7 gap-2 py-1 items-center border-b border-gray-700 last:border-b-0 ${styles.statusJudgeRow}`}> 
+            <div className="col-span-full text-md text-right text-gray-200">
               <span className="font-semibold">判定：</span>
-              <span className="font-bold mr-8">{selectedMs["格闘判定力"] || '-'}</span>
+              <span className="font-bold mr-2">{selectedMs["格闘判定力"] || '-'}</span>
               <span className="font-semibold">カウンター：</span>
               <span className="font-bold">{selectedMs["カウンター"] || '-'}</span>
             </div>

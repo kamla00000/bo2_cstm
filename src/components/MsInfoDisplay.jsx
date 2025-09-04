@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './PickedMs.module.css';
 
 // 属性ごとに色を返す関数をこのファイル内に記述
 const getTypeColor = (type) => {
@@ -14,6 +15,9 @@ const getTypeColor = (type) => {
   }
 };
 
+
+import { useState, useEffect } from 'react';
+
 const MsInfoDisplay = ({
   selectedMs,
   baseName,
@@ -27,6 +31,13 @@ const MsInfoDisplay = ({
   msData,
   handleMsSelect,
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   if (!selectedMs) {
     return null;
   }
@@ -43,16 +54,17 @@ const MsInfoDisplay = ({
 
   return (
     <>
-      <div className="msrow-card-shape flex items-center gap-4 p-3">
+      {/* <div className="msrow-card-shape flex items-center gap-4 p-3"> */}
+  <div className={styles.msInfoInnerWrapper + " flex items-center gap-4 p-3"}>
         <style>{`
-          .msrow-card-shape {
-            background: rgba(0,0,0,0.5);
-            border: none;
-            box-shadow: none;
-            border-radius: 0;
-            clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
-            transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
-          }
+          // .msrow-card-shape {
+          //   background: rgba(0,0,0,0.5);
+          //   border: none;
+          //   box-shadow: none;
+          //   border-radius: 0;
+          //   clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+          //   transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
+          // }
           .ms-imgbox-card {
             width: 4rem;
             height: 4rem;
@@ -192,21 +204,20 @@ const MsInfoDisplay = ({
               }
             `}</style>
           </div>
-          <span className="text-xl text-gray-200 leading-tight">{selectedMs["MS名"]}</span>
+          <span className={styles.msNameText + " text-xl text-gray-200 leading-tight"}>{selectedMs["MS名"]}</span>
         </div>
 
-        <div className="flex flex-col items-start gap-1 text-gray-200 text-base ml-4">
+  <div className={styles.msInfoDetailSection + " flex flex-col items-start gap-1 text-gray-200 text-base ml-4"}>
           {/* スライドトグル */}
-<div className="flex items-center gap-2">
+<div className={styles.msToggleRow}>
   <span
     className={`text-md cursor-pointer select-none ${!isFullStrengthened ? 'text-orange-400' : 'text-gray-400'}`}
     onClick={() => setIsFullStrengthened(false)}
     tabIndex={0}
     role="button"
     aria-pressed={!isFullStrengthened}
-    style={{ minWidth: 48, textAlign: 'center' }}
   >
-    未強化
+    零
   </span>
 <button
   type="button"
@@ -245,18 +256,17 @@ const MsInfoDisplay = ({
     tabIndex={0}
     role="button"
     aria-pressed={isFullStrengthened}
-    style={{ minWidth: 48, textAlign: 'center' }}
   >
-    フル強化
+    完
   </span>
 </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="expansion-select" className="whitespace-nowrap">拡張選択:</label>
+            <label htmlFor="expansion-select" className={styles.expansionLabel + " whitespace-nowrap"}>拡張</label>
             <select
               id="expansion-select"
               value={expansionType}
               onChange={(e) => setExpansionType(e.target.value)}
-              className="block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-200 w-auto"
+              className={styles.expansionSelect + " block py-2 px-3 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-200 w-auto"}
             >
               {expansionOptions.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -265,7 +275,7 @@ const MsInfoDisplay = ({
           </div>
         </div>
       </div>
-      <div className="msrow-card-shape p-3 text-gray-200 text-base text-center mt-2">
+  <div className={styles.expansionTextCard + " msrow-card-shape p-3 text-gray-200 text-base text-center mt-2"}>
         <style>{`
           .msrow-card-shape {
             background: rgba(0,0,0,0.5);
@@ -276,12 +286,18 @@ const MsInfoDisplay = ({
             transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
           }
         `}</style>
-        <div
-          className="text-md text-gray-200 text-center mx-auto max-w-lg"
-          dangerouslySetInnerHTML={{
-            __html: expansionDescriptions[expansionType] || "説明がありません"
-          }}
-        />
+        {isMobile ? (
+          <span className="text-md text-gray-200 text-center mx-auto max-w-lg">
+            {(expansionDescriptions[expansionType] || "説明がありません").replace(/<br\s*\/?>(\n)?/gi, '')}
+          </span>
+        ) : (
+          <div
+            className="text-md text-gray-200 text-center mx-auto max-w-lg"
+            dangerouslySetInnerHTML={{
+              __html: expansionDescriptions[expansionType] || "説明がありません"
+            }}
+          />
+        )}
       </div>
     </>
   );
