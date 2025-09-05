@@ -112,7 +112,7 @@ const PickedMs = ({
             const fadeTimer = setTimeout(() => {
                 console.log('🔥 HIDING STATUS HINT AFTER TIMEOUT');
                 setShowStatusHint(false);
-            }, 2000);
+            }, 1000);
             
             return () => clearTimeout(fadeTimer);
         } else {
