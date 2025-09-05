@@ -37,18 +37,32 @@ const PickedMs = ({
     filterCost,
     setFilterCost,
 }) => {
+    console.log('🔥 PICKEDMS COMPONENT RENDERED:', {
+        selectedMs: selectedMs ? selectedMs["MS名"] : 'none',
+        showSelector,
+        windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'undefined'
+    });
+    
     // 右カラムの表示状態管理（767px以下のみ）
     const [showRightColumn, setShowRightColumn] = useState(false);
     const [isHiding, setIsHiding] = useState(false);
+    
+    // ステータスヒント表示状態を追加
+    const [showStatusHint, setShowStatusHint] = useState(false);
+    const [hasShownHintForCurrentMs, setHasShownHintForCurrentMs] = useState(false);
 
     // アニメーション付きで右カラムを表示
     const showRightColumnWithAnimation = () => {
+        console.log('🎯 showRightColumnWithAnimation called');
         setIsHiding(false);
         setShowRightColumn(true);
+        // ヒントを非表示
+        setShowStatusHint(false);
     };
 
     // アニメーション付きで右カラムを非表示
     const hideRightColumnWithAnimation = () => {
+        console.log('🎯 hideRightColumnWithAnimation called');
         setIsHiding(true);
         // 0.1秒後（アニメーション完了後）に実際に非表示にする
         setTimeout(() => {
@@ -60,30 +74,92 @@ const PickedMs = ({
     // 画面サイズの監視
     useEffect(() => {
         const handleResize = () => {
+            console.log('🎯 Resize detected, width:', window.innerWidth);
             if (window.innerWidth > 767) {
                 // 768px以上：モバイルステータスを非表示
                 setShowRightColumn(false);
                 setIsHiding(false);
+                setShowStatusHint(false);
+            } else {
+                // 767px以下では何もしない（ヒント表示は別のuseEffectで制御）
             }
-            // 767px以下に戻った時は、状態はそのまま（左フリックで再度表示可能）
         };
         
         window.addEventListener('resize', handleResize);
+        // 初回チェック
+        handleResize();
+        
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [selectedMs, showSelector, showRightColumn]);
 
-    // 767px以下での左フリック機能
+    // MSが変更された時のヒント表示制御（初回のみ）
+    useEffect(() => {
+        console.log('🔥 HINT USEEFFECT TRIGGERED:', {
+            selectedMs: selectedMs ? selectedMs["MS名"] : 'none',
+            showSelector,
+            hasShownHint: hasShownHintForCurrentMs,
+            showRightColumn,
+            width: window.innerWidth
+        });
+        
+        // MSが選択されて、セレクター画面でなく、767px以下で、まだヒントを表示していない場合のみ
+        if (selectedMs && !showSelector && window.innerWidth <= 767 && !hasShownHintForCurrentMs) {
+            console.log('🔥 ALL CONDITIONS MET - SHOWING STATUS HINT');
+            setShowStatusHint(true);
+            setHasShownHintForCurrentMs(true); // フラグを立てる
+            
+            // 2秒後にフェードアウトで非表示
+            const fadeTimer = setTimeout(() => {
+                console.log('🔥 HIDING STATUS HINT AFTER TIMEOUT');
+                setShowStatusHint(false);
+            }, 2000);
+            
+            return () => clearTimeout(fadeTimer);
+        } else {
+            console.log('🔥 CONDITIONS NOT MET - NOT SHOWING HINT');
+            setShowStatusHint(false);
+        }
+    }, [selectedMs, showSelector]); // hasShownHintForCurrentMsを依存関係から削除
+    
+    // MSが変更された時のフラグリセット（別のuseEffect）
+    useEffect(() => {
+        if (selectedMs) {
+            console.log('🔥 RESETTING hasShownHintForCurrentMs FLAG for new MS');
+            setHasShownHintForCurrentMs(false);
+        }
+    }, [selectedMs]);
+
+    // 767px以下での左フリック機能（MSSelector画面では無効）
     useFlick(
         () => { 
-            // 左フリック：767px以下でのみ右カラムを表示
-            if (window.innerWidth <= 767) {
+            // 左フリック：767px以下でMSSelector画面でない場合のみ右カラムを表示
+            console.log('🔥 LEFT FLICK DETECTED!', {
+                width: window.innerWidth,
+                showSelector,
+                selectedMs: selectedMs ? selectedMs["MS名"] : 'none',
+                showRightColumn,
+                hasShownHint: hasShownHintForCurrentMs
+            });
+            if (window.innerWidth <= 767 && !showSelector && selectedMs) {
+                console.log('🔥 CONDITIONS MET - EXECUTING showRightColumnWithAnimation');
                 showRightColumnWithAnimation();
+            } else {
+                console.log('🔥 CONDITIONS NOT MET');
             }
         },
         () => { 
-            // 右フリック：767px以下でのみ右カラムを非表示
-            if (window.innerWidth <= 767) {
+            // 右フリック：767px以下でMSSelector画面でない場合のみ右カラムを非表示
+            console.log('🔥 RIGHT FLICK DETECTED!', {
+                width: window.innerWidth,
+                showSelector,
+                selectedMs: selectedMs ? selectedMs["MS名"] : 'none',
+                showRightColumn
+            });
+            if (window.innerWidth <= 767 && !showSelector && selectedMs) {
+                console.log('🔥 CONDITIONS MET - EXECUTING hideRightColumnWithAnimation');
                 hideRightColumnWithAnimation();
+            } else {
+                console.log('🔥 CONDITIONS NOT MET');
             }
         }
     );
@@ -136,7 +212,7 @@ const PickedMs = ({
 
     return (
         <div
-            className={`${styles.pickedmsMainContainer} pickedms-main-container flex flex-row gap-6 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
+            className={`${styles.pickedmsMainContainer} pickedms-main-container flex flex-row gap-2 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
         >
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
@@ -235,6 +311,14 @@ const PickedMs = ({
                         isFullStrengthened={isFullStrengthened}
                         isModified={currentStats.isModified}
                     />
+                </div>
+            )}
+            
+            {/* ステータスヒント表示 */}
+            {showStatusHint && (
+                <div className={pickedMsStyles.statusSwipeHint}>
+                    <div className={pickedMsStyles.statusSwipeHintIcon}></div>
+                    <div className={pickedMsStyles.statusSwipeHintTxt}>ステータス一覧を表示</div>
                 </div>
             )}
         </div>

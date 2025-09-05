@@ -3,6 +3,12 @@
   h1{
     margin:20px 0!important;
   }
+  .appMainRoot{    
+      display: flex!important;
+      flex-flow: column nowrap!important;
+      justify-content: center!important;
+      align-items: center!important;
+  }
 }
 
 /* 1280px未満 */

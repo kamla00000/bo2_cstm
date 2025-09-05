@@ -16,13 +16,9 @@
   border-radius: 0;
   clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
   transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,0,0,0.5);
 }
-@media (max-width: 767px) {
-  .statusJudgeRow{
-    font-size: 12px;
-  }
-}
+
 
 /* グローバルアニメーション用スタイル */
 :global(.triangle-blink-1) {
@@ -53,10 +49,23 @@
   0%, 80% { opacity: 0.3; }
   10%, 20% { opacity: 1; }
 }
-
+@media (min-width: 1280px) {
+  .pickedmsCard{
+    padding: 20px!important;
+  }
+}
 /* 768px以上では格納ボタンを非表示 */
 @media (min-width: 768px) {
   :global(.mobile-close-button) {
     display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .statusJudgeRow{
+    font-size: 12px;
+  }
+  .pickedmsCard{
+    background: rgba(0,0,0,0.9);
   }
 }

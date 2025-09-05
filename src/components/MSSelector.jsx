@@ -97,7 +97,7 @@ const MSSelector = ({
   return (
     <div
       className={`w-full h-full flex flex-col items-center justify-start ${styles.msselectorRoot}`}> 
-  <div className={`w-full flex flex-col gap-6 px-[10px] ${styles.msselectorMainInner}`}> 
+  <div className={`w-full flex flex-col gap-2 px-[10px] ${styles.msselectorMainInner}`}> 
   <div className={`w-full msselector-filter-row flex flex-row flex-wrap gap-3 items-center mb-2 ${styles.msselectorFilterRow}`}> 
           <div className={`${styles['msselector-filter-group']} ${styles.zokusei}`}> 
             <button

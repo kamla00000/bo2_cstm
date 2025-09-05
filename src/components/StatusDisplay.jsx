@@ -75,8 +75,8 @@ const StatusDisplay = ({
     const rawTotalValue = getBonusValue(rawTotal, statKey);
     const totalValue = getBonusValue(total, statKey);
     
-  // 補正値: パーツ補正 + 拡張パーツ補正
-  const combinedBonusValue = partBonusValue + expansionBonusValue;
+  // 補正値: パーツ補正 + 強化リスト補正 + 拡張スキル補正
+  const combinedBonusValue = partBonusValue + fullStrengthenBonusValue + expansionBonusValue;
 
     const displayNumericValue = (value) => {
       if (value === null || value === undefined || isNaN(value)) {

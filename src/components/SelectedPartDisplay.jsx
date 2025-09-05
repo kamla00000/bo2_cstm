@@ -212,7 +212,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
     };
 
     return (
-        <div className={`${styles.selectedPartsCard} pickedms-card p-3 flex flex-row gap-2 relative`}>
+        <div className={`${styles.selectedPartsCard} pickedms-card p-3 flex flex-row relative`}>
             {/* パーツ表示エリア */}
             <div className={styles.partListArea}>
                 <div className={styles.partRow}>
