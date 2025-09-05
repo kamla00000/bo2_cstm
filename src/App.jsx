@@ -146,7 +146,7 @@ function AppContent() {
   }
 
     const mainUI = (
-    <div className={`min-h-screen bg-transparent flex flex-col items-center max-w-[1280px] w-full mx-auto appMainRoot`}>
+    <div className={`min-h-screen bg-transparent flex flex-col items-center max-w-[1280px] w-full mx-auto appMainRoot ${selectedMs && !showSelector ? 'pickedms-active' : ''}`}>
             {/* フル強化解除警告モーダル */}
             <FullStrengthenWarningModal
                 open={showFullStrengthenWarning}
