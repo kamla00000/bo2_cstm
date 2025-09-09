@@ -39,12 +39,33 @@ const MSSelector = ({
         !filterCost ||
         msCost === filterCost ||
         (filterCost === 'low' && Number(msCost) <= 400);
-      // 名前検索（部分一致・大文字小文字・全角半角・ひらがなカタカナ区別なし）
+      // 名前検索（部分一致・大文字小文字・全角半角・ひらがなカタカナ区別なし＋ギリシャ文字・英字ゆるく）
       const toHiragana = (str) => str.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
-      const normalize = (str) => toHiragana(str.toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC'));
-        const matchesSearch =
-          !searchText ||
-          normalize(msName).includes(normalize(searchText));
+      
+      // ギリシャ文字⇔英字ゆる変換（検索を緩くするため）
+      const normalizeAlphabet = (str) => {
+        return str
+          .replace(/[ΖζＺｚZz]/g, 'z')
+          .replace(/[ΝνＶｖVv]/g, 'v')
+          .replace(/[ΑαＡａAa]/g, 'a')
+          .replace(/[ΣσＳｓSs]/g, 's')
+          .replace(/[ΕεＥｅEe]/g, 'e')
+          .replace(/[ΩωＯｏOo]/g, 'o');
+      };
+      
+      const normalize = (str) => {
+        return normalizeAlphabet(
+          toHiragana(
+            str.toLowerCase()
+              .replace(/[\u0009\s　]/g, '')
+              .normalize('NFKC')
+          )
+        );
+      };
+      
+      const matchesSearch =
+        !searchText ||
+        normalize(msName).includes(normalize(searchText));
 
         return matchesType && matchesCost && matchesSearch;
     });
