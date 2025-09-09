@@ -159,7 +159,7 @@ function AppContent() {
             )}
             {/* MS再選択バー */}
             {!showSelector && (
-                <div className="w-full flex justify-center">
+                <div className={`w-full flex justify-center ${styles.msreselect}`}>
                     <div
                         className="flex items-center"
                         style={{ maxWidth: '1280px', width: '100%' }}

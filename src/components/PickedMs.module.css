@@ -11,6 +11,13 @@
   max-width: 1280px; /* max-w-screen-xl */
 }
 
+/* MS再選択バー用のスタイル */
+.msreselect {
+  /* デフォルトスタイル - 必要に応じて追加/修正 */
+}
+
+
+
 /* appMainRoot用のスタイル */
 .appMainRoot {
   position: relative;
@@ -112,6 +119,8 @@ span{
   transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
   width: 100%;
   min-width: 220px;
+  min-height: 200px;
+  height: 200px;
 }
 
 /* パーツプレビュー・カード形状 */
@@ -175,7 +184,19 @@ span{
   justify-content: center;
 }
 
+
 @media (min-width: 1280px) {
+  .msreselect{
+    position: absolute;
+    left: 0;
+    top: 20px;
+    width: 765px!important;
+    flex: none;
+    z-index: 999;
+  }
+  .msNameText{
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6), 1px 1px 2px rgba(0, 0, 0, 1) !important;
+  }
   .partPreviewArea{
     height: 100%;
     .partPreviewCardShape{
@@ -184,10 +205,10 @@ span{
     }
   }
   .picked-ms-left-col {
-    width: 60%;
-    min-width: 320px;
-    max-width: 900px;
-    margin-right: 2rem;
+    width: 40% !important;
+    min-width: 280px !important;
+    max-width: 450px !important;
+    margin-right: 2rem !important;
   }
   .slotparts-rightcol{
     display: none;
@@ -208,9 +229,9 @@ span{
     align-items: flex-end!important;
   }
   .picked-ms-left-col {
-    width: 60%;
-    min-width: 320px;
-    max-width: 900px;
+    width: 40% !important;
+    min-width: 280px !important;
+    max-width: 450px !important;
   }
   .equipSelectText {
     font-size: 80px !important;
@@ -256,10 +277,10 @@ span{
     align-items: flex-end!important;
   }
   .picked-ms-left-col {
-    width: 60%;
-    min-width: 320px;
-    max-width: 900px;
-    margin-right: 2rem;
+    width: 40% !important;
+    min-width: 280px !important;
+    max-width: 450px !important;
+    margin-right: 2rem !important;
   }
   .slotparts-rightcol {
     display: none;
@@ -315,23 +336,37 @@ span{
     width: 50%!important;
     background: none!important;
   }
+  /* 1280px以上でMS再選択バーの幅を調整 */
+  .msNameText{
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6), 1px 1px 2px rgba(0, 0, 0, 1) !important;
+  }
+
   
   /* 指のアイコン（左から右へスワイプアニメーション） */
   :global(.bg-red-500.bg-opacity-60::after),
-  :global(.bg-orange-500.bg-opacity-60::after) {
+  :global(.bg-orange-500.bg-opacity-60::after),
+  :global(.bg-gray-700.bg-opacity-70.show-swipe-hint::after) {
     content: "\F073F";
     font-family: 'Material Design Icons';
     position: absolute;
-    top: 50%;
+    top: 15px;
     left: 20%;
     transform: translateY(-50%);
-    font-size: 24px;
+    font-size: 30px;
     color: #ffffff;
     text-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 16px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.9);
     filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
     z-index: 10002;
     pointer-events: none;
     animation: swipeFingerMove 0.75s ease-in-out forwards;
+  }
+
+  /* マウス優先デバイス（タッチサポートなし＋ホバー対応）ではスワイプヒントを非表示 */
+  @media (hover: hover) and (pointer: fine) {
+    :global(.bg-red-500.bg-opacity-60::after),
+    :global(.bg-orange-500.bg-opacity-60::after) {
+      display: none;
+    }
   }
   
   @keyframes swipeFingerMove {
@@ -420,7 +455,7 @@ span{
     order: 2 !important;
     display: flex !important;
     flex-flow: row nowrap !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: stretch !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -433,10 +468,13 @@ span{
   .slotparts-leftcol {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 0.5rem;
     flex-grow: 1;
     min-width: 0;
     width: 50% !important;
+    max-width: 400px!important;
+    flex:none;
   }
   
   .slotparts-rightcol {
@@ -481,7 +519,7 @@ span{
     line-height: 1.5 !important;
     min-height: 0 !important;
     max-height: none !important;
-    height: auto !important;
+    height: 90px !important;
     overflow: visible !important;
     margin-bottom: 0.5rem !important;
     flex-grow: 0 !important;
@@ -557,14 +595,13 @@ span{
     order: 2 !important;
     display: flex !important;
     flex-flow: row nowrap !important;
-    justify-content: flex-start !important;
     align-items: stretch !important;
     width: 100% !important;
     max-width: 100% !important;
     gap: 0.5rem !important;
     height: auto !important;
     min-height: 300px !important;
-    max-width: 800px!important;
+    max-width: 1000px!important;
     margin-left: auto!important;
     margin-right: auto!important;
   }
@@ -614,7 +651,6 @@ span{
     line-height: 1.5 !important;
     min-height: 0 !important;
     max-height: none !important;
-    height: auto !important;
     overflow: visible !important;
     margin-bottom: 0.5rem !important;
     flex-grow: 0 !important;
@@ -643,6 +679,16 @@ span{
     max-height: none !important;
     overflow: visible !important;
   }
+}
+
+/* OVER用の強制text-shadowクラス */
+.overTextShadow {
+  text-shadow: 3px 3px 6px black !important,
+               -3px -3px 6px black !important,
+               3px -3px 6px black !important,
+               -3px 3px 6px black !important,
+               0 0 12px black !important,
+               0 0 16px black !important;
 }
 
 
@@ -800,6 +846,7 @@ span{
   }
   .msNameText{
     font-size:14px!important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6), 1px 1px 2px rgba(0, 0, 0, 1) !important;
   }
   .pickedms-main-container,
   .expansionLabel,
@@ -1065,6 +1112,7 @@ span{
   }
   .msNameText{
     font-size:14px!important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6), 1px 1px 2px rgba(0, 0, 0, 1) !important;
   }
   .pickedms-main-container,
   .expansionLabel,

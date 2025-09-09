@@ -37,7 +37,7 @@ const ImageWithFallback = ({ partName, className }) => {
 const PartPreview = ({ part }) => {
   if (!part) {
     return (
-      <div className={styles.partPreviewCardShape + " relative text-gray-200"} style={{ minHeight: '200px', height: '200px' }}>
+      <div className={styles.partPreviewCardShape + " relative text-gray-200"}>
         <span className={"absolute top-8 left-8 " + styles.equipSelectText + " text-gray-200 [text-shadow:1px_1px_2px_black]"}>装</span>
         <span className={"absolute top-8 right-8 " + styles.equipSelectText + " text-gray-200 [text-shadow:1px_1px_2px_black]"}>備</span>
         <span className={"absolute bottom-8 left-8 " + styles.equipSelectText + " text-gray-200 [text-shadow:1px_1px_2px_black]"}>選</span>

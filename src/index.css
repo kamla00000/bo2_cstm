@@ -74,15 +74,16 @@ li {
   background: #444;
   padding: 0;
 }
-/* 1279px以下 */
-@media (min-width: 1280px) {
-  
+
+@media (min-width: 1280px) {  
   .pickedms-active{
     display: flex;
     flex-flow: column nowrap;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+    position: relative;
   }
+
 }
 /* 768px未満 */
 @media (max-width: 767px) {

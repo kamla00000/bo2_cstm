@@ -5,6 +5,7 @@ import { useGlobalRemoveFlick } from '../hooks/useGlobalRemoveFlick';
 import React from 'react';
 import { ALL_CATEGORY_NAME } from '../constants/appConstants';
 import styles from './PickedMs.module.css';
+import { shouldShowFlickGuide, shouldInstantAction, getDeviceType } from '../utils/deviceDetection';
 
 // 画像パスを生成する関数をコンポーネントの外に定義
 const getBaseImagePath = (partName) => `/images/parts/${encodeURIComponent(partName)}`;
@@ -356,11 +357,21 @@ const PartList = ({
                                         ${selected && !showOneShotEffect ? '' : ''}
                                     `}
                                     onClick={() => {
-                                        if (window.innerWidth <= 1024) {
+                                        const isInstantAction = shouldInstantAction();
+                                        const deviceType = getDeviceType();
+                                        
+                                        if (isInstantAction) {
+                                            // マウス優先デバイス: 即座に装備・解除
+                                            if (!reallyDisabled || selected) {
+                                                handleSelect(part);
+                                            }
+                                            onPreviewSelect?.(part);
+                                        } else if (deviceType === 'touch' || window.innerWidth <= 1024) {
+                                            // タッチデバイスまたは小画面: プレビューのみ
                                             setPreviewPart(part.name);
                                             onPreviewSelect?.(part);
-                                            // タップでは装着しない
                                         } else {
+                                            // ハイブリッドデバイス（大画面）: 従来の動作
                                             if (!reallyDisabled || selected) {
                                                 handleSelect(part);
                                             }
@@ -412,7 +423,31 @@ const PartList = ({
 
                                     {/* 装備中の表示 (ワンクッション表示と重ねて表示) */}
                                     {selected && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20 pointer-events-none">
+                                        <div 
+                                            className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const isInstantAction = shouldInstantAction();
+                                                const showGuide = shouldShowFlickGuide();
+                                                const deviceType = getDeviceType();
+                                                
+                                                if (isInstantAction) {
+                                                    // マウス優先デバイス: 即座に装備解除
+                                                    handleSelect(part);
+                                                } else if (showGuide && (deviceType === 'touch' || window.innerWidth <= 1024)) {
+                                                    // タッチデバイス: スワイプヒントを表示
+                                                    const element = e.currentTarget;
+                                                    element.classList.add('show-swipe-hint');
+                                                    setTimeout(() => {
+                                                        element.classList.remove('show-swipe-hint');
+                                                    }, 1500);
+                                                }
+                                            }}
+                                            style={{ 
+                                                cursor: shouldInstantAction() ? 'pointer' : 
+                                                       (shouldShowFlickGuide() && window.innerWidth <= 1024) ? 'pointer' : 'default' 
+                                            }}
+                                        >
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
                                                 <span>装 備</span>
                                                 <span>完 了</span>

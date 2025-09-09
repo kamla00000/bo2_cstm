@@ -44,14 +44,18 @@
 :global(.triangle-blink-6) {
   animation: triangleBlink 3s infinite 1.5s;
 }
-
+.statusShadowStrong{
+  color: white;
+  text-shadow: 1px 1px 1px black;
+}
 @keyframes triangleBlink {
   0%, 80% { opacity: 0.3; }
   10%, 20% { opacity: 1; }
 }
 @media (min-width: 1280px) {
   .pickedmsCard{
-    padding: 20px!important;
+    padding: 10px!important;
+    width: 100%;
   }
 }
 /* 768px以上では格納ボタンを非表示 */

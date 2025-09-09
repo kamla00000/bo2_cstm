@@ -3,6 +3,7 @@ import { useGlobalRemoveFlick } from '../hooks/useGlobalRemoveFlick';
 import React from 'react';
 import ImageWithFallback from './ImageWithFallback';
 import styles from './PickedMs.module.css';
+import { shouldInstantAction } from '../utils/deviceDetection';
 
 const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, onLeavePart }) => {
     // 解除用フリックstate
@@ -131,11 +132,16 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                 data-selected-part-name={part ? part.name : undefined}
                 onClick={(e) => {
                     if (part) {
-                        if (window.innerWidth <= 1024) {
-                            // モバイル：タップで解除レイヤー表示、フリックで解除
+                        const isInstantAction = shouldInstantAction();
+                        
+                        if (isInstantAction) {
+                            // マウス優先デバイス：クリックで直接解除
+                            onRemove(part);
+                        } else if (window.innerWidth <= 1024) {
+                            // タッチデバイス（モバイル）：タップで解除レイヤー表示、フリックで解除
                             // onTouchStartで既に設定済み
                         } else {
-                            // デスクトップ：クリックで直接解除（レイヤー表示なし）
+                            // ハイブリッドデバイス（デスクトップ）：クリックで直接解除
                             onRemove(part);
                         }
                     }
