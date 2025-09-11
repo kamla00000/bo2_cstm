@@ -44,11 +44,13 @@ function AppContent() {
 
     const navigate = useNavigate();
     const { msName } = useParams();
+    
     // URLからMS自動選択
     useEffect(() => {
         if (!msData || !Array.isArray(msData) || msData.length === 0) return;
         if (msName) {
-            const decodedName = decodeURIComponent(msName).replace(/_/g, ' ');
+            // URLパラメータをそのまま使用（アンダースコアをスペースに変換しない）
+            const decodedName = decodeURIComponent(msName);
             const foundMs = msData.find(ms => ms["MS名"] === decodedName);
             if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
                 handleMsSelect(foundMs);
@@ -308,18 +310,16 @@ function AppContent() {
         </div>
     );
 
-    return (
-        <Routes>
-            <Route path="/:msName" element={mainUI} />
-            <Route path="/" element={mainUI} />
-        </Routes>
-    );
+    return mainUI;
 }
 
 function App() {
     return (
         <BrowserRouter>
-            <AppContent />
+            <Routes>
+                <Route path="/:msName" element={<AppContent />} />
+                <Route path="/" element={<AppContent />} />
+            </Routes>
         </BrowserRouter>
     );
 }
