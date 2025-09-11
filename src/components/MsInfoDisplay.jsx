@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './PickedMs.module.css';
 import { useState, useEffect } from 'react';
 
@@ -40,7 +41,7 @@ const generateImagePaths = (baseName) => {
 };
 
 // MS画像コンポーネント（複数パターンを試す）
-const MSImageDisplay = ({ baseName, msName, onMsImageClick }) => {
+const MSImageDisplay = ({ baseName, msName }) => {
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [imagePaths] = useState(() => generateImagePaths(baseName));
 
@@ -62,9 +63,7 @@ const MSImageDisplay = ({ baseName, msName, onMsImageClick }) => {
       src={currentSrc}
       alt={msName}
       className="ms-img-card cursor-pointer"
-      onClick={onMsImageClick}
       onError={handleImageError}
-      title="MSを再選択"
     />
   );
 };
@@ -149,11 +148,17 @@ const MsInfoDisplay = ({
           }
         `}</style>
         <div className="ms-imgbox-card">
-          <MSImageDisplay
-            baseName={baseName}
-            msName={selectedMs["MS名"]}
-            onMsImageClick={onMsImageClick}
-          />
+          <Link 
+            to="/" 
+            onClick={onMsImageClick}
+            className="inline-block"
+            title="MSを再選択"
+          >
+            <MSImageDisplay
+              baseName={baseName}
+              msName={selectedMs["MS名"]}
+            />
+          </Link>
         </div>
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 mb-1">
@@ -174,30 +179,51 @@ const MsInfoDisplay = ({
                   borderTop = borderBottom = '#facc15';
                 }
               }
-              return (
+              return isCurrent ? (
                 <button
                   key={costStr}
-                  className={`ms-badge-hex flex-shrink-0 ${isCurrent ? 'hex-main' : 'hex-side'}`}
-                  data-type={isCurrent ? ms.属性 : ''}
+                  className={`ms-badge-hex flex-shrink-0 hex-main`}
+                  data-type={ms.属性}
                   style={{
-                    opacity: isCurrent ? 1 : 0.7,
+                    opacity: 1,
                     border: 'none',
-                    background: isCurrent ? '#353942' : '#23272e',
-                    cursor: isCurrent ? 'default' : 'pointer',
-                    minWidth: isCurrent ? 0 : 28,
-                    padding: isCurrent ? '0.2em 1.1em' : '0.08em 0.7em',
-                    boxShadow: isCurrent ? '0 2px 8px #0003' : '0 1px 4px #0002',
+                    background: '#353942',
+                    cursor: 'default',
+                    minWidth: 0,
+                    padding: '0.2em 1.1em',
+                    boxShadow: '0 2px 8px #0003',
                     color: '#fff',
-                    borderTop: isCurrent ? `3px solid ${borderTop}` : 'none',
-                    borderBottom: isCurrent ? `3px solid ${borderBottom}` : 'none',
-                    fontSize: isCurrent ? undefined : '1em',
+                    borderTop: `3px solid ${borderTop}`,
+                    borderBottom: `3px solid ${borderBottom}`,
                   }}
-                  disabled={isCurrent}
-                  onClick={() => !isCurrent && handleMsSelect(ms)}
-                  title={isCurrent ? '選択中' : `${costStr}`}
+                  disabled={true}
+                  title="選択中"
                 >
-                  {isCurrent ? `${ms.属性}：${costStr}` : costStr}
+                  {`${ms.属性}：${costStr}`}
                 </button>
+              ) : (
+                <Link
+                  key={costStr}
+                  to={`/${encodeURIComponent(ms["MS名"])}`}
+                  className={`ms-badge-hex flex-shrink-0 hex-side`}
+                  style={{
+                    opacity: 0.7,
+                    border: 'none',
+                    background: '#23272e',
+                    cursor: 'pointer',
+                    minWidth: 28,
+                    padding: '0.08em 0.7em',
+                    boxShadow: '0 1px 4px #0002',
+                    color: '#fff',
+                    fontSize: '1em',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                  }}
+                  onClick={() => handleMsSelect(ms)}
+                  title={costStr}
+                >
+                  {costStr}
+                </Link>
               );
             })}
             <style>{`

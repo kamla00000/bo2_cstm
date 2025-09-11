@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './MSSelector.module.css';
 const COSTS = [750, 700, 650, 600, 550, 500, 450];
 const TYPES = ['強襲', '汎用', '支援'];
@@ -289,15 +290,18 @@ const MSSelector = ({
                 const baseName = (ms["MS名"] ?? '').replace(/_LV\d+$/, '').trim();
 
                 return (
-                  <div
+                  <Link
                     key={`${ms["MS名"]}_${ms.コスト}_${ms.属性}`}
-                    className={`ms-row-card-mecha cursor-pointer flex items-center gap-2 transition-all`}
+                    to={`/${encodeURIComponent(ms["MS名"])}`}
+                    className={`ms-row-card-mecha cursor-pointer flex items-center gap-2 transition-all text-decoration-none`}
                     onClick={() => handleMsSelect(ms)}
                     style={{
                       minHeight: 72,
                       border: 'none', // 罫線なし
                       padding: '0.3rem 0.2rem',
                       borderRadius: '0',
+                      textDecoration: 'none', // リンクの下線を消す
+                      color: 'inherit', // 親の色を継承
                       // clipPath: 'polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%)',
                       // backdropFilter: 'blur(12px)',
                       // WebkitBackdropFilter: 'blur(12px)',
@@ -395,7 +399,7 @@ const MSSelector = ({
                         textShadow: '0 3px 16px #000, 0 0 0px #000, 0 1px 0 #000'
                       }}>{ms["MS名"]}</span>
                     </div>
-                  </div>
+                  </Link>
                 );
               })
             ) : (

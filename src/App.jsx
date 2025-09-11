@@ -3,7 +3,7 @@ import PartSelectionSection from './components/PartSelectionSection';
 import styles from './components/PickedMs.module.css';
 import PickedMs from './components/PickedMs';
 import React, { useEffect, useState, useRef } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { useAppData } from './hooks/useAppData';
 import FullStrengthenWarningModal from './components/FullStrengthenWarningModal';
 // 追加: 背景動画のパターン
@@ -167,7 +167,8 @@ function AppContent() {
                         style={{ maxWidth: '1280px', width: '100%' }}
                     >
                         {/* MS再選択ボタン */}
-                        <button
+                        <Link
+                            to="/"
                             className="h-14 flex-1 rounded-none text-4xl text-gray-200 bg-transparent relative overflow-visible flex items-center group pl-8 pr-8"
                             style={{
                                 borderRadius: 0,
@@ -175,10 +176,10 @@ function AppContent() {
                                 zIndex: 1,
                                 padding: 0,
                                 minWidth: 0,
+                                textDecoration: 'none',
                             }}
                             onClick={() => {
                                 setShowSelector(true);
-                                navigate && navigate('/');
                             }}
                         >
                             {/* ストライプ背景 */}
@@ -234,7 +235,7 @@ function AppContent() {
                             >
                                 M　S　再　選　択
                             </span>
-                        </button>
+                        </Link>
                         {/* X（旧Twitter）アイコン */}
                         <a
                             href="https://x.com/GBO2CSTM"
