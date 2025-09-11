@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './PickedMs.module.css';
+import { useState, useEffect } from 'react';
 
 // 属性ごとに色を返す関数をこのファイル内に記述
 const getTypeColor = (type) => {
@@ -15,8 +16,58 @@ const getTypeColor = (type) => {
   }
 };
 
+// 画像名正規化関数（MSSelector と同じロジック）
+const normalizeImageName = (name) => {
+  return name
+    .replace(/[ΖζＺｚZz]/g, 'Z')
+    .replace(/[ΝνＶｖVv]/g, 'V')
+    .replace(/[ΑαＡａAa]/g, 'A')
+    .replace(/[ΣσＳｓSs]/g, 'S')
+    .replace(/[ΕεＥｅEe]/g, 'E')
+    .replace(/[ΩωＯｏOo]/g, 'O');
+};
 
-import { useState, useEffect } from 'react';
+// 複数パターンの画像パスを生成
+const generateImagePaths = (baseName) => {
+  const normalized = normalizeImageName(baseName);
+  const paths = [
+    `/images/ms/${baseName}.webp`,      // 元の名前
+    `/images/ms/${normalized}.webp`,    // 正規化後
+  ];
+  
+  // 重複を除去
+  return [...new Set(paths)];
+};
+
+// MS画像コンポーネント（複数パターンを試す）
+const MSImageDisplay = ({ baseName, msName, onMsImageClick }) => {
+  const [currentPathIndex, setCurrentPathIndex] = useState(0);
+  const [imagePaths] = useState(() => generateImagePaths(baseName));
+
+  const handleImageError = () => {
+    if (currentPathIndex < imagePaths.length - 1) {
+      setCurrentPathIndex(currentPathIndex + 1);
+    } else {
+      // 全てのパターンが失敗した場合はdefault.webpに切り替え
+      setCurrentPathIndex(-1);
+    }
+  };
+
+  const currentSrc = currentPathIndex === -1 
+    ? '/images/ms/default.webp' 
+    : imagePaths[currentPathIndex];
+
+  return (
+    <img
+      src={currentSrc}
+      alt={msName}
+      className="ms-img-card cursor-pointer"
+      onClick={onMsImageClick}
+      onError={handleImageError}
+      title="MSを再選択"
+    />
+  );
+};
 
 const MsInfoDisplay = ({
   selectedMs,
@@ -98,17 +149,10 @@ const MsInfoDisplay = ({
           }
         `}</style>
         <div className="ms-imgbox-card">
-          <img
-            src={`/images/ms/${baseName}.webp`}
-            alt={selectedMs["MS名"]}
-            className="ms-img-card cursor-pointer"
-            onClick={onMsImageClick}
-            onError={(e) => {
-              console.error(`MsInfoDisplay: Image load error for: /images/ms/${baseName}.webp`);
-              e.target.src = '/images/ms/default.webp';
-              e.target.onerror = null;
-            }}
-            title="MSを再選択"
+          <MSImageDisplay
+            baseName={baseName}
+            msName={selectedMs["MS名"]}
+            onMsImageClick={onMsImageClick}
           />
         </div>
         <div className="flex flex-col flex-grow">

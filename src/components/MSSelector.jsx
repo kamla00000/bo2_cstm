@@ -20,6 +20,58 @@ const MSSelector = ({
 }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredMs, setFilteredMs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 画像名正規化関数（検索と同じロジック）
+  const normalizeImageName = (name) => {
+    return name
+      .replace(/[ΖζＺｚZz]/g, 'Z')
+      .replace(/[ΝνＶｖVv]/g, 'V')
+      .replace(/[ΑαＡａAa]/g, 'A')
+      .replace(/[ΣσＳｓSs]/g, 'S')
+      .replace(/[ΕεＥｅEe]/g, 'E')
+      .replace(/[ΩωＯｏOo]/g, 'O');
+  };
+
+  // 複数パターンの画像パスを生成
+  const generateImagePaths = (baseName) => {
+    const normalized = normalizeImageName(baseName);
+    const paths = [
+      `/images/ms/${baseName}.webp`,      // 元の名前
+      `/images/ms/${normalized}.webp`,    // 正規化後
+    ];
+    
+    // 重複を除去
+    return [...new Set(paths)];
+  };
+
+  // MS画像コンポーネント（複数パターンを試す）
+  const MSImage = ({ baseName, msName, isSelected }) => {
+    const [currentPathIndex, setCurrentPathIndex] = useState(0);
+    const [imagePaths] = useState(() => generateImagePaths(baseName));
+
+    const handleImageError = () => {
+      if (currentPathIndex < imagePaths.length - 1) {
+        setCurrentPathIndex(currentPathIndex + 1);
+      } else {
+        // 全てのパターンが失敗した場合はdefault.webpに切り替え
+        setCurrentPathIndex(-1);
+      }
+    };
+
+    const currentSrc = currentPathIndex === -1 
+      ? '/images/ms/default.webp' 
+      : imagePaths[currentPathIndex];
+
+    return (
+      <img
+        src={currentSrc}
+        alt={msName}
+        className={`ms-img-card transition ${isSelected ? 'selected' : ''}`}
+        onError={handleImageError}
+      />
+    );
+  };
 
   useEffect(() => {
     if (!msData || !Array.isArray(msData)) {
@@ -95,6 +147,7 @@ const MSSelector = ({
     });
 
     setFilteredMs(results);
+    setIsLoading(false);
   }, [filterType, filterCost, searchText, msData]);
 
   const getTypeColor = (type) => {
@@ -251,16 +304,7 @@ const MSSelector = ({
                     }}
                   >
                     <div className="ms-imgbox-card relative w-16 h-16 flex-shrink-0 overflow-hidden transition" style={{ width: '4rem', height: '4rem', position: 'relative', overflow: 'hidden' }}>
-                      <img
-                        src={`/images/ms/${baseName}.webp`}
-                        alt={ms["MS名"]}
-                        className={`ms-img-card transition ${isSelected ? 'selected' : ''}`}
-                        onError={(e) => {
-                          console.error(`MSSelector: Image load error for: /images/ms/${baseName}.webp`);
-                          e.target.src = '/images/ms/default.webp';
-                          e.target.onerror = null;
-                        }}
-                      />
+                      <MSImage baseName={baseName} msName={ms["MS名"]} isSelected={isSelected} />
                     </div>
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
@@ -355,7 +399,18 @@ const MSSelector = ({
                 );
               })
             ) : (
-              <p className="text-gray-200 text-center py-8 col-span-full">該当するMSが見つかりません。</p>
+              isLoading ? (
+                <div className="w-full flex flex-col items-center justify-center py-8 col-span-full">
+                  <div className="flex space-x-2 mb-4">
+                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="text-gray-300">MSデータをロード中...</span>
+                </div>
+              ) : (
+                <p className="text-gray-200 text-center py-8 col-span-full">該当するMSが見つかりません。</p>
+              )
             )}
           </div>
         </div>
