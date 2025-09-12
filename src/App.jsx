@@ -1,19 +1,60 @@
-﻿import { CATEGORY_NAMES, ALL_CATEGORY_NAME } from './constants/appConstants';
-import PartSelectionSection from './components/PartSelectionSection';
-import styles from './components/PickedMs.module.css';
-import PickedMs from './components/PickedMs';
-import React, { useEffect, useState, useRef } from 'react';
+﻿import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { useAppData } from './hooks/useAppData';
+import { CATEGORY_NAMES, ALL_CATEGORY_NAME } from './constants/appConstants';
+import PartSelectionSection from './components/PartSelectionSection';
+import PickedMs from './components/PickedMs';
 import FullStrengthenWarningModal from './components/FullStrengthenWarningModal';
-// 追加: 背景動画のパターン
+import InfoModal from './components/InfoModal';
+import styles from './components/PickedMs.module.css';
+
+// 背景動画のパターン
 const BG_VIDEOS = [
     "/images/zekunova.mp4",
     "/images/zekunova2.mp4",
 ];
 
+// ビルド構成をURLパラメータに変換（修正版）
+const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) => {
+    if (!ms) return '';
+    
+    // MS名の処理を統一（%20を_に変換）
+    const encodedMsName = encodeURIComponent(ms["MS名"]).replace(/%20/g, '_');
+    const baseUrl = `${window.location.origin}/${encodedMsName}`;
+    const params = new URLSearchParams();
+    
+    if (isFullStrengthened) {
+        params.set('fullst', '1');
+    }
+    
+    if (expansionType && expansionType !== 'なし') {
+        params.set('expansion', expansionType);
+    }
+    
+    if (selectedParts && selectedParts.length > 0) {
+        const partIds = selectedParts.map(part => part.name).join(',');
+        params.set('parts', partIds);
+    }
+    
+    const queryString = params.toString();
+    const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+    
+    return finalUrl;
+};
+
+// URLパラメータからビルド構成を解析
+const parseBuildFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        fullst: urlParams.get('fullst') === '1',
+        expansion: urlParams.get('expansion') || 'なし',
+        parts: urlParams.get('parts') ? urlParams.get('parts').split(',') : []
+    };
+};
+
+
 function AppContent() {
-    // useAppData()の分割代入を最初に記述
+    // useAppData()の分割代入
     const {
         msData,
         partData,
@@ -40,120 +81,262 @@ function AppContent() {
         handlePartSelect,
         handleClearAllParts,
         isPartDisabled,
+        allPartsCache,
     } = useAppData();
 
     const navigate = useNavigate();
     const { msName } = useParams();
     
-    // URLからMS自動選択
-    useEffect(() => {
-        if (!msData || !Array.isArray(msData) || msData.length === 0) return;
-        if (msName) {
-            // URLパラメータをそのまま使用（アンダースコアをスペースに変換しない）
-            const decodedName = decodeURIComponent(msName);
-            const foundMs = msData.find(ms => ms["MS名"] === decodedName);
-            if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
-                handleMsSelect(foundMs);
-                setShowSelector(false);
-            }
-        }
-    }, [msName, msData]);
+    // 属性・コスト絞り込みをAppで管理
+    const [filterType, setFilterType] = useState('');
+    const [filterCost, setFilterCost] = useState('');
+    const [showSelector, setShowSelector] = useState(!selectedMs);
+    const PickedMsRef = useRef(null);
+    const [PickedMsHeight, setPickedMsHeight] = useState(0);
 
-  // 属性・コスト絞り込みをAppで管理
-  const [filterType, setFilterType] = useState('');
-  const [filterCost, setFilterCost] = useState('');
-  const [showSelector, setShowSelector] = useState(!selectedMs);
-  const PickedMsRef = useRef(null);
-  const [PickedMsHeight, setPickedMsHeight] = useState(0);
+    // 動画再生速度用ref
+    const videoRef = useRef(null);
 
-  // 動画再生速度用ref
-  const videoRef = useRef(null);
+    // ランダム動画選択
+    const [bgVideo, setBgVideo] = useState(BG_VIDEOS[0]);
 
-  // ランダム動画選択
-  const [bgVideo, setBgVideo] = useState(BG_VIDEOS[0]);
+    // フル強化解除警告モーダルの表示状態
+    const [showFullStrengthenWarning, setShowFullStrengthenWarning] = useState(false);
+    // フル強化解除時の一時保存
+    const [pendingFullStrengthen, setPendingFullStrengthen] = useState(null);
 
-  // フル強化解除警告モーダルの表示状態
-  const [showFullStrengthenWarning, setShowFullStrengthenWarning] = useState(false);
-  // フル強化解除時の一時保存
-  const [pendingFullStrengthen, setPendingFullStrengthen] = useState(null);
+    // ビルド共有モーダルの表示状態
+    const [showBuildShareModal, setShowBuildShareModal] = useState(false);
 
-  // MSピック時にランダム動画を選択
+    // URL読み込み完了フラグ
+    const [urlConfigLoaded, setUrlConfigLoaded] = useState(false);
+    
+    // パーツ復元完了フラグ
+    const [partsRestored, setPartsRestored] = useState(false);
+
+    // MSピック時にランダム動画を選択
     const handleMsSelectWithVideo = (ms) => {
         setBgVideo(BG_VIDEOS[Math.floor(Math.random() * BG_VIDEOS.length)]);
         handleMsSelect(ms);
         setShowSelector(false);
+        setUrlConfigLoaded(false);
+        setPartsRestored(false);
+        
         if (ms && ms["MS名"]) {
             navigate(`/${encodeURIComponent(ms["MS名"]).replace(/%20/g, '_')}`);
         }
     };
 
-  useEffect(() => {
-    if (!selectedMs) setShowSelector(true);
-  }, [selectedMs]);
+    // URLからMS自動選択
+    useEffect(() => {
+        if (!msData || !Array.isArray(msData) || msData.length === 0) return;
+        if (msName && !urlConfigLoaded) {
+            const decodedName = decodeURIComponent(msName);
+            const foundMs = msData.find(ms => ms["MS名"] === decodedName);
+            if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
+                handleMsSelect(foundMs);
+                setShowSelector(false);
+                
+                // URLパラメータからビルド構成を読み込み
+                const buildConfig = parseBuildFromUrl();
+                if (buildConfig.fullst) {
+                    setIsFullStrengthened(true);
+                }
+                if (buildConfig.expansion && buildConfig.expansion !== 'なし') {
+                    setExpansionType(buildConfig.expansion);
+                }
+                
+                setUrlConfigLoaded(true);
+            }
+        }
+    }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType]);
 
-  useEffect(() => {
-    const updateHeight = () => {
-      if (PickedMsRef.current) {
-        setPickedMsHeight(PickedMsRef.current.offsetHeight);
-      }
-    };
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
-  }, [selectedMs, showSelector, PickedMsRef]);
+    // パーツデータが読み込まれた後にURLパラメータからパーツを復元（一回のみ）
+    useEffect(() => {
+        if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) return;
+        if (!allPartsCache || Object.keys(allPartsCache).length === 0) return;
+        
+        const buildConfig = parseBuildFromUrl();
+        if (buildConfig.parts && buildConfig.parts.length > 0) {
+            console.log('=== パーツ復元処理開始 ===');
+            
+            // 現在選択されているパーツをクリア
+            handleClearAllParts();
+            
+            // 全カテゴリから検索
+            const allParts = [];
+            for (const categoryName of Object.keys(allPartsCache)) {
+                if (allPartsCache[categoryName]) {
+                    allParts.push(...allPartsCache[categoryName]);
+                }
+            }
+            
+            // URLパラメータからパーツ名を取得し、実際のパーツオブジェクトを検索
+            buildConfig.parts.forEach(partName => {
+                if (!partName || partName.trim() === '') return;
+                
+                const foundPart = allParts.find(part => part.name === partName);
+                if (foundPart) {
+                    console.log('パーツ復元:', foundPart.name);
+                    handlePartSelect(foundPart);
+                }
+            });
+            
+            setPartsRestored(true);
+            console.log('=== パーツ復元処理完了 ===');
+        } else {
+            setPartsRestored(true);
+        }
+    }, [selectedMs, urlConfigLoaded, allPartsCache, partsRestored, handleClearAllParts, handlePartSelect]);
 
-  // 再生スピード
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 2.0;
-    }
-  }, []);
+    useEffect(() => {
+        if (!selectedMs) setShowSelector(true);
+    }, [selectedMs]);
 
-  // フル強化トグル時のラップ
-  const handleFullStrengthenToggle = (next) => {
-    // フル強化を解除しようとしたときだけ警告（ただしカスタムパーツ未装備なら即解除）
-    if (isFullStrengthened && !next) {
-      if (selectedParts && selectedParts.length > 0) {
-        setPendingFullStrengthen(next);
-        setShowFullStrengthenWarning(true);
-      } else {
-        setIsFullStrengthened(next);
-      }
-    } else {
-      setIsFullStrengthened(next);
-    }
-  };
+    useEffect(() => {
+        const updateHeight = () => {
+            if (PickedMsRef.current) {
+                setPickedMsHeight(PickedMsRef.current.offsetHeight);
+            }
+        };
+        updateHeight();
+        window.addEventListener('resize', updateHeight);
+        return () => window.removeEventListener('resize', updateHeight);
+    }, [selectedMs, showSelector, PickedMsRef]);
 
-  // モーダルでOK
-  const handleFullStrengthenWarningOk = () => {
-    setShowFullStrengthenWarning(false);
-    setIsFullStrengthened(pendingFullStrengthen);
-    setPendingFullStrengthen(null);
-    // 装備解除処理
-    handleClearAllParts();
-  };
+    // 再生スピード
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.playbackRate = 2.0;
+        }
+    }, []);
 
-  // モーダルでキャンセル
-  const handleFullStrengthenWarningCancel = () => {
-    setShowFullStrengthenWarning(false);
-    setPendingFullStrengthen(null);
-  };
+    // フル強化トグル時のラップ
+    const handleFullStrengthenToggle = (next) => {
+        // フル強化を解除しようとしたときだけ警告（ただしカスタムパーツ未装備なら即解除）
+        if (isFullStrengthened && !next) {
+            if (selectedParts && selectedParts.length > 0) {
+                setPendingFullStrengthen(next);
+                setShowFullStrengthenWarning(true);
+            } else {
+                setIsFullStrengthened(next);
+            }
+        } else {
+            setIsFullStrengthened(next);
+        }
+    };
 
-  if (!msData || msData.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-700 text-gray-100 p-4 flex flex-col items-center justify-center">
-        <p className="text-xl">データを読み込み中...</p>
-      </div>
-    );
-  }
+    // モーダルでOK
+    const handleFullStrengthenWarningOk = () => {
+        setShowFullStrengthenWarning(false);
+        setIsFullStrengthened(pendingFullStrengthen);
+        setPendingFullStrengthen(null);
+        // 装備解除処理
+        handleClearAllParts();
+    };
+
+    // モーダルでキャンセル
+    const handleFullStrengthenWarningCancel = () => {
+        setShowFullStrengthenWarning(false);
+        setPendingFullStrengthen(null);
+    };
+
+    // ビルド共有ボタンクリック
+    const handleBuildShare = async () => {
+        if (!selectedMs) return;
+        
+        const buildUrl = generateBuildUrl(selectedMs, selectedParts, isFullStrengthened, expansionType);
+        
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(buildUrl);
+                setShowBuildShareModal(true);
+            } else {
+                // フォールバック: document.execCommandを使用
+                const textArea = document.createElement('textarea');
+                textArea.value = buildUrl;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    setShowBuildShareModal(true);
+                } else {
+                    prompt('以下のURLをコピーしてください:', buildUrl);
+                }
+            }
+        } catch (err) {
+            console.error('クリップボードへのコピーに失敗しました:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = buildUrl;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    setShowBuildShareModal(true);
+                } else {
+                    prompt('以下のURLをコピーしてください:', buildUrl);
+                }
+            } catch (fallbackErr) {
+                console.error('フォールバックも失敗:', fallbackErr);
+                prompt('以下のURLをコピーしてください:', buildUrl);
+            }
+        }
+    };
+
+    // ビルド共有モーダル閉じる
+    const handleBuildShareModalClose = () => {
+        setShowBuildShareModal(false);
+    };
+
+    if (!msData || msData.length === 0) {
+        return (
+            <div className="min-h-screen bg-gray-700 text-gray-100 p-4 flex flex-col items-center justify-center">
+                <p className="text-xl">データを読み込み中...</p>
+                {msName && (
+                    <div className="mt-4 flex items-center gap-3">
+                        <div className="flex gap-1">
+                            <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                            <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                            <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        </div>
+                        <span className="text-gray-200">MS「{decodeURIComponent(msName)}」を準備中</span>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     const mainUI = (
-    <div className={`min-h-screen bg-transparent flex flex-col items-center max-w-[1280px] w-full mx-auto appMainRoot ${selectedMs && !showSelector ? 'pickedms-active' : ''}`}>
+        <div className={`min-h-screen bg-transparent flex flex-col items-center max-w-[1280px] w-full mx-auto appMainRoot ${selectedMs && !showSelector ? 'pickedms-active' : ''}`}>
             {/* フル強化解除警告モーダル */}
             <FullStrengthenWarningModal
                 open={showFullStrengthenWarning}
                 onOk={handleFullStrengthenWarningOk}
                 onCancel={handleFullStrengthenWarningCancel}
+            />
+
+            {/* ビルド共有完了モーダル */}
+            <InfoModal
+                open={showBuildShareModal}
+                title="生　成　完　了"
+                message="ビルドの専用URLを&#13;&#10;クリップボードにコピーしました。"
+                onOk={handleBuildShareModalClose}
+                okButtonText="OK"
             />
 
             {showSelector && (
@@ -236,6 +419,22 @@ function AppContent() {
                                 M　S　再　選　択
                             </span>
                         </Link>
+
+                        {/* ビルド共有ボタン */}
+                        {selectedMs && (
+                            <button
+                                className="w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"
+                                style={{ zIndex: 2, borderRadius: 0 }}
+                                onClick={handleBuildShare}
+                                title="ビルドのURLをコピー"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                </svg>
+                            </button>
+                        )}
+
                         {/* X（旧Twitter）アイコン */}
                         <a
                             href="https://x.com/GBO2CSTM"
@@ -324,4 +523,5 @@ function App() {
         </BrowserRouter>
     );
 }
+
 export default App;

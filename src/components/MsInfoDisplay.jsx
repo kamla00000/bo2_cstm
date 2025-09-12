@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './PickedMs.module.css';
-import { useState, useEffect } from 'react';
 
 // 属性ごとに色を返す関数をこのファイル内に記述
 const getTypeColor = (type) => {
@@ -40,24 +39,28 @@ const generateImagePaths = (baseName) => {
   return [...new Set(paths)];
 };
 
-// MS画像コンポーネント（複数パターンを試す）
+// ...existing code...
 const MSImageDisplay = ({ baseName, msName }) => {
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
-  const [imagePaths] = useState(() => generateImagePaths(baseName));
+
+  // baseNameが変わるたびにimagePathsを再生成
+  const imagePaths = useMemo(() => generateImagePaths(baseName), [baseName]);
+
+  // baseNameまたはmsNameが変わったらリセット
+  useEffect(() => {
+    setCurrentPathIndex(0);
+  }, [baseName, msName]);
 
   const handleImageError = () => {
     if (currentPathIndex < imagePaths.length - 1) {
       setCurrentPathIndex(currentPathIndex + 1);
     } else {
-      // 全てのパターンが失敗した場合はdefault.webpに切り替え
       setCurrentPathIndex(-1);
     }
   };
-
   const currentSrc = currentPathIndex === -1 
     ? '/images/ms/default.webp' 
     : imagePaths[currentPathIndex];
-
   return (
     <img
       src={currentSrc}
@@ -67,6 +70,7 @@ const MSImageDisplay = ({ baseName, msName }) => {
     />
   );
 };
+// ...existing code...
 
 const MsInfoDisplay = ({
   selectedMs,

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { startTransition } from 'react';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
 import { calculateSlotUsage } from '../utils/calculateSlots';
 import { useDataLoading } from './useDataLoading';
@@ -146,21 +147,25 @@ export const useAppData = () => {
     }, [calculateUsageWithPreview]);
 
     const handleMsSelect = useCallback((ms) => {
-        setSelectedMs(ms);
-        setSelectedParts([]);
-        setHoveredPart(null);
-        setHoverSource(null);
-        setIsFullStrengthened(false);
-        setExpansionType('無し');
-        setFilterCategory('防御');
-        setSelectedPreviewPart(null);
+        startTransition(() => {
+            setSelectedMs(ms);
+            setSelectedParts([]);
+            setHoveredPart(null);
+            setHoverSource(null);
+            setIsFullStrengthened(false);
+            setExpansionType('無し');
+            setFilterCategory('防御');
+            setSelectedPreviewPart(null);
+        });
     }, []);
 
     const handlePartRemove = useCallback((partToRemove) => {
-        setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
-        setHoveredPart(null);
-        setHoverSource(null);
-        setSelectedPreviewPart(null);
+        startTransition(() => {
+            setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
+            setHoveredPart(null);
+            setHoverSource(null);
+            setSelectedPreviewPart(null);
+        });
     }, []);
 
     const handlePartSelect = useCallback((part) => {
@@ -176,17 +181,22 @@ export const useAppData = () => {
         if (projectedSlots.close > projectedSlots.maxClose ||
             projectedSlots.mid > projectedSlots.maxMid ||
             projectedSlots.long > projectedSlots.maxLong) return;
-        setSelectedParts(prevParts => {
-            const filteredPrevParts = prevParts.filter(p => p.name !== part.name);
-            return [...filteredPrevParts, part];
+        
+        startTransition(() => {
+            setSelectedParts(prevParts => {
+                const filteredPrevParts = prevParts.filter(p => p.name !== part.name);
+                return [...filteredPrevParts, part];
+            });
         });
     }, [selectedMs, selectedParts, handlePartRemove, isFullStrengthened, fullStrengtheningEffects, isPartDisabled]);
 
     const handleClearAllParts = useCallback(() => {
-        setSelectedParts([]);
-        setHoveredPart(null);
-        setHoverSource(null);
-        setSelectedPreviewPart(null);
+        startTransition(() => {
+            setSelectedParts([]);
+            setHoveredPart(null);
+            setHoverSource(null);
+            setSelectedPreviewPart(null);
+        });
     }, []);
 
     const setFullStrengthenedWrapper = useCallback((newValue) => {
@@ -199,6 +209,7 @@ export const useAppData = () => {
         // プレビュー解除はパーツ一覧・装着中パーツ一覧のパーツをタップした時のみ
         // ここではsetSelectedPreviewPart(null)を呼ばない
     }, []);
+    
     // プレビュー固定用
     const handlePartPreviewSelect = useCallback((part) => {
         setSelectedPreviewPart(part);
@@ -233,5 +244,6 @@ export const useAppData = () => {
         selectedPreviewPart,
         handlePartPreviewSelect,
         isPartDisabled, 
+        allPartsCache,
     };
 };
