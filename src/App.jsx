@@ -14,6 +14,7 @@ const BG_VIDEOS = [
     "/images/zekunova2.mp4",
 ];
 
+// ...existing code...
 // ビルド構成をURLパラメータに変換（修正版）
 const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) => {
     if (!ms) return '';
@@ -32,7 +33,8 @@ const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) 
     }
     
     if (selectedParts && selectedParts.length > 0) {
-        const partIds = selectedParts.map(part => part.name).join(',');
+        // ここを修正：パーツ名をエンコードして連結
+        const partIds = selectedParts.map(part => encodeURIComponent(part.name)).join(',');
         params.set('parts', partIds);
     }
     
@@ -48,9 +50,13 @@ const parseBuildFromUrl = () => {
     return {
         fullst: urlParams.get('fullst') === '1',
         expansion: urlParams.get('expansion') || 'なし',
-        parts: urlParams.get('parts') ? urlParams.get('parts').split(',') : []
+        // ここも修正：デコードして配列化
+        parts: urlParams.get('parts')
+            ? urlParams.get('parts').split(',').map(name => decodeURIComponent(name))
+            : []
     };
 };
+// ...existing code...
 
 
 function AppContent() {
