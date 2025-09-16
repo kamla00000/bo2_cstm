@@ -25,6 +25,16 @@ const LV_FILTERS = [
     { label: 'LV6', value: '6' },
 ];
 
+// MS名正規化（全角/半角/大文字小文字吸収）
+const normalizeMsName = (name) => {
+    if (!name) return '';
+    return name
+        .replace(/[ＬＶ]/g, 'LV')
+        .replace(/_LV(\d+)$/, (m, lv) => `_LV${lv}`)
+        .replace(/[\s　]+/g, '')
+        .toLowerCase();
+};
+
 // ビルドURL生成
 const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) => {
     if (!ms) return '';
@@ -117,24 +127,26 @@ function AppContent() {
         }
     };
 
-    // MS名復元処理
+    // MS名復元処理（正規化比較で環境差異吸収）
     useEffect(() => {
         if (!msData || !Array.isArray(msData) || msData.length === 0) return;
         if (msName && !urlConfigLoaded) {
             const decodedName = decodeURIComponent(msName);
-            const foundMs = msData.find(ms => ms["MS名"] === decodedName);
+            const normalizedDecoded = normalizeMsName(decodedName);
+            const foundMs = msData.find(ms => normalizeMsName(ms["MS名"]) === normalizedDecoded);
             if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
                 handleMsSelect(foundMs);
                 setShowSelector(false);
                 const buildConfig = parseBuildFromUrl();
                 if (buildConfig.fullst) {
-                    setIsFullStrengthened(true); // ← ここを修正
+                    setIsFullStrengthened(true);
                 }
                 if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
                 setUrlConfigLoaded(true);
             }
         }
     }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+
     // パーツ復元処理（2段階）
     useEffect(() => {
         if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) return;
