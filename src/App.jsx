@@ -129,19 +129,25 @@ function AppContent() {
 
     // MS名復元処理（正規化比較で環境差異吸収）
     useEffect(() => {
-        if (!msData || !Array.isArray(msData) || msData.length === 0) return;
-        if (msName && !urlConfigLoaded) {
+    // msDataがロード済みかつmsNameが存在し、復元処理が未実行の場合のみ
+    if (
+        msData && Array.isArray(msData) && msData.length > 0 &&
+        msName && !urlConfigLoaded
+        ) {
             const decodedName = decodeURIComponent(msName);
             const normalizedDecoded = normalizeMsName(decodedName);
+            // MS名正規化で一致するものを探す
             const foundMs = msData.find(ms => normalizeMsName(ms["MS名"]) === normalizedDecoded);
             if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
                 handleMsSelect(foundMs);
                 setShowSelector(false);
                 const buildConfig = parseBuildFromUrl();
-                if (buildConfig.fullst) {
-                    setIsFullStrengthened(true);
-                }
+                if (buildConfig.fullst) setIsFullStrengthened(true);
                 if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
+                setUrlConfigLoaded(true);
+            } else if (!foundMs) {
+                // MS名が見つからない場合は一度だけshowSelectorをtrueに
+                setShowSelector(true);
                 setUrlConfigLoaded(true);
             }
         }
