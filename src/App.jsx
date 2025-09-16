@@ -120,6 +120,9 @@ function AppContent() {
     // パーツ復元完了フラグ
     const [partsRestored, setPartsRestored] = useState(false);
 
+    // パーツ復元用一時保存
+    const [pendingRestoreParts, setPendingRestoreParts] = useState(null);
+
     // MSピック時にランダム動画を選択
     const handleMsSelectWithVideo = (ms) => {
         setBgVideo(BG_VIDEOS[Math.floor(Math.random() * BG_VIDEOS.length)]);
@@ -127,6 +130,7 @@ function AppContent() {
         setShowSelector(false);
         setUrlConfigLoaded(false);
         setPartsRestored(false);
+        setPendingRestoreParts(null);
         
         if (ms && ms["MS名"]) {
             navigate(`/${encodeURIComponent(ms["MS名"]).replace(/%20/g, '_')}`);
@@ -157,43 +161,45 @@ function AppContent() {
         }
     }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType]);
 
-    // パーツデータが読み込まれた後にURLパラメータからパーツを復元（一回のみ）
+    // パーツデータが読み込まれた後にURLパラメータからパーツを復元（1段目: pendingRestorePartsにセット＆クリア）
     useEffect(() => {
         if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) return;
         if (!allPartsCache || Object.keys(allPartsCache).length === 0) return;
-        
+
         const buildConfig = parseBuildFromUrl();
         if (buildConfig.parts && buildConfig.parts.length > 0) {
-            console.log('=== パーツ復元処理開始 ===');
-            
-            // 現在選択されているパーツをクリア
+            setPendingRestoreParts(buildConfig.parts);
             handleClearAllParts();
-            
-            // 全カテゴリから検索
-            const allParts = [];
-            for (const categoryName of Object.keys(allPartsCache)) {
-                if (allPartsCache[categoryName]) {
-                    allParts.push(...allPartsCache[categoryName]);
-                }
-            }
-            
-            // URLパラメータからパーツ名を取得し、実際のパーツオブジェクトを検索
-            buildConfig.parts.forEach(partName => {
-                if (!partName || partName.trim() === '') return;
-                
-                const foundPart = allParts.find(part => part.name === partName);
-                if (foundPart) {
-                    console.log('パーツ復元:', foundPart.name);
-                    handlePartSelect(foundPart);
-                }
-            });
-            
-            setPartsRestored(true);
-            console.log('=== パーツ復元処理完了 ===');
         } else {
             setPartsRestored(true);
         }
-    }, [selectedMs, urlConfigLoaded, allPartsCache, partsRestored, handleClearAllParts, handlePartSelect]);
+    }, [selectedMs, urlConfigLoaded, allPartsCache, partsRestored, handleClearAllParts, msName]);
+
+    // パーツクリア後にpendingRestorePartsがあればパーツ追加（2段目）
+    useEffect(() => {
+        if (!pendingRestoreParts || partsRestored) return;
+        if (!selectedMs || !allPartsCache) return;
+        if (selectedParts.length > 0) return; // クリアが終わっていない
+
+        // 全カテゴリから検索
+        const allParts = [];
+        for (const categoryName of Object.keys(allPartsCache)) {
+            if (allPartsCache[categoryName]) {
+                allParts.push(...allPartsCache[categoryName]);
+            }
+        }
+
+        pendingRestoreParts.forEach(partName => {
+            if (!partName || partName.trim() === '') return;
+            const foundPart = allParts.find(part => part.name === partName);
+            if (foundPart) {
+                handlePartSelect(foundPart);
+            }
+        });
+
+        setPartsRestored(true);
+        setPendingRestoreParts(null);
+    }, [selectedParts, pendingRestoreParts, partsRestored, selectedMs, allPartsCache, handlePartSelect]);
 
     useEffect(() => {
         if (!selectedMs) setShowSelector(true);
