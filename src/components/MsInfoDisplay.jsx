@@ -165,7 +165,7 @@ const MsInfoDisplay = ({
           </Link>
         </div>
         <div className="flex flex-col flex-grow">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center mb-1">
             {/* コスト選択六角形群（外観調整） */}
             {relatedMsList.map(ms => {
               const costStr = String(ms.コスト);

@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './MSSelector.module.css';
 const COSTS = [750, 700, 650, 600, 550, 500, 450];
+const LV_FILTERS = [
+  { label: '全LV', value: '' },
+  { label: 'LV1', value: '1' },
+  { label: 'LV2', value: '2' },
+  { label: 'LV3', value: '3' },
+  { label: 'LV4', value: '4' },
+  { label: 'LV5', value: '5' },
+  { label: 'LV6', value: '6' },
+];
 const TYPES = ['強襲', '汎用', '支援'];
 
 const TYPE_ORDER = {
@@ -18,6 +27,8 @@ const MSSelector = ({
   setFilterType,
   filterCost,
   setFilterCost,
+  filterLv,
+  setFilterLv,
 }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredMs, setFilteredMs] = useState([]);
@@ -172,8 +183,8 @@ const MSSelector = ({
   return (
     <div
       className={`w-full h-full flex flex-col items-center justify-start ${styles.msselectorRoot}`}> 
-  <div className={`w-full flex flex-col gap-2 px-[10px] ${styles.msselectorMainInner}`}> 
-  <div className={`w-full msselector-filter-row flex flex-row flex-wrap gap-3 items-center mb-2 ${styles.msselectorFilterRow}`}> 
+      <div className={`w-full flex flex-col gap-2 px-[10px] ${styles.msselectorMainInner}`}> 
+        <div className={`w-full msselector-filter-row flex flex-row flex-wrap gap-3 items-center ${styles.msselectorFilterRow}`}> 
           <div className={`${styles['msselector-filter-group']} ${styles.zokusei}`}> 
             <button
               onClick={() => setFilterType('')}
@@ -205,7 +216,20 @@ const MSSelector = ({
               style={{ minWidth: 0 }}
             >低</button>
           </div>
-          <div className={`${styles['msselector-filter-group']} ${styles.kensaku} msselector-search-box ml-2 relative flex items-center`}>
+          {/* LV絞込 六角形ボタン群（インラインスタイル） */}
+          <div className={`${styles['msselector-filter-group']} ${styles.lv}`}> 
+            {LV_FILTERS.map(lv => (
+              <button
+                key={lv.value}
+                onClick={() => setFilterLv && setFilterLv(lv.value)}
+                className={`hex-filter-btn text-lg sm:text-xl transition${filterLv === lv.value ? ' hex-filter-btn-active' : ''}`}
+                style={{ minWidth: 64 }}
+              >
+                {lv.label}
+              </button>
+            ))}
+          </div>
+          <div className={`${styles['msselector-filter-group']} ${styles.kensaku} msselector-search-box relative flex items-center`}>
             <input
               type="text"
               value={searchText}
