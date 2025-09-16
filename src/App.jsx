@@ -133,25 +133,49 @@ function AppContent() {
     if (
         msData && Array.isArray(msData) && msData.length > 0 &&
         msName && !urlConfigLoaded
-        ) {
-            const decodedName = decodeURIComponent(msName);
-            const normalizedDecoded = normalizeMsName(decodedName);
-            // MS名正規化で一致するものを探す
-            const foundMs = msData.find(ms => normalizeMsName(ms["MS名"]) === normalizedDecoded);
-            if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
-                handleMsSelect(foundMs);
-                setShowSelector(false);
-                const buildConfig = parseBuildFromUrl();
-                if (buildConfig.fullst) setIsFullStrengthened(true);
-                if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
-                setUrlConfigLoaded(true);
-            } else if (!foundMs) {
-                // MS名が見つからない場合は一度だけshowSelectorをtrueに
-                setShowSelector(true);
-                setUrlConfigLoaded(true);
+    ) {
+        const decodedName = decodeURIComponent(msName);
+        const normalizedDecoded = normalizeMsName(decodedName);
+        // デバッグログ
+        console.log('[DEBUG] msName from URL:', msName);
+        console.log('[DEBUG] decodedName:', decodedName);
+        console.log('[DEBUG] normalizedDecoded:', normalizedDecoded);
+        console.log('[DEBUG] msData.length:', msData.length);
+        console.log('[DEBUG] msData sample:', msData.slice(0, 3));
+        // MS名正規化で一致するものを探す
+        const foundMs = msData.find(ms => {
+            const norm = normalizeMsName(ms["MS名"]);
+            if (norm === normalizedDecoded) {
+                console.log('[DEBUG] MS match found:', ms["MS名"], 'normalized:', norm);
+                return true;
             }
+            return false;
+        });
+        if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
+            console.log('[DEBUG] handleMsSelect called with:', foundMs["MS名"]);
+            handleMsSelect(foundMs);
+            setShowSelector(false);
+            const buildConfig = parseBuildFromUrl();
+            console.log('[DEBUG] buildConfig:', buildConfig);
+            if (buildConfig.fullst) setIsFullStrengthened(true);
+            if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
+            setUrlConfigLoaded(true);
+        } else if (!foundMs) {
+            console.warn('[DEBUG] MS not found for:', normalizedDecoded);
+            // MS名が見つからない場合は一度だけshowSelectorをtrueに
+            setShowSelector(true);
+            setUrlConfigLoaded(true);
         }
-    }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+    } else {
+        // ロード条件が揃っていない場合
+        console.log('[DEBUG] useEffect skip:', {
+            msDataLoaded: !!(msData && Array.isArray(msData) && msData.length > 0),
+            msName,
+            urlConfigLoaded
+        });
+    }
+}, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+
 
     // パーツ復元処理（2段階）
     useEffect(() => {
