@@ -1,9 +1,4 @@
-/* PickedMs直下の左カラム専用クラス */
-.leftColCustom {
-  flex-flow: column nowrap;
-    justify-content: space-between;
-    align-items: normal;
-}
+
 /* pickedms-main-container のスタイルをモジュール化 */
 .pickedmsMainContainer {
   display: flex;
@@ -192,6 +187,12 @@ span{
 
 
 @media (min-width: 1280px) {
+  /* PickedMs直下の左カラム専用クラス */
+.leftColCustom {
+  flex-flow: column nowrap;
+    justify-content: space-between;
+    align-items: normal;
+}
   .msreselect{
     width: 765px!important;
     flex: none;
