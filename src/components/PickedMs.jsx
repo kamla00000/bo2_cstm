@@ -10,7 +10,7 @@ import PartPreview from './PartPreview';
 import { EXPANSION_OPTIONS, EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
 import styles from './PickedMs.module.css';
 
-const PickedMs = ({
+const PickedMs = React.forwardRef(({
     msData,
     selectedMs,
     selectedParts,
@@ -38,7 +38,7 @@ const PickedMs = ({
     setFilterCost,
     filterLv, // 追加
     setFilterLv, // 追加（必要なら）
-}) => {
+}, ref) => {
     console.log('🔥 PICKEDMS COMPONENT RENDERED:', {
         selectedMs: selectedMs ? selectedMs["MS名"] : 'none',
         showSelector,
@@ -181,6 +181,7 @@ const PickedMs = ({
 
     return (
         <div
+            ref={ref}
             className={`${styles.pickedmsMainContainer} pickedms-main-container flex flex-row gap-2 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
         >
             {/* 左側のカラム（幅を動的に切り替え） */}
@@ -294,6 +295,6 @@ const PickedMs = ({
             )}
         </div>
     );
-};
+});
 
 export default PickedMs;
