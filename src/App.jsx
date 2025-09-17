@@ -35,6 +35,16 @@ const normalizeMsName = (name) => {
         .toLowerCase();
 };
 
+// パーツ名正規化（全角/半角/スペース/大文字小文字吸収）
+const normalizePartName = (name) => {
+    if (!name) return '';
+    // 全角英数→半角
+    const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    return zenkakuToHankaku(name)
+        .replace(/[　\s]/g, '') // 全角・半角スペース除去
+        .toLowerCase();
+};
+
 // ビルドURL生成
 const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) => {
     if (!ms) return '';
@@ -213,7 +223,9 @@ function AppContent() {
             }
             pendingRestoreParts.forEach(partName => {
                 if (!partName || partName.trim() === '') return;
-                const foundPart = allParts.find(part => part.name === partName);
+                const foundPart = allParts.find(part =>
+                    normalizePartName(part.name) === normalizePartName(partName)
+                );
                 if (foundPart) {
                     console.log('[DEBUG] 復元パーツ追加:', foundPart.name);
                     handlePartSelect(foundPart);
