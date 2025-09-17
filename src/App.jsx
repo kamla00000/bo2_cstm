@@ -112,7 +112,6 @@ function AppContent() {
     const [filterLv, setFilterLv] = useState('');
     const [showSelector, setShowSelector] = useState(!selectedMs);
     const PickedMsRef = useRef(null);
-    const [PickedMsHeight, setPickedMsHeight] = useState(0);
 
     const videoRef = useRef(null);
     const [bgVideo, setBgVideo] = useState(BG_VIDEOS[0]);
@@ -200,6 +199,8 @@ function AppContent() {
             }
             if (!allPartsCache || Object.keys(allPartsCache).length === 0) {
                 console.log('[DEBUG] パーツ復元処理1: allPartsCache未ロード', allPartsCache);
+                // allPartsCacheがロードされたらpartsRestoredをリセット
+                setPartsRestored(false);
                 return;
             }
             const buildConfig = parseBuildFromUrl();
@@ -280,18 +281,6 @@ function AppContent() {
         console.log('[DEBUG] useEffect: selectedMs変更', selectedMs);
         if (!selectedMs) setShowSelector(true);
     }, [selectedMs]);
-
-    useEffect(() => {
-        const updateHeight = () => {
-            if (PickedMsRef.current) {
-                setPickedMsHeight(PickedMsRef.current.offsetHeight);
-                console.log('[DEBUG] PickedMsHeight更新:', PickedMsRef.current.offsetHeight);
-            }
-        };
-        updateHeight();
-        window.addEventListener('resize', updateHeight);
-        return () => window.removeEventListener('resize', updateHeight);
-    }, [selectedMs, showSelector, PickedMsRef]);
 
     useEffect(() => {
         if (videoRef.current) {
