@@ -28,7 +28,17 @@ const LV_FILTERS = [
 // MS名正規化（全角/半角/大文字小文字吸収）
 const normalizeMsName = (name) => {
     if (!name) return '';
-    return name
+    // ギリシャ文字→アルファベット
+    const greekToAlphabet = s => s
+        .replace(/[ΖＺ]/g, 'Z')
+        .replace(/[ν]/g, 'v')
+        .replace(/[α]/g, 'a')
+        .replace(/[β]/g, 'b');
+    // 全角英数→半角
+    const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    return greekToAlphabet(
+        zenkakuToHankaku(name)
+    )
         .replace(/[ＬＶ]/g, 'LV')
         .replace(/_LV(\d+)$/, (m, lv) => `_LV${lv}`)
         .replace(/[\s　]+/g, '')
@@ -135,35 +145,43 @@ function AppContent() {
         }
     };
 
-    // MS名復元処理（正規化比較で環境差異吸収）
-    useEffect(() => {
-        try {
-            if (
-                msData && Array.isArray(msData) && msData.length > 0 &&
-                msName && !urlConfigLoaded
-            ) {
-                const decodedName = decodeURIComponent(msName);
-                const normalizedDecoded = normalizeMsName(decodedName);
-                const foundMs = msData.find(ms => {
-                    const norm = normalizeMsName(ms["MS名"]);
-                    return norm === normalizedDecoded;
-                });
-                if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
-                    handleMsSelect(foundMs);
-                    setShowSelector(false);
-                    const buildConfig = parseBuildFromUrl();
-                    if (buildConfig.fullst) setIsFullStrengthened(true);
-                    if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
-                    setUrlConfigLoaded(true);
-                } else if (!foundMs) {
-                    setShowSelector(true);
-                    setUrlConfigLoaded(true);
-                }
+    // パーツ復元処理（2段階）: allPartsCacheがロードされたら必ず復元を試みる
+useEffect(() => {
+    try {
+        if (
+            msData && Array.isArray(msData) && msData.length > 0 &&
+            msName && !urlConfigLoaded
+        ) {
+            const decodedName = decodeURIComponent(msName);
+            const normalizedDecoded = normalizeMsName(decodedName);
+            // 追加ログ
+            console.log('[DEBUG] msName from URL:', decodedName);
+            console.log('[DEBUG] normalized msName:', normalizedDecoded);
+            msData.forEach(ms => {
+                console.log('[DEBUG] ms["MS名"]:', ms["MS名"], 'normalized:', normalizeMsName(ms["MS名"]));
+            });
+            const foundMs = msData.find(ms => {
+                const norm = normalizeMsName(ms["MS名"]);
+                return norm === normalizedDecoded;
+            });
+            if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
+                handleMsSelect(foundMs);
+                setShowSelector(false);
+                const buildConfig = parseBuildFromUrl();
+                if (buildConfig.fullst) setIsFullStrengthened(true);
+                if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
+                setUrlConfigLoaded(true);
+            } else if (!foundMs) {
+                console.log('[DEBUG] MS not found for:', normalizedDecoded);
+                setShowSelector(true);
+                setUrlConfigLoaded(true);
             }
-        } catch (err) {
-            console.error('[DEBUG] MS名復元処理で例外:', err);
         }
-    }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+    } catch (err) {
+        console.error('[DEBUG] MS名復元処理で例外:', err);
+    }
+}, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+
 
     // パーツ復元処理（2段階）
     useEffect(() => {
