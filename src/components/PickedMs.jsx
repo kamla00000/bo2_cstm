@@ -38,6 +38,9 @@ const PickedMs = React.forwardRef(({
     setFilterCost,
     filterLv, // 追加
     setFilterLv, // 追加（必要なら）
+    bgVideo,
+    videoRef,
+    handleBuildShare,
 }, ref) => {
     console.log('🔥 PICKEDMS COMPONENT RENDERED:', {
         selectedMs: selectedMs ? selectedMs["MS名"] : 'none',
@@ -174,7 +177,7 @@ const PickedMs = React.forwardRef(({
         setShowSelector(false);
     };
 
-    const leftColClass = `space-y-4 flex flex-col flex-shrink-0 ${showSelector ? 'w-full' : ''}`;
+    const leftColClass = `${styles.leftColCustom} space-y-4 flex flex-col flex-shrink-0 ${showSelector ? 'w-full' : ''}`;
     const leftColStyle = showSelector
         ? {}
         : { width: '60%', minWidth: 320, maxWidth: 900 };
@@ -203,23 +206,129 @@ const PickedMs = React.forwardRef(({
 
                 {/* MS詳細表示・パーツ一覧などは「selectedMs && !showSelector」の時だけ表示 */}
                 {selectedMs && !showSelector && (
-                    <>
-                        <div className={pickedMsStyles.msInfoWrapper}>
-                            <MsInfoDisplay
-                                selectedMs={selectedMs}
-                                baseName={baseName}
-                                isFullStrengthened={isFullStrengthened}
-                                setIsFullStrengthened={setIsFullStrengthened}
-                                expansionType={expansionType}
-                                setExpansionType={setExpansionType}
-                                expansionOptions={EXPANSION_OPTIONS}
-                                expansionDescriptions={EXPANSION_DESCRIPTIONS}
-                                getTypeColor={getTypeColor}
-                                onMsImageClick={handleOpenSelector}
-                                msData={msData}
-                                handleMsSelect={handleMsSelect}
-                            />
-                        </div>
+                        <>
+                            {/* msreselectバーをmsInfoWrapperのすぐ上に配置（App.jsxから移植） */}
+                            <div className={pickedMsStyles.msreselect + " w-full flex justify-center"}>
+                                <div
+                                    className="flex items-center"
+                                    style={{ maxWidth: '1280px', width: '100%' }}
+                                >
+                                    {/* MS再選択ボタン */}
+                                    <button
+                                        className="h-14 flex-1 rounded-none text-4xl text-gray-200 bg-transparent relative overflow-visible flex items-center group pl-8 pr-8"
+                                        style={{
+                                            borderRadius: 0,
+                                            marginBottom: 0,
+                                            zIndex: 1,
+                                            padding: 0,
+                                            minWidth: 0,
+                                            textDecoration: 'none',
+                                        }}
+                                        onClick={() => {
+                                            console.log('[DEBUG] MS再選択ボタン押下');
+                                            setShowSelector(true);
+                                        }}
+                                    >
+                                        {/* ストライプ背景 */}
+                                        <svg
+                                            className="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-300 group-hover:opacity-0"
+                                            viewBox="0 0 100 56"
+                                            preserveAspectRatio="none"
+                                            aria-hidden="true"
+                                            style={{ zIndex: 0 }}
+                                        >
+                                            <defs>
+                                                <pattern
+                                                    id="stripe-bg"
+                                                    patternUnits="userSpaceOnUse"
+                                                    width="6"
+                                                    height="16"
+                                                    patternTransform="rotate(4)"
+                                                >
+                                                    <animateTransform
+                                                        attributeName="patternTransform"
+                                                        type="translate"
+                                                        from="0,0"
+                                                        to="-6,0"
+                                                        dur="3s"
+                                                        repeatCount="indefinite"
+                                                        additive="sum"
+                                                    />
+                                                    <rect x="0" y="0" width="4" height="16" fill="#ff9100" />
+                                                    <rect x="4" y="0" width="2" height="16" fill="transparent" />
+                                                </pattern>
+                                            </defs>
+                                            <rect x="0" y="0" width="100" height="56" fill="url(#stripe-bg)" />
+                                        </svg>
+                                        {/* ホバー時：空間を進む演出（動画＋ズーム、枠内のみ） */}
+                                        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                                            <video
+                                                ref={typeof videoRef !== 'undefined' ? videoRef : null}
+                                                className="w-full h-full object-cover opacity-0 group-hover:opacity-100 transform group-hover:scale-110 transition-all duration-700"
+                                                src={bgVideo}
+                                                autoPlay
+                                                loop
+                                                muted
+                                                playsInline
+                                                preload="auto"
+                                                style={{
+                                                    pointerEvents: 'none',
+                                                }}
+                                            />
+                                        </div>
+                                        {/* テキスト */}
+                                        <span className={"relative z-10 font-extrabold text-white text-4xl ml-4 " + styles.headingTextMobile}
+                                            style={{ textShadow: '2px 2px 8px #000, 0 0 4px #000' }}
+                                        >
+                                            M　S　再　選　択
+                                        </span>
+                                    </button>
+
+                                    {/* ビルド共有ボタン */}
+                                    {selectedMs && (
+                                        <button
+                                            className="w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"
+                                            style={{ zIndex: 2, borderRadius: 0 }}
+                                            onClick={typeof handleBuildShare === 'function' ? handleBuildShare : undefined}
+                                            title="ビルドのURLをコピー"
+                                        >
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                            </svg>
+                                        </button>
+                                    )}
+
+                                    {/* X（旧Twitter）アイコン */}
+                                    <a
+                                        href="https://x.com/GBO2CSTM"
+                                        className={styles.xIcon + " w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"}
+                                        style={{ zIndex: 2, borderRadius: 0 }}
+                                        aria-label="Xでシェア" target="_blank"
+                                    >
+                                        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+                                            <rect width="64" height="64" rx="12" fill="black"/>
+                                            <path d="M44.7 16H51.5L36.7 32.1L54 52H41.6L30.8 39.1L18.8 52H12L27.8 35.9L11 16H23.7L33.4 27.7L44.7 16ZM42.5 48.5H46.1L22.7 19.2H18.8L42.5 48.5Z" fill="white"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            <div className={pickedMsStyles.msInfoWrapper}>
+                                <MsInfoDisplay
+                                    selectedMs={selectedMs}
+                                    baseName={baseName}
+                                    isFullStrengthened={isFullStrengthened}
+                                    setIsFullStrengthened={setIsFullStrengthened}
+                                    expansionType={expansionType}
+                                    setExpansionType={setExpansionType}
+                                    expansionOptions={EXPANSION_OPTIONS}
+                                    expansionDescriptions={EXPANSION_DESCRIPTIONS}
+                                    getTypeColor={getTypeColor}
+                                    onMsImageClick={handleOpenSelector}
+                                    msData={msData}
+                                    handleMsSelect={handleMsSelect}
+                                />
+                            </div>
 
                         {/* スロットバー、装着済みパーツ一覧、装備選択を配置するメインの横並びコンテナ */}
                         <div className={pickedMsStyles.slotPartsWrapper + " flex flex-row gap-6 items-end w-full"}>

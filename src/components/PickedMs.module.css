@@ -1,3 +1,9 @@
+/* PickedMs直下の左カラム専用クラス */
+.leftColCustom {
+  flex-flow: column nowrap;
+    justify-content: space-between;
+    align-items: normal;
+}
 /* pickedms-main-container のスタイルをモジュール化 */
 .pickedmsMainContainer {
   display: flex;
@@ -187,12 +193,10 @@ span{
 
 @media (min-width: 1280px) {
   .msreselect{
-    position: absolute;
-    left: 0;
-    top: 20px;
     width: 765px!important;
     flex: none;
     z-index: 999;
+    /* position指定を完全に削除。通常フローで配置 */
   }
   .msNameText{
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6), 1px 1px 2px rgba(0, 0, 0, 1) !important;
@@ -274,7 +278,8 @@ span{
     display: flex;
     flex-flow: row nowrap;
     justify-content: center;
-    align-items: flex-end!important;
+    align-items: stretch!important;
+    margin-top: 20px;
   }
   .picked-ms-left-col {
     width: 40% !important;
@@ -316,7 +321,7 @@ span{
     min-height: 280px;
   }
   .statusListWrapper {
-    margin-top: 20px;
+    /* margin-top: 20px; */
   }
   .equipSelectText {
     font-size: 80px !important;
