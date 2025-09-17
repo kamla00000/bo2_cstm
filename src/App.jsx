@@ -25,7 +25,7 @@ const LV_FILTERS = [
     { label: 'LV6', value: '6' },
 ];
 
-// MS名正規化（全角/半角/大文字小文字吸収）
+// MS名正規化（全角/半角/ギリシャ文字/大文字小文字吸収）
 const normalizeMsName = (name) => {
     if (!name) return '';
     // ギリシャ文字→アルファベット
@@ -36,8 +36,12 @@ const normalizeMsName = (name) => {
         .replace(/[β]/g, 'b');
     // 全角英数→半角
     const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    // 全角記号→半角
+    const zenkakuSymbolToHankaku = s => s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
     return greekToAlphabet(
-        zenkakuToHankaku(name)
+        zenkakuSymbolToHankaku(
+            zenkakuToHankaku(name)
+        )
     )
         .replace(/[ＬＶ]/g, 'LV')
         .replace(/_LV(\d+)$/, (m, lv) => `_LV${lv}`)
@@ -45,12 +49,24 @@ const normalizeMsName = (name) => {
         .toLowerCase();
 };
 
-// パーツ名正規化（全角/半角/スペース/大文字小文字吸収）
+// パーツ名正規化（全角/半角/ギリシャ文字/スペース/大文字小文字吸収）
 const normalizePartName = (name) => {
     if (!name) return '';
+    // ギリシャ文字→アルファベット
+    const greekToAlphabet = s => s
+        .replace(/[ΖＺ]/g, 'Z')
+        .replace(/[ν]/g, 'v')
+        .replace(/[α]/g, 'a')
+        .replace(/[β]/g, 'b');
     // 全角英数→半角
     const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    return zenkakuToHankaku(name)
+    // 全角記号→半角
+    const zenkakuSymbolToHankaku = s => s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    return greekToAlphabet(
+        zenkakuSymbolToHankaku(
+            zenkakuToHankaku(name)
+        )
+    )
         .replace(/[　\s]/g, '') // 全角・半角スペース除去
         .toLowerCase();
 };
@@ -145,45 +161,44 @@ function AppContent() {
         }
     };
 
-    // パーツ復元処理（2段階）: allPartsCacheがロードされたら必ず復元を試みる
-useEffect(() => {
-    try {
-        if (
-            msData && Array.isArray(msData) && msData.length > 0 &&
-            msName && !urlConfigLoaded
-        ) {
-            const decodedName = decodeURIComponent(msName);
-            const normalizedDecoded = normalizeMsName(decodedName);
-            // 追加ログ
-            console.log('[DEBUG] msName from URL:', decodedName);
-            console.log('[DEBUG] normalized msName:', normalizedDecoded);
-            msData.forEach(ms => {
-                console.log('[DEBUG] ms["MS名"]:', ms["MS名"], 'normalized:', normalizeMsName(ms["MS名"]));
-            });
-            const foundMs = msData.find(ms => {
-                const norm = normalizeMsName(ms["MS名"]);
-                return norm === normalizedDecoded;
-            });
-            if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
-                handleMsSelect(foundMs);
-                setShowSelector(false);
-                const buildConfig = parseBuildFromUrl();
-                if (buildConfig.fullst) setIsFullStrengthened(true);
-                if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
-                setUrlConfigLoaded(true);
-            } else if (!foundMs) {
-                console.log('[DEBUG] MS not found for:', normalizedDecoded);
-                setShowSelector(true);
-                setUrlConfigLoaded(true);
+    // MS名復元処理（正規化比較で環境差異吸収＋デバッグログ）
+    useEffect(() => {
+        try {
+            if (
+                msData && Array.isArray(msData) && msData.length > 0 &&
+                msName && !urlConfigLoaded
+            ) {
+                const decodedName = decodeURIComponent(msName);
+                const normalizedDecoded = normalizeMsName(decodedName);
+                // 追加ログ
+                console.log('[DEBUG] msName from URL:', decodedName);
+                console.log('[DEBUG] normalized msName:', normalizedDecoded);
+                msData.forEach(ms => {
+                    console.log('[DEBUG] ms["MS名"]:', ms["MS名"], 'normalized:', normalizeMsName(ms["MS名"]));
+                });
+                const foundMs = msData.find(ms => {
+                    const norm = normalizeMsName(ms["MS名"]);
+                    return norm === normalizedDecoded;
+                });
+                if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
+                    handleMsSelect(foundMs);
+                    setShowSelector(false);
+                    const buildConfig = parseBuildFromUrl();
+                    if (buildConfig.fullst) setIsFullStrengthened(true);
+                    if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
+                    setUrlConfigLoaded(true);
+                } else if (!foundMs) {
+                    console.log('[DEBUG] MS not found for:', normalizedDecoded);
+                    setShowSelector(true);
+                    setUrlConfigLoaded(true);
+                }
             }
+        } catch (err) {
+            console.error('[DEBUG] MS名復元処理で例外:', err);
         }
-    } catch (err) {
-        console.error('[DEBUG] MS名復元処理で例外:', err);
-    }
-}, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+    }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
 
-
-    // パーツ復元処理（2段階）
+    // パーツ復元処理（2段階）: allPartsCacheがロードされたら必ず復元を試みる
     useEffect(() => {
         try {
             if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) {
@@ -224,9 +239,16 @@ useEffect(() => {
             }
             pendingRestoreParts.forEach(partName => {
                 if (!partName || partName.trim() === '') return;
+                const normalizedTarget = normalizePartName(partName);
                 const foundPart = allParts.find(part =>
-                    normalizePartName(part.name) === normalizePartName(partName)
+                    normalizePartName(part.name) === normalizedTarget
                 );
+                if (!foundPart) {
+                    console.log('[DEBUG] パーツ未一致:', partName, '→', normalizedTarget);
+                    allParts.forEach(part => {
+                        console.log('[DEBUG] 候補:', part.name, '→', normalizePartName(part.name));
+                    });
+                }
                 if (foundPart) {
                     handlePartSelect(foundPart);
                 }
