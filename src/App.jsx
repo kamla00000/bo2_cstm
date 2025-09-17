@@ -124,7 +124,6 @@ function AppContent() {
 
     // MSピック時にランダム動画を選択
     const handleMsSelectWithVideo = (ms) => {
-        console.log('[DEBUG] handleMsSelectWithVideo called', ms);
         setBgVideo(BG_VIDEOS[Math.floor(Math.random() * BG_VIDEOS.length)]);
         handleMsSelect(ms);
         setShowSelector(false);
@@ -139,46 +138,27 @@ function AppContent() {
     // MS名復元処理（正規化比較で環境差異吸収）
     useEffect(() => {
         try {
-            console.log('[DEBUG] useEffect: MS名復元処理', { msName, msData, urlConfigLoaded, selectedMs });
             if (
                 msData && Array.isArray(msData) && msData.length > 0 &&
                 msName && !urlConfigLoaded
             ) {
                 const decodedName = decodeURIComponent(msName);
                 const normalizedDecoded = normalizeMsName(decodedName);
-                console.log('[DEBUG] msName from URL:', msName);
-                console.log('[DEBUG] decodedName:', decodedName);
-                console.log('[DEBUG] normalizedDecoded:', normalizedDecoded);
-                console.log('[DEBUG] msData.length:', msData.length);
-                console.log('[DEBUG] msData sample:', msData.slice(0, 3));
                 const foundMs = msData.find(ms => {
                     const norm = normalizeMsName(ms["MS名"]);
-                    if (norm === normalizedDecoded) {
-                        console.log('[DEBUG] MS match found:', ms["MS名"], 'normalized:', norm);
-                        return true;
-                    }
-                    return false;
+                    return norm === normalizedDecoded;
                 });
                 if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
-                    console.log('[DEBUG] handleMsSelect called with:', foundMs["MS名"]);
                     handleMsSelect(foundMs);
                     setShowSelector(false);
                     const buildConfig = parseBuildFromUrl();
-                    console.log('[DEBUG] buildConfig:', buildConfig);
                     if (buildConfig.fullst) setIsFullStrengthened(true);
                     if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
                     setUrlConfigLoaded(true);
                 } else if (!foundMs) {
-                    console.warn('[DEBUG] MS not found for:', normalizedDecoded);
                     setShowSelector(true);
                     setUrlConfigLoaded(true);
                 }
-            } else {
-                console.log('[DEBUG] useEffect skip:', {
-                    msDataLoaded: !!(msData && Array.isArray(msData) && msData.length > 0),
-                    msName,
-                    urlConfigLoaded
-                });
             }
         } catch (err) {
             console.error('[DEBUG] MS名復元処理で例外:', err);
@@ -188,23 +168,14 @@ function AppContent() {
     // パーツ復元処理（2段階）
     useEffect(() => {
         try {
-            console.log('[DEBUG] useEffect: パーツ復元処理1', {
-                selectedMs, msName, urlConfigLoaded, partsRestored, allPartsCache
-            });
             if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) {
-                console.log('[DEBUG] パーツ復元処理1: skip条件', {
-                    selectedMs, msName, urlConfigLoaded, partsRestored
-                });
                 return;
             }
             if (!allPartsCache || Object.keys(allPartsCache).length === 0) {
-                console.log('[DEBUG] パーツ復元処理1: allPartsCache未ロード', allPartsCache);
-                // allPartsCacheがロードされたらpartsRestoredをリセット
                 setPartsRestored(false);
                 return;
             }
             const buildConfig = parseBuildFromUrl();
-            console.log('[DEBUG] buildConfig(parts):', buildConfig.parts);
             if (buildConfig.parts && buildConfig.parts.length > 0) {
                 setPendingRestoreParts(buildConfig.parts);
                 handleClearAllParts();
@@ -218,19 +189,13 @@ function AppContent() {
 
     useEffect(() => {
         try {
-            console.log('[DEBUG] useEffect: パーツ復元処理2', {
-                pendingRestoreParts, partsRestored, selectedMs, allPartsCache, selectedParts
-            });
             if (!pendingRestoreParts || partsRestored) {
-                console.log('[DEBUG] パーツ復元処理2: skip条件', { pendingRestoreParts, partsRestored });
                 return;
             }
             if (!selectedMs || !allPartsCache) {
-                console.log('[DEBUG] パーツ復元処理2: selectedMs/allPartsCache未ロード', { selectedMs, allPartsCache });
                 return;
             }
             if (selectedParts.length > 0) {
-                console.log('[DEBUG] パーツ復元処理2: selectedPartsが既に存在', selectedParts);
                 return;
             }
             const allParts = [];
@@ -239,35 +204,13 @@ function AppContent() {
                     allParts.push(...allPartsCache[categoryName]);
                 }
             }
-            console.log('[DEBUG] allParts展開:', allParts.map(p => p.name));
             pendingRestoreParts.forEach(partName => {
-                if (!partName || partName.trim() === '') {
-                    console.log('[DEBUG] 復元パーツ名が空', partName);
-                    return;
-                }
+                if (!partName || partName.trim() === '') return;
                 const foundPart = allParts.find(part =>
                     normalizePartName(part.name) === normalizePartName(partName)
                 );
                 if (foundPart) {
-                    console.log('[DEBUG] 復元パーツ追加:', {
-                        urlPartName: partName,
-                        normalizedUrl: normalizePartName(partName),
-                        foundPartName: foundPart.name,
-                        normalizedFound: normalizePartName(foundPart.name),
-                        partObj: foundPart
-                    });
                     handlePartSelect(foundPart);
-                } else {
-                    // 詳細デバッグ: 近い候補を出す
-                    const candidates = allParts.filter(part =>
-                        normalizePartName(part.name).includes(normalizePartName(partName)) ||
-                        normalizePartName(partName).includes(normalizePartName(part.name))
-                    );
-                    console.warn('[DEBUG] 復元パーツ未発見:', {
-                        urlPartName: partName,
-                        normalizedUrl: normalizePartName(partName),
-                        candidates: candidates.map(p => p.name)
-                    });
                 }
             });
             setPartsRestored(true);
@@ -278,20 +221,17 @@ function AppContent() {
     }, [selectedParts, pendingRestoreParts, partsRestored, selectedMs, allPartsCache, handlePartSelect]);
 
     useEffect(() => {
-        console.log('[DEBUG] useEffect: selectedMs変更', selectedMs);
         if (!selectedMs) setShowSelector(true);
     }, [selectedMs]);
 
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.playbackRate = 2.0;
-            console.log('[DEBUG] video playbackRate set to 2.0');
         }
     }, []);
 
     // 警告モーダル付きフル強化切り替え
     const handleFullStrengthenToggle = (next) => {
-        console.log('[DEBUG] handleFullStrengthenToggle:', { isFullStrengthened, next, selectedParts });
         if (isFullStrengthened && !next) {
             if (selectedParts && selectedParts.length > 0) {
                 setPendingFullStrengthen(next);
@@ -305,7 +245,6 @@ function AppContent() {
     };
 
     const handleFullStrengthenWarningOk = () => {
-        console.log('[DEBUG] handleFullStrengthenWarningOk');
         setShowFullStrengthenWarning(false);
         setIsFullStrengthened(pendingFullStrengthen);
         setPendingFullStrengthen(null);
@@ -313,7 +252,6 @@ function AppContent() {
     };
 
     const handleFullStrengthenWarningCancel = () => {
-        console.log('[DEBUG] handleFullStrengthenWarningCancel');
         setShowFullStrengthenWarning(false);
         setPendingFullStrengthen(null);
     };
@@ -321,7 +259,6 @@ function AppContent() {
     const handleBuildShare = async () => {
         if (!selectedMs) return;
         const buildUrl = generateBuildUrl(selectedMs, selectedParts, isFullStrengthened, expansionType);
-        console.log('[DEBUG] handleBuildShare:', buildUrl);
         try {
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(buildUrl);
@@ -344,7 +281,6 @@ function AppContent() {
                 }
             }
         } catch (err) {
-            console.error('[DEBUG] クリップボードへのコピーに失敗:', err);
             try {
                 const textArea = document.createElement('textarea');
                 textArea.value = buildUrl;
@@ -362,7 +298,6 @@ function AppContent() {
                     prompt('以下のURLをコピーしてください:', buildUrl);
                 }
             } catch (fallbackErr) {
-                console.error('[DEBUG] フォールバックも失敗:', fallbackErr);
                 prompt('以下のURLをコピーしてください:', buildUrl);
             }
         }
@@ -373,7 +308,6 @@ function AppContent() {
     };
 
     if (!msData || msData.length === 0) {
-        console.log('[DEBUG] msData未ロード');
         return (
             <div className="min-h-screen bg-gray-700 text-gray-100 p-4 flex flex-col items-center justify-center">
                 <p className="text-xl">データを読み込み中...</p>
