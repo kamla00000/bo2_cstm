@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './MSSelector.module.css';
-const COSTS = [750, 700, 650, 600, 550, 500, 450];
+const COSTS = [750, 700, 650, 600, 550, 500, 450,400];
 const LV_FILTERS = [
   { label: '全LV', value: '' },
   { label: 'LV1', value: '1' },
@@ -52,8 +52,6 @@ const MSSelector = ({
       `/images/ms/${baseName}.webp`,      // 元の名前
       `/images/ms/${normalized}.webp`,    // 正規化後
     ];
-    
-    // 重複を除去
     return [...new Set(paths)];
   };
 
@@ -66,7 +64,6 @@ const MSSelector = ({
       if (currentPathIndex < imagePaths.length - 1) {
         setCurrentPathIndex(currentPathIndex + 1);
       } else {
-        // 全てのパターンが失敗した場合はdefault.webpに切り替え
         setCurrentPathIndex(-1);
       }
     };
@@ -91,50 +88,76 @@ const MSSelector = ({
       return;
     }
 
-    let results = msData.filter((ms) => {
-      const msType = String(ms.属性 ?? '').trim();
-      const msCost = String(ms.コスト ?? '').trim();
-      const msName = String(ms["MS名"] ?? '').trim();
+    // MS名からLVを抽出
+    const extractLvFromName = (name) => {
+      const match = String(name).match(/_LV(\d+)/i);
+      return match ? match[1] : '';
+    };
 
-      // タイプフィルタ
-      const matchesType = !filterType || msType === filterType;
-      // コストフィルタ
-      const matchesCost =
-        !filterCost ||
-        msCost === filterCost ||
-        (filterCost === 'low' && Number(msCost) <= 400);
-      // 名前検索（部分一致・大文字小文字・全角半角・ひらがなカタカナ区別なし＋ギリシャ文字・英字ゆるく）
-      const toHiragana = (str) => str.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
-      
-      // ギリシャ文字⇔英字ゆる変換（検索を緩くするため）
-      const normalizeAlphabet = (str) => {
-        return str
-          .replace(/[ΖζＺｚZz]/g, 'z')
-          .replace(/[ΝνＶｖVv]/g, 'v')
-          .replace(/[ΑαＡａAa]/g, 'a')
-          .replace(/[ΣσＳｓSs]/g, 's')
-          .replace(/[ΕεＥｅEe]/g, 'e')
-          .replace(/[ΩωＯｏOo]/g, 'o');
-      };
-      
-      const normalize = (str) => {
-        return normalizeAlphabet(
-          toHiragana(
-            str.toLowerCase()
-              .replace(/[\u0009\s　]/g, '')
-              .normalize('NFKC')
-          )
-        );
-      };
-      
+    // コスト値正規化
+    const normalizeCost = (cost) => {
+      if (cost == null) return 0;
+      if (typeof cost === 'number') return cost;
+      if (typeof cost === 'string') {
+        // 全角数字対応＋空白除去
+        const numStr = cost.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)).replace(/\s/g, '');
+        const num = Number(numStr);
+        return isNaN(num) ? 0 : num;
+      }
+      return 0;
+    };
+
+    // データ確認用ログ（クラッシュ防止のためtry-catch）
+    try {
+      msData.forEach(ms => {
+        // 例外が出ても止まらないように
+        let costVal = '';
+        try {
+          costVal = normalizeCost(ms.コスト);
+        } catch (e) {
+          costVal = 'error';
+        }
+        console.log('MS名:', ms["MS名"], 'コスト:', ms.コスト, 'normalizeCost:', costVal);
+      });
+    } catch (e) {
+      // ログ出力失敗時は何もしない
+    }
+
+    let results = msData.filter((ms) => {
+      const msType = ms.属性 ?? '';
+      const msCost = normalizeCost(ms.コスト);
+      const msName = ms["MS名"] ?? '';
+      const msLv = extractLvFromName(msName);
+
+      // 属性フィルター
+      const matchesType = !filterType || filterType === '' || msType === filterType;
+
+      // コストフィルター
+      let matchesCost = true;
+      if (filterCost && filterCost !== '') {
+        if (filterCost === 'low') {
+          matchesCost = msCost <= 400;
+        } else {
+          matchesCost = msCost === Number(filterCost);
+        }
+      }
+
+      // LVフィルター
+      let matchesLv = true;
+      if (filterLv && filterLv !== '') {
+        matchesLv = msLv === filterLv;
+      }
+
+      // 検索フィルター
+      const normalize = (str) => (str ?? '').toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC');
       const matchesSearch =
         !searchText ||
         normalize(msName).includes(normalize(searchText));
 
-        return matchesType && matchesCost && matchesSearch;
+      return matchesType && matchesCost && matchesLv && matchesSearch;
     });
 
-    // 重複排除（スクロール挙動確認用に一時コメントアウト）
+    // 重複排除
     const seen = new Set();
     results = results.filter(ms => {
       const key = `${ms["MS名"]}_${ms.コスト}_${ms.属性}`;
@@ -160,7 +183,7 @@ const MSSelector = ({
 
     setFilteredMs(results);
     setIsLoading(false);
-  }, [filterType, filterCost, searchText, msData]);
+  }, [filterType, filterCost, filterLv, searchText, msData]);
 
   const getTypeColor = (type) => {
     switch (type) {
@@ -210,11 +233,11 @@ const MSSelector = ({
                 className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
               >{cost}</button>
             ))}
-            <button
+            {/* <button
               onClick={() => setFilterCost('low')}
               className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
               style={{ minWidth: 0 }}
-            >低</button>
+            >低</button> */}
           </div>
           {/* LV絞込 六角形ボタン群（インラインスタイル） */}
           <div className={`${styles['msselector-filter-group']} ${styles.lv}`}> 
@@ -303,7 +326,7 @@ const MSSelector = ({
           `}</style>
         </div>
         {/* MSリスト：複数列表示に更新 */}
-  <div className={`w-full h-full ${styles.msListOuter}`}> 
+        <div className={`w-full h-full ${styles.msListOuter}`}> 
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[75vh] custom-scrollbar ${styles['ms-list-container']}`}
             style={{ width: '100%', maxWidth: 'calc(100vw - 20px)', boxSizing: 'border-box', margin: '0 auto', overflowY: 'auto' }}
@@ -321,14 +344,11 @@ const MSSelector = ({
                     onClick={() => handleMsSelect(ms)}
                     style={{
                       minHeight: 72,
-                      border: 'none', // 罫線なし
+                      border: 'none',
                       padding: '0.3rem 0.2rem',
                       borderRadius: '0',
-                      textDecoration: 'none', // リンクの下線を消す
-                      color: 'inherit', // 親の色を継承
-                      // clipPath: 'polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%)',
-                      // backdropFilter: 'blur(12px)',
-                      // WebkitBackdropFilter: 'blur(12px)',
+                      textDecoration: 'none',
+                      color: 'inherit',
                     }}
                   >
                     <div className="ms-imgbox-card relative w-16 h-16 flex-shrink-0 overflow-hidden transition" style={{ width: '4rem', height: '4rem', position: 'relative', overflow: 'hidden' }}>
@@ -349,10 +369,8 @@ const MSSelector = ({
                             box-shadow: 0 2px 8px #0003;
                             padding: 0.3rem 0.2rem;
                             border-radius: 0;
-                            /* 右上の角を45度でカット（小さめ） */
                             clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
                             transition: background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.18s;
-                            /* すりガラス効果は削除 */
                           }
                           .ms-row-card-mecha:hover {
                             background: rgba(0,0,0,0.32);
