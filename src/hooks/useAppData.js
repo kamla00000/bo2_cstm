@@ -9,10 +9,15 @@ import {
     EXPANSION_OPTIONS,
     EXPANSION_DESCRIPTIONS
 } from '../constants/appConstants';
-import { isPartDisabled as ngIsPartDisabled } from '../utils/ngparts'; // ここで ngIsPartDisabled をインポート
+import { isPartDisabled as ngIsPartDisabled } from '../utils/ngparts';
 
 export const useAppData = () => {
     const { msData, fullStrengtheningEffects, allPartsCache, isDataLoaded } = useDataLoading();
+
+    // ★ログ追加
+    useEffect(() => {
+        console.log('[useAppData] msData.length:', msData?.length, 'isDataLoaded:', isDataLoaded);
+    }, [msData, isDataLoaded]);
 
     const [partData, setPartData] = useState([]);
     const [selectedMs, setSelectedMs] = useState(null);
@@ -22,14 +27,11 @@ export const useAppData = () => {
     const [filterCategory, setFilterCategory] = useState('防御');
     const [isFullStrengthened, setIsFullStrengthened] = useState(false);
     const [expansionType, setExpansionType] = useState('無し');
-    // プレビュー固定用
     const [selectedPreviewPart, setSelectedPreviewPart] = useState(null);
 
-    // 併用不可判定はngparts.jsのisPartDisabledに統一
-    // ***ここを修正しました！***
     const isPartDisabled = useCallback(
-        ngIsPartDisabled, // ngIsPartDisabled 関数を直接渡す
-        [] // 依存配列は空でOKです。ngIsPartDisabled自体は外部のselectedPartsに依存しないため。
+        ngIsPartDisabled,
+        []
     );
 
     const updateDisplayedParts = useCallback((category) => {
@@ -54,6 +56,7 @@ export const useAppData = () => {
             updateDisplayedParts(filterCategory);
         }
     }, [isDataLoaded, filterCategory, updateDisplayedParts]);
+
 
     const currentStats = useMemo(() => {
         return calculateMSStatsLogic(

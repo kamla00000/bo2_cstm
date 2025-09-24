@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './MSSelector.module.css';
-const COSTS = [750, 700, 650, 600, 550, 500, 450,400];
+
+const COSTS = [750, 700, 650, 600, 550, 500, 450, 400];
 const LV_FILTERS = [
   { label: '全LV', value: '' },
   { label: 'LV1', value: '1' },
@@ -21,6 +22,7 @@ const TYPE_ORDER = {
 
 const MSSelector = ({
   msData,
+  isDataLoading = false,
   onSelect,
   selectedMs,
   filterType,
@@ -34,7 +36,7 @@ const MSSelector = ({
   const [filteredMs, setFilteredMs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 画像名正規化関数（検索と同じロジック）
+  // 画像名正規化関数
   const normalizeImageName = (name) => {
     return name
       .replace(/[ΖζＺｚZz]/g, 'Z')
@@ -49,13 +51,13 @@ const MSSelector = ({
   const generateImagePaths = (baseName) => {
     const normalized = normalizeImageName(baseName);
     const paths = [
-      `/images/ms/${baseName}.webp`,      // 元の名前
-      `/images/ms/${normalized}.webp`,    // 正規化後
+      `/images/ms/${baseName}.webp`,
+      `/images/ms/${normalized}.webp`,
     ];
     return [...new Set(paths)];
   };
 
-  // MS画像コンポーネント（複数パターンを試す）
+  // MS画像コンポーネント
   const MSImage = ({ baseName, msName, isSelected }) => {
     const [currentPathIndex, setCurrentPathIndex] = useState(0);
     const [imagePaths] = useState(() => generateImagePaths(baseName));
@@ -68,8 +70,8 @@ const MSSelector = ({
       }
     };
 
-    const currentSrc = currentPathIndex === -1 
-      ? '/images/ms/default.webp' 
+    const currentSrc = currentPathIndex === -1
+      ? '/images/ms/default.webp'
       : imagePaths[currentPathIndex];
 
     return (
@@ -83,8 +85,15 @@ const MSSelector = ({
   };
 
   useEffect(() => {
+      console.log('🌟filterType:', filterType, 'filterCost:', filterCost, 'filterLv:', filterLv, 'msData.length:', msData?.length);
+    if (isDataLoading) {
+      setIsLoading(true);
+      return;
+    }
+
     if (!msData || !Array.isArray(msData)) {
       setFilteredMs([]);
+      setIsLoading(false);
       return;
     }
 
@@ -96,32 +105,15 @@ const MSSelector = ({
 
     // コスト値正規化
     const normalizeCost = (cost) => {
-      if (cost == null) return 0;
+      if (cost == null || cost === '') return null;
       if (typeof cost === 'number') return cost;
       if (typeof cost === 'string') {
-        // 全角数字対応＋空白除去
-        const numStr = cost.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)).replace(/\s/g, '');
+        const numStr = cost.trim().replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)).replace(/[^\d]/g, '');
         const num = Number(numStr);
-        return isNaN(num) ? 0 : num;
+        return isNaN(num) ? null : num;
       }
-      return 0;
+      return null;
     };
-
-    // データ確認用ログ（クラッシュ防止のためtry-catch）
-    try {
-      msData.forEach(ms => {
-        // 例外が出ても止まらないように
-        let costVal = '';
-        try {
-          costVal = normalizeCost(ms.コスト);
-        } catch (e) {
-          costVal = 'error';
-        }
-        console.log('MS名:', ms["MS名"], 'コスト:', ms.コスト, 'normalizeCost:', costVal);
-      });
-    } catch (e) {
-      // ログ出力失敗時は何もしない
-    }
 
     let results = msData.filter((ms) => {
       const msType = ms.属性 ?? '';
@@ -129,26 +121,23 @@ const MSSelector = ({
       const msName = ms["MS名"] ?? '';
       const msLv = extractLvFromName(msName);
 
-      // 属性フィルター
-      const matchesType = !filterType || filterType === '' || msType === filterType;
+      if (msCost === null) {
+        return false;
+      }
 
-      // コストフィルター
+      const matchesType = !filterType || filterType === '' || msType === filterType;
       let matchesCost = true;
       if (filterCost && filterCost !== '') {
         if (filterCost === 'low') {
-          matchesCost = msCost <= 400;
+          matchesCost = msCost <= 350;
         } else {
           matchesCost = msCost === Number(filterCost);
         }
       }
-
-      // LVフィルター
       let matchesLv = true;
       if (filterLv && filterLv !== '') {
         matchesLv = msLv === filterLv;
       }
-
-      // 検索フィルター
       const normalize = (str) => (str ?? '').toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC');
       const matchesSearch =
         !searchText ||
@@ -183,7 +172,7 @@ const MSSelector = ({
 
     setFilteredMs(results);
     setIsLoading(false);
-  }, [filterType, filterCost, filterLv, searchText, msData]);
+  }, [filterType, filterCost, filterLv, searchText, msData, isDataLoading]);
 
   const getTypeColor = (type) => {
     switch (type) {
@@ -233,13 +222,17 @@ const MSSelector = ({
                 className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === String(cost) ? 'hex-filter-btn-active' : ''}`}
               >{cost}</button>
             ))}
-            {/* <button
-              onClick={() => setFilterCost('low')}
+            <button
+              onClick={() => {
+                setFilterCost('low');
+                setFilterType('');
+                setFilterLv && setFilterLv('');
+                setSearchText && setSearchText('');
+              }}
               className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
               style={{ minWidth: 0 }}
-            >低</button> */}
+            >低</button>
           </div>
-          {/* LV絞込 六角形ボタン群（インラインスタイル） */}
           <div className={`${styles['msselector-filter-group']} ${styles.lv}`}> 
             {LV_FILTERS.map(lv => (
               <button
@@ -325,7 +318,6 @@ const MSSelector = ({
             }
           `}</style>
         </div>
-        {/* MSリスト：複数列表示に更新 */}
         <div className={`w-full h-full ${styles.msListOuter}`}> 
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[75vh] custom-scrollbar ${styles['ms-list-container']}`}
@@ -454,6 +446,8 @@ const MSSelector = ({
                   </div>
                   <span className="text-gray-300">MSデータをロード中...</span>
                 </div>
+              ) : msData.length === 0 ? (
+                <p className="text-gray-200 text-center py-8 col-span-full">MSデータがありません。データがロードされていない可能性があります。</p>
               ) : (
                 <p className="text-gray-200 text-center py-8 col-span-full">該当するMSが見つかりません。</p>
               )

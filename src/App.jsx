@@ -8,13 +8,11 @@ import FullStrengthenWarningModal from './components/FullStrengthenWarningModal'
 import InfoModal from './components/InfoModal';
 import styles from './components/PickedMs.module.css';
 
-// 背景動画のパターン
 const BG_VIDEOS = [
     "/images/zekunova.mp4",
     "/images/zekunova2.mp4",
 ];
 
-// LV絞り込み用
 const LV_FILTERS = [
     { label: '全LV', value: '' },
     { label: 'LV1', value: '1' },
@@ -25,18 +23,14 @@ const LV_FILTERS = [
     { label: 'LV6', value: '6' },
 ];
 
-// MS名正規化（全角/半角/ギリシャ文字/大文字小文字吸収）
 const normalizeMsName = (name) => {
     if (!name) return '';
-    // ギリシャ文字→アルファベット
     const greekToAlphabet = s => s
         .replace(/[ΖＺ]/g, 'Z')
         .replace(/[ν]/g, 'v')
         .replace(/[α]/g, 'a')
         .replace(/[β]/g, 'b');
-    // 全角英数→半角
     const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    // 全角記号→半角
     const zenkakuSymbolToHankaku = s => s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
     return greekToAlphabet(
         zenkakuSymbolToHankaku(
@@ -49,29 +43,24 @@ const normalizeMsName = (name) => {
         .toLowerCase();
 };
 
-// パーツ名正規化（全角/半角/ギリシャ文字/スペース/大文字小文字吸収）
 const normalizePartName = (name) => {
     if (!name) return '';
-    // ギリシャ文字→アルファベット
     const greekToAlphabet = s => s
         .replace(/[ΖＺ]/g, 'Z')
         .replace(/[ν]/g, 'v')
         .replace(/[α]/g, 'a')
         .replace(/[β]/g, 'b');
-    // 全角英数→半角
     const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    // 全角記号→半角
     const zenkakuSymbolToHankaku = s => s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
     return greekToAlphabet(
         zenkakuSymbolToHankaku(
             zenkakuToHankaku(name)
         )
     )
-        .replace(/[　\s]/g, '') // 全角・半角スペース除去
+        .replace(/[　\s]/g, '')
         .toLowerCase();
 };
 
-// ビルドURL生成
 const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) => {
     if (!ms) return '';
     const encodedMsName = encodeURIComponent(ms["MS名"]);
@@ -147,6 +136,12 @@ function AppContent() {
     const [urlConfigLoaded, setUrlConfigLoaded] = useState(false);
     const [partsRestored, setPartsRestored] = useState(false);
     const [pendingRestoreParts, setPendingRestoreParts] = useState(null);
+
+    // ★ログ追加
+    useEffect(() => {
+        console.log('[AppContent] filterType:', filterType, 'filterCost:', filterCost, 'filterLv:', filterLv, 'selectedMs:', selectedMs, 'msData.length:', msData?.length);
+    }, [filterType, filterCost, filterLv, selectedMs, msData]);
+
 
     // MSピック時にランダム動画を選択
     const handleMsSelectWithVideo = (ms) => {

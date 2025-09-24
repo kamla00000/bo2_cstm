@@ -59,13 +59,20 @@ const PickedMs = React.forwardRef(({
     const [showStatusHint, setShowStatusHint] = useState(false);
     const [hasShownHintForCurrentMs, setHasShownHintForCurrentMs] = useState(false);
 
-    // MSリストの絞り込み（filterLv対応: MS名の末尾 _LVx で判定）
+    // 修正版: MSリストの絞り込み（filterLv/filterCost対応: "低"ボタンも考慮）
     const filteredMsData = msData
         ? msData.filter(ms => {
             let typeMatch = !filterType || ms["属性"] === filterType;
-            let costMatch = !filterCost || String(ms["コスト"]) === filterCost;
+            let costMatch = true;
+            if (filterCost && filterCost !== '') {
+                if (filterCost === 'low') {
+                    costMatch = Number(ms["コスト"]) <= 400;
+                } else {
+                    costMatch = String(ms["コスト"]) === filterCost;
+                }
+            }
             let lvMatch = true;
-            if (filterLv) {
+            if (filterLv && filterLv !== '') {
                 lvMatch = ms["MS名"].endsWith(`_LV${filterLv}`);
             }
             return typeMatch && costMatch && lvMatch;
@@ -182,7 +189,15 @@ const PickedMs = React.forwardRef(({
     return (
         <div
             ref={ref}
-            className={`${styles.pickedmsMainContainer} pickedms-main-container flex flex-row gap-2 items-start min-w-0 relative z-10 w-full max-w-screen-xl ${className}`}
+            className={
+                [
+                    styles.pickedmsMainContainer,
+                    "pickedms-main-container flex flex-row gap-2 items-start min-w-0 relative z-10 w-full max-w-screen-xl",
+                    className,
+                    // pickedms-active状態なら専用クラスを追加
+                    showSelector ? "" : styles.pickedmsMainContainerActive
+                ].join(" ")
+            }
         >
             {/* 左側のカラム（幅を動的に切り替え） */}
             <div className={leftColClass} style={leftColStyle}>
