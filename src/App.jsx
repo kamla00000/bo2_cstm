@@ -23,43 +23,28 @@ const LV_FILTERS = [
     { label: 'LV6', value: '6' },
 ];
 
-const normalizeMsName = (name) => {
+// --- normalize関数を強化・統一 ---
+const normalizeString = (name) => {
     if (!name) return '';
-    const greekToAlphabet = s => s
-        .replace(/[ΖＺ]/g, 'Z')
-        .replace(/[ν]/g, 'v')
-        .replace(/[α]/g, 'a')
-        .replace(/[β]/g, 'b');
-    const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    const zenkakuSymbolToHankaku = s => s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    return greekToAlphabet(
-        zenkakuSymbolToHankaku(
-            zenkakuToHankaku(name)
-        )
-    )
-        .replace(/[ＬＶ]/g, 'LV')
-        .replace(/_LV(\d+)$/, (m, lv) => `_LV${lv}`)
+    return String(name)
+        .trim()
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // 全角英数→半角
+        .replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // 全角記号→半角
+        .replace(/[ΖＺZｚ]/g, 'z')
+        .replace(/[νｖV]/g, 'v')
+        .replace(/[αａA]/g, 'a')
+        .replace(/[βｂB]/g, 'b')
+        .replace(/[［\[]/g, '[').replace(/[］\]]/g, ']')
+        .replace(/【/g, '[').replace(/】/g, ']')
+        .replace(/_lv(\d+)/gi, (_, lv) => `_lv${lv}`) // _LV1→_lv1
+        .replace(/[ＬＶ]/gi, 'lv')
         .replace(/[\s　]+/g, '')
+        .normalize('NFKC')
         .toLowerCase();
 };
 
-const normalizePartName = (name) => {
-    if (!name) return '';
-    const greekToAlphabet = s => s
-        .replace(/[ΖＺ]/g, 'Z')
-        .replace(/[ν]/g, 'v')
-        .replace(/[α]/g, 'a')
-        .replace(/[β]/g, 'b');
-    const zenkakuToHankaku = s => s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    const zenkakuSymbolToHankaku = s => s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-    return greekToAlphabet(
-        zenkakuSymbolToHankaku(
-            zenkakuToHankaku(name)
-        )
-    )
-        .replace(/[　\s]/g, '')
-        .toLowerCase();
-};
+const normalizeMsName = (name) => normalizeString(name);
+const normalizePartName = (name) => normalizeString(name);
 
 const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) => {
     if (!ms) return '';
