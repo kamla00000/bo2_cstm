@@ -223,15 +223,10 @@ const MSSelector = ({
               >{cost}</button>
             ))}
             <button
-              onClick={() => {
-                setFilterCost('low');
-                setFilterType('');
-                setFilterLv && setFilterLv('');
-                setSearchText && setSearchText('');
-              }}
-              className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
-              style={{ minWidth: 0 }}
-            >低</button>
+  onClick={() => setFilterCost('low')}
+  className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
+  style={{ minWidth: 0 }}
+>低</button>
           </div>
           <div className={`${styles['msselector-filter-group']} ${styles.lv}`}> 
             {LV_FILTERS.map(lv => (
