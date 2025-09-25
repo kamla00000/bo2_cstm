@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
+﻿import React, { useEffect, useState, useRef } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { useAppData } from './hooks/useAppData';
 import { CATEGORY_NAMES, ALL_CATEGORY_NAME } from './constants/appConstants';
 import PartSelectionSection from './components/PartSelectionSection';
@@ -122,11 +122,9 @@ function AppContent() {
     const [partsRestored, setPartsRestored] = useState(false);
     const [pendingRestoreParts, setPendingRestoreParts] = useState(null);
 
-    // ★ログ追加
     useEffect(() => {
         console.log('[AppContent] filterType:', filterType, 'filterCost:', filterCost, 'filterLv:', filterLv, 'selectedMs:', selectedMs, 'msData.length:', msData?.length);
     }, [filterType, filterCost, filterLv, selectedMs, msData]);
-
 
     // MSピック時にランダム動画を選択
     const handleMsSelectWithVideo = (ms) => {
@@ -141,7 +139,7 @@ function AppContent() {
         }
     };
 
-    // MS名復元処理（正規化比較で環境差異吸収＋デバッグログ）
+    // MS名復元処理
     useEffect(() => {
         try {
             if (
@@ -150,9 +148,6 @@ function AppContent() {
             ) {
                 const decodedName = decodeURIComponent(msName);
                 const normalizedDecoded = normalizeMsName(decodedName);
-                // 追加ログ
-                console.log('[DEBUG] msName from URL:', decodedName);
-                console.log('[DEBUG] normalized msName:', normalizedDecoded);
                 msData.forEach(ms => {
                     console.log('[DEBUG] ms["MS名"]:', ms["MS名"], 'normalized:', normalizeMsName(ms["MS名"]));
                 });
@@ -168,7 +163,6 @@ function AppContent() {
                     if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
                     setUrlConfigLoaded(true);
                 } else if (!foundMs) {
-                    console.log('[DEBUG] MS not found for:', normalizedDecoded);
                     setShowSelector(true);
                     setUrlConfigLoaded(true);
                 }
@@ -178,7 +172,7 @@ function AppContent() {
         }
     }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
 
-    // パーツ復元処理（2段階）: allPartsCacheがロードされたら必ず復元を試みる
+    // パーツ復元処理（2段階）
     useEffect(() => {
         try {
             if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) {
@@ -200,45 +194,50 @@ function AppContent() {
         }
     }, [selectedMs, urlConfigLoaded, allPartsCache, partsRestored, handleClearAllParts, msName]);
 
+    // PickedMsからのロード（localStorage）でも pendingRestoreParts を使う
     useEffect(() => {
-        try {
-            if (!pendingRestoreParts || partsRestored) {
-                return;
-            }
-            if (!selectedMs || !allPartsCache) {
-                return;
-            }
-            if (selectedParts.length > 0) {
-                return;
-            }
-            const allParts = [];
-            for (const categoryName of Object.keys(allPartsCache)) {
-                if (allPartsCache[categoryName]) {
-                    allParts.push(...allPartsCache[categoryName]);
+        (async () => {
+            try {
+                if (
+                    pendingRestoreParts &&
+                    !partsRestored &&
+                    selectedMs &&
+                    allPartsCache &&
+                    Object.keys(allPartsCache).length > 0
+                ) {
+                    const allParts = [];
+                    for (const categoryName of Object.keys(allPartsCache)) {
+                        if (allPartsCache[categoryName]) {
+                            allParts.push(...allPartsCache[categoryName]);
+                        }
+                    }
+                    for (const partName of pendingRestoreParts) {
+                        if (!partName || partName.trim() === '') continue;
+                        const normalizedTarget = normalizePartName(partName);
+                        const foundPart = allParts.find(part =>
+                            normalizePartName(part.name) === normalizedTarget
+                        );
+                        if (foundPart) {
+                            // awaitで同期・非同期どちらでもOK
+                            await Promise.resolve(handlePartSelect(foundPart));
+                        }
+                    }
+                    setPartsRestored(true);
+                    setPendingRestoreParts(null);
                 }
+            } catch (err) {
+                console.error('[DEBUG] パーツ復元処理2で例外:', err);
             }
-            pendingRestoreParts.forEach(partName => {
-                if (!partName || partName.trim() === '') return;
-                const normalizedTarget = normalizePartName(partName);
-                const foundPart = allParts.find(part =>
-                    normalizePartName(part.name) === normalizedTarget
-                );
-                if (!foundPart) {
-                    console.log('[DEBUG] パーツ未一致:', partName, '→', normalizedTarget);
-                    allParts.forEach(part => {
-                        console.log('[DEBUG] 候補:', part.name, '→', normalizePartName(part.name));
-                    });
-                }
-                if (foundPart) {
-                    handlePartSelect(foundPart);
-                }
-            });
-            setPartsRestored(true);
-            setPendingRestoreParts(null);
-        } catch (err) {
-            console.error('[DEBUG] パーツ復元処理2で例外:', err);
-        }
-    }, [selectedParts, pendingRestoreParts, partsRestored, selectedMs, allPartsCache, handlePartSelect]);
+        })();
+    }, [
+        pendingRestoreParts,
+        partsRestored,
+        selectedMs,
+        expansionType,
+        isFullStrengthened,
+        allPartsCache,
+        handlePartSelect
+    ]);
 
     useEffect(() => {
         if (!selectedMs) setShowSelector(true);
@@ -266,7 +265,7 @@ function AppContent() {
 
     const handleFullStrengthenWarningOk = () => {
         setShowFullStrengthenWarning(false);
-        setIsFullStrengthened(pendingFullStrengthen);
+        setIsFullStrengthen(pendingFullStrengthen);
         setPendingFullStrengthen(null);
         handleClearAllParts();
     };
@@ -389,6 +388,7 @@ function AppContent() {
                         handleMsSelect={handleMsSelectWithVideo}
                         handlePartRemove={handlePartRemove}
                         handleClearAllParts={handleClearAllParts}
+                        handlePartSelect={handlePartSelect} 
                         onSelectedPartDisplayHover={(part) => handlePartHover(part, 'selectedParts')}
                         onSelectedPartDisplayLeave={() => handlePartHover(null, null)}
                         showSelector={showSelector}
@@ -402,6 +402,10 @@ function AppContent() {
                         handleBuildShare={handleBuildShare}
                         videoRef={videoRef}
                         bgVideo={bgVideo}
+                        allPartsCache={allPartsCache}
+                        pendingRestoreParts={pendingRestoreParts} 
+                        setPendingRestoreParts={setPendingRestoreParts}
+                        setPartsRestored={setPartsRestored} 
                     />
                 </div>
                 {selectedMs && !showSelector && (

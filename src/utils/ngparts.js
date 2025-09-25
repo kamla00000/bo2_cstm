@@ -31,17 +31,29 @@ export const isPartDisabled = (part, selectedParts) => {
     const isReloadOrOH = part.description && (part.description.includes("リロード") || part.description.includes("兵装のオーバーヒート"));
     const hasSupplyPackSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name && p.name.includes("大容量補給パック"));
     const hasReloadOrOHSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.description && (p.description.includes("リロード") || p.description.includes("兵装のオーバーヒート")));
-// 火器管制最適化システムとASL/兵装の収束時間系パーツは併用不可
+    // 火器管制最適化システムとASL/兵装の収束時間系パーツは併用不可
     const isFireControlSystem = part.name && part.name.includes("火器管制最適化システム");
     const isASLOrConverge = part.description && (part.description.includes("ASL") || part.description.includes("兵装の集束時間"));
     const hasFireControlSystemSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name && p.name.includes("火器管制最適化システム"));
     const hasASLOrConvergeSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.description && (p.description.includes("ASL") || p.description.includes("兵装の集束時間")));
+    // コネクティングシステム[支援Ⅰ型]_LV1と大容量補給パック・火器管制最適化システムは併用不可
+    const isConnectingSystem = part.name && part.name.includes("コネクティングシステム[支援Ⅰ型]_LV1");
+    const hasConnectingSystemSelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name && p.name.includes("コネクティングシステム[支援Ⅰ型]_LV1"));
+
     if ((isFireControlSystem && hasASLOrConvergeSelected) || (isASLOrConverge && hasFireControlSystemSelected)) {
         return true;
     }
     if ((isSupplyPack && hasReloadOrOHSelected) || (isReloadOrOH && hasSupplyPackSelected)) {
         return true;
     }
+    // 新ルール：コネクティングシステム[支援Ⅰ型]_LV1と大容量補給パック・火器管制最適化システムは併用不可
+    if (
+        (isConnectingSystem && (hasSupplyPackSelected || hasFireControlSystemSelected)) ||
+        ((isSupplyPack || isFireControlSystem) && hasConnectingSystemSelected)
+    ) {
+        return true;
+    }
+
     const isAlreadySelected = Array.isArray(selectedParts) && selectedParts.some(p => p.name === part.name);
     if (isAlreadySelected) {
         return false;
