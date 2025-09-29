@@ -183,6 +183,7 @@ function AppContent() {
                 return;
             }
             const buildConfig = parseBuildFromUrl();
+            console.log('[DEBUG] buildConfig.parts:', buildConfig.parts);
             if (buildConfig.parts && buildConfig.parts.length > 0) {
                 setPendingRestoreParts(buildConfig.parts);
                 handleClearAllParts();
@@ -205,12 +206,14 @@ function AppContent() {
                     allPartsCache &&
                     Object.keys(allPartsCache).length > 0
                 ) {
+                    // デバッグ: allPartsCacheの内容
                     const allParts = [];
                     for (const categoryName of Object.keys(allPartsCache)) {
                         if (allPartsCache[categoryName]) {
                             allParts.push(...allPartsCache[categoryName]);
                         }
                     }
+                    console.log('[DEBUG] allPartsCache names:', allParts.map(p => p.name));
                     for (const partName of pendingRestoreParts) {
                         if (!partName || partName.trim() === '') continue;
                         const normalizedTarget = normalizePartName(partName);
@@ -218,8 +221,10 @@ function AppContent() {
                             normalizePartName(part.name) === normalizedTarget
                         );
                         if (foundPart) {
-                            // awaitで同期・非同期どちらでもOK
                             await Promise.resolve(handlePartSelect(foundPart));
+                        } else {
+                            // 詳細ログ
+                            console.warn('[復元失敗] partName:', partName, 'normalizedTarget:', normalizedTarget, '候補:', allParts.map(p => normalizePartName(p.name)));
                         }
                     }
                     setPartsRestored(true);
@@ -250,25 +255,36 @@ function AppContent() {
     }, []);
 
     // 警告モーダル付きフル強化切り替え
-    const handleFullStrengthenToggle = (next) => {
-        if (isFullStrengthened && !next) {
-            if (selectedParts && selectedParts.length > 0) {
-                setPendingFullStrengthen(next);
-                setShowFullStrengthenWarning(true);
-            } else {
-                setIsFullStrengthened(next);
-            }
+    // ...existing code...
+const handleFullStrengthenToggle = (next) => {
+    if (isFullStrengthened && !next) {
+        // 完→零（パーツ装備中なら警告）
+        if (selectedParts && selectedParts.length > 0) {
+            setPendingFullStrengthen(next);
+            setShowFullStrengthenWarning(true);
         } else {
             setIsFullStrengthened(next);
+            handleClearAllParts(); // パーツを必ず外す
         }
-    };
+    } else if (!isFullStrengthened && next) {
+        // 零→完
+        setIsFullStrengthened(next);
+    } else if (isFullStrengthened && next) {
+        // 完→完（何もしない）
+        setIsFullStrengthened(next);
+    } else {
+        // 零→零（何もしない）
+        setIsFullStrengthened(next);
+    }
+};
 
-    const handleFullStrengthenWarningOk = () => {
-        setShowFullStrengthenWarning(false);
-        setIsFullStrengthen(pendingFullStrengthen);
-        setPendingFullStrengthen(null);
-        handleClearAllParts();
-    };
+const handleFullStrengthenWarningOk = () => {
+    setShowFullStrengthenWarning(false);
+    setIsFullStrengthened(pendingFullStrengthen);
+    setPendingFullStrengthen(null);
+    handleClearAllParts(); // パーツを必ず外す
+};
+// ...existing code...
 
     const handleFullStrengthenWarningCancel = () => {
         setShowFullStrengthenWarning(false);
