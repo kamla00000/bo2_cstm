@@ -17,14 +17,14 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
 
     // 右フリックで解除
     useRemoveFlick(
-        (partName) => {
-            const part = parts.find(p => p.name === partName);
-            if (part) {
-                onRemove(part);
-            }
-        },
-        removePreviewPart
-    );
+    (partName) => {
+        const part = parts.find(p => p.name === partName);
+        if (part) {
+            onRemove(part);
+        }
+    },
+    parts ? parts.map(p => p.name) : [] 
+);
 
     // 全装着済みパーツで「タップせずにフリック」解除を許可
     useGlobalRemoveFlick(

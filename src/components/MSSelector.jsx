@@ -439,7 +439,7 @@ const MSSelector = ({
                     <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                     <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
-                  <span className="text-gray-300">MSデータをロード中...</span>
+                  <span className="text-gray-200">MSデータをロード中...</span>
                 </div>
               ) : msData.length === 0 ? (
                 <p className="text-gray-200 text-center py-8 col-span-full">MSデータがありません。データがロードされていない可能性があります。</p>
