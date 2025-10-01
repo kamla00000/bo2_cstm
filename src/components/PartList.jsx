@@ -29,7 +29,6 @@ const ImageWithFallback = ({ partName, level, className }) => {
         if (nextExtIndex < IMAGE_EXTENSIONS.length) {
             setCurrentExtIndex(nextExtIndex);
         } else {
-            // 全ての拡張子を試しても画像が見つからない場合
             setCurrentExtIndex(IMAGE_EXTENSIONS.length);
         }
     };
@@ -39,7 +38,6 @@ const ImageWithFallback = ({ partName, level, className }) => {
     };
 
     React.useEffect(() => {
-        // partNameが変わったら状態をリセット
         setCurrentExtIndex(0);
         setHasLoaded(false);
     }, [partName]);
@@ -48,7 +46,7 @@ const ImageWithFallback = ({ partName, level, className }) => {
     if (currentExtIndex < IMAGE_EXTENSIONS.length) {
         src = `${getBaseImagePath(partName)}.webp`;
     } else {
-        src = '/images/parts/default.webp'; // デフォルト画像
+        src = '/images/parts/default.webp';
     }
 
     return (
@@ -80,33 +78,27 @@ const PartList = ({
     onPreviewSelect,
     isPartDisabled,
 }) => {
-    // プレビュー中パーツ名をstateで管理
     const [previewPart, setPreviewPart] = React.useState(null);
 
-    // プレビュー状態をグローバルに共有（装備解除レイヤーとの排他制御用）
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
             window.globalPreviewPart = previewPart;
-            // イベント発火で他コンポーネントに通知
             window.dispatchEvent(new CustomEvent('previewPartChanged'));
         }
     }, [previewPart]);
 
-    // 装備解除レイヤー変更を監視してプレビューをクリア
     React.useEffect(() => {
         const handleRemoveLayerChange = () => {
             if (typeof window !== 'undefined' && window.globalRemoveLayerPart) {
                 setPreviewPart(null);
             }
         };
-
         if (typeof window !== 'undefined') {
             window.addEventListener('removeLayerChanged', handleRemoveLayerChange);
             return () => window.removeEventListener('removeLayerChanged', handleRemoveLayerChange);
         }
     }, []);
 
-    // 右フリックで装着（プレビュー中パーツ）
     usePartFlick(
         null,
         (partName) => {
@@ -118,18 +110,16 @@ const PartList = ({
         previewPart
     );
 
-    // 右フリックで装備解除（選択中パーツ）
     useRemoveFlick(
         (partName) => {
             const part = parts.find(p => p.name === partName);
             if (part && isSelected(part)) {
-                handleSelect(part); // 装備済みパーツをもう一度選択すると解除される
+                handleSelect(part);
             }
         },
-        selectedParts.map(p => p.name) // 選択中の全パーツ名の配列を渡す
+        selectedParts.map(p => p.name)
     );
 
-    // 全パーツボタンで「タップせずにフリック」装着を許可
     useGlobalPartFlick(
         (partName) => {
             const part = parts.find(p => p.name === partName);
@@ -140,57 +130,24 @@ const PartList = ({
         parts ? parts.map(p => p.name) : []
     );
 
-    // 全装備済みパーツで「タップせずにフリック」解除を許可
     useGlobalRemoveFlick(
         (partName) => {
             const part = parts.find(p => p.name === partName);
             if (part && isSelected(part)) {
-                handleSelect(part); // 装備済みパーツをもう一度選択すると解除される
+                handleSelect(part);
             }
         },
         selectedParts ? selectedParts.map(p => p.name) : []
     );
-    // 装備中判定
+
     const isSelected = (part) => selectedParts.some(p => p.name === part.name);
 
-    // ワンクッション用state
-    const [lastActionedPartName, setLastActionedPartName] = React.useState(null);
-    const [actionType, setActionType] = React.useState(null); // 'equip' or 'unequip'
-    const [lastActionedPartIndex, setLastActionedPartIndex] = React.useState(null); // 装備直前の表示インデックス
+    // 「装備完了」直後のパーツを記録
+    const [fixedPartInfo, setFixedPartInfo] = React.useState(null);
+    const [lastSelectedPartsLength, setLastSelectedPartsLength] = React.useState(0);
+    // 現在のソート済み配列をrefで保持（固定位置計算用）
+    const currentSortedPartsRef = React.useRef([]);
 
-    // ★ 追加: selectedPartsが空になったらワンクッション状態をリセット
-    React.useEffect(() => {
-        if (selectedParts.length === 0 && lastActionedPartName !== null) {
-            setLastActionedPartName(null);
-            setActionType(null);
-            setLastActionedPartIndex(null);
-        }
-    }, [selectedParts, lastActionedPartName]);
-
-    // 装備時の処理をラップ（ワンクッション動作対応）
-    const handleSelect = (part) => {
-        const currentlySelected = isSelected(part);
-        // 装備直前の表示インデックスを記録
-        if (!currentlySelected) {
-            // parts配列の現在の並びでインデックスを取得
-            const currentIndex = sortedParts.findIndex(p => p.name === part.name);
-            setLastActionedPartIndex(currentIndex);
-            setLastActionedPartName(part.name);
-            setActionType('equip');
-        } else {
-            setLastActionedPartName(null);
-            setActionType(null);
-            setLastActionedPartIndex(null);
-        }
-        onSelect(part);
-        if (window.innerWidth <= 1279) {
-            if (typeof window.setSelectedPreviewPart === 'function') {
-                window.setSelectedPreviewPart(null);
-            }
-        }
-    };
-
-    // スロットオーバー判定
     const willCauseSlotOverflow = (part) => {
         if (!selectedMs || !currentSlotUsage) return false;
         const maxClose = currentSlotUsage.maxClose || 0;
@@ -209,16 +166,13 @@ const PartList = ({
         );
     };
 
-    // kind重複判定
     const hasSameKind = (part) => {
         if (!part.kind) return false;
         return selectedParts.some(p => p.kind && p.kind === part.kind && p.name !== part.name);
     };
 
-    // 装備数上限
     const isPartLimitReached = selectedParts.length >= 8;
 
-    // カテゴリ特攻プログラム_汎用/支援の装備可否（_LV以降を除いた名称で判定）
     const isCategorySpecificPartDisabled = (part) => {
         const basePartName = part.name ? part.name.replace(/_LV\d+$/, '') : '';
         if (basePartName === "カテゴリ特攻プログラム_汎用" && selectedMs && selectedMs["属性"] !== "汎用") return true;
@@ -227,9 +181,8 @@ const PartList = ({
         return false;
     };
 
-    // 装備可能（未装備）判定
     const isEquipable = (part) => {
-        if (isSelected(part)) return false; // 装備済みの場合は装備可能ではない
+        if (isSelected(part)) return false;
         if (typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts)) return false;
         if (willCauseSlotOverflow(part)) return false;
         if (isPartLimitReached) return false;
@@ -238,41 +191,103 @@ const PartList = ({
         return true;
     };
 
-    // 使用スロット合計
     const getSlotSum = (part) =>
         Number(part.close || 0) + Number(part.mid || 0) + Number(part.long || 0);
 
-    // 属性取得
     const getCategory = (part) => part.category || '';
 
-    // 「併用不可」と「装備不可」の優先度付け
     const getNotEquipablePriority = (part) => {
-        // isSelected(part)の場合はこの関数が呼ばれない前提だが、念のため
-        if (isSelected(part)) return -1; // 装備中は優先度を無視（このソートでは装備済みは別のグループになるため）
-
-        // 併用不可が最も高い優先度（最も下に表示される）
+        if (isSelected(part)) return -1;
         if (typeof isPartDisabled === 'function' && isPartDisabled(part, selectedParts)) return 0;
-        if (hasSameKind(part)) return 0; // kind重複も併用不可と同等に扱う
-
-        // スロットオーバー、カテゴリ特攻プログラムは次に高い優先度
+        if (hasSameKind(part)) return 0;
         if (willCauseSlotOverflow(part) || isCategorySpecificPartDisabled(part) || isPartLimitReached) return 1;
-
-        // それ以外（装備可能ではないが上記理由でないもの）は低い優先度
         return 2;
     };
 
+    // 装備/解除時の処理
+    const handleSelect = (part) => {
+        const currentlySelected = isSelected(part);
+        if (!currentlySelected) {
+            // 現在のソート済み配列での位置を取得（装備前の表示順）
+            const currentIndex = currentSortedPartsRef.current.findIndex(p => p.name === part.name);
+            
+            // 新しいパーツ装備時は前の固定を解除してから新しい固定を設定
+            const newFixedInfo = {
+                name: part.name,
+                index: currentIndex,
+            };
+            setFixedPartInfo(newFixedInfo);
+            console.log('🎯 新規装備でfixedPartInfo設定:', newFixedInfo, '現在のソート済み配列長さ:', currentSortedPartsRef.current.length);
+        } else {
+            setFixedPartInfo(null);
+            console.log('🎯 装備解除でfixedPartInfo解除');
+        }
+        onSelect(part);
+        if (window.innerWidth <= 1279) {
+            if (typeof window.setSelectedPreviewPart === 'function') {
+                window.setSelectedPreviewPart(null);
+            }
+        }
+    };
 
-    // 最終的なソートロジック (useMemoでメモ化)
+    // selectedPartsの変化を監視
+    React.useEffect(() => {
+        const currentLength = selectedParts.length;
+        
+        console.log('🔍 selectedParts変化検出:', {
+            前回の長さ: lastSelectedPartsLength,
+            現在の長さ: currentLength,
+            固定中パーツ: fixedPartInfo?.name,
+            装備中パーツ: selectedParts.map(p => p.name)
+        });
+
+        // 全パーツが外された場合
+        if (currentLength === 0) {
+            if (fixedPartInfo !== null) {
+                setFixedPartInfo(null);
+                console.log('🎯 全パーツ外れ、fixedPartInfo解除');
+            }
+        } 
+        // パーツが新たに装備された場合（長さが増加）
+        else if (currentLength > lastSelectedPartsLength) {
+            // 新しくパーツが装備された時点で、前回の固定は既にhandleSelectで解除済み
+            console.log('🔧 パーツ新規装備検出、固定は既にhandleSelectで更新済み');
+        }
+        // パーツが外された場合（長さが減少）
+        else if (currentLength < lastSelectedPartsLength) {
+            // 固定中のパーツが外された場合は固定を解除
+            if (fixedPartInfo && !selectedParts.some(p => p.name === fixedPartInfo.name)) {
+                setFixedPartInfo(null);
+                console.log('🎯 固定中パーツが外された、fixedPartInfo解除');
+            }
+        }
+
+        setLastSelectedPartsLength(currentLength);
+    }, [selectedParts]); // fixedPartInfoは依存配列から除外
+
+    // ソートロジック - 固定パーツがある場合は固定パーツを除外してソートし、後で挿入
     const sortedParts = React.useMemo(() => {
+        console.log('🔄 ソート実行 fixedPartInfo:', fixedPartInfo, 'selectedParts.length:', selectedParts.length);
+        
         if (!Array.isArray(parts) || parts.length === 0) {
             return [];
         }
-        // ワンクッションパーツのインデックスをlastActionedPartIndexで固定
-        const fixedIndex = (lastActionedPartName && actionType === 'equip' && lastActionedPartIndex !== null) ? lastActionedPartIndex : -1;
-        const fixedPart = (fixedIndex !== -1) ? parts.find(p => p.name === lastActionedPartName) : null;
-        // ワンクッションパーツ以外をソート
-        const filtered = parts.filter(p => !(fixedPart && p.name === fixedPart.name));
-        const sorted = filtered.sort((a, b) => {
+        
+        // 「装備完了」直後のパーツを完全にソート対象外にする
+        let fixedPart = null;
+        let fixedIndex = -1;
+        let partsToSort = parts;
+        
+        if (fixedPartInfo && fixedPartInfo.name) {
+            fixedPart = parts.find(p => p.name === fixedPartInfo.name);
+            fixedIndex = fixedPartInfo.index;
+            // 固定パーツをソート対象から完全に除外
+            partsToSort = parts.filter(p => p.name !== fixedPartInfo.name);
+            console.log('🔧 固定パーツをソート除外:', fixedPart?.name, '元位置:', fixedIndex);
+        }
+        
+        // 固定パーツ以外のみをソート
+        const sorted = partsToSort.sort((a, b) => {
             const aSelected = isSelected(a);
             const bSelected = isSelected(b);
             const aEquipable = isEquipable(a);
@@ -313,17 +328,34 @@ const PartList = ({
             }
             return 0;
         });
-        // ワンクッションパーツを装備直前の位置に挿入
+        
+        // 固定パーツを元の位置に挿入
         if (fixedPart && fixedIndex !== -1) {
-            sorted.splice(fixedIndex, 0, fixedPart);
+            // 元の位置が配列範囲内に収まるように調整
+            const insertIndex = Math.min(fixedIndex, sorted.length);
+            sorted.splice(insertIndex, 0, fixedPart);
+            console.log('📍 固定パーツを位置', insertIndex, 'に挿入:', fixedPart.name);
         }
+        
+        // 現在のソート結果をrefに保存（次回のhandleSelectで使用）
+        currentSortedPartsRef.current = [...sorted];
+        
         return sorted;
-    }, [parts, selectedParts, lastActionedPartName, actionType, lastActionedPartIndex, isSelected, isEquipable, getSlotSum, getCategory, getNotEquipablePriority]);
-
+    }, [
+        parts, 
+        // selectedPartsは除外して、装備状態が変わってもソートが再実行されないようにする
+        // 代わりにselectedParts.lengthのみ監視してソートタイミングを制御
+        selectedParts.length > 0 ? selectedParts.map(p => p.name).sort().join(',') : '', 
+        fixedPartInfo, 
+        isSelected, 
+        isEquipable, 
+        getSlotSum, 
+        getCategory, 
+        getNotEquipablePriority
+    ]);
 
     return (
         <div className="flex-grow w-full partlist-card-shape">
-            {/* パーツリスト */}
             <div className="overflow-y-auto pr-2" style={{ maxHeight: '195px' }}>
                 {sortedParts.length === 0 ? (
                     <p className="text-gray-200 text-center py-4">パーツデータがありません。</p>
@@ -339,8 +371,8 @@ const PartList = ({
                             const levelMatch = part.name.match(/_LV(\d+)/);
                             const partLevel = levelMatch ? parseInt(levelMatch[1], 10) : undefined;
 
-                            // ワンクッション表示の条件: 最後に装備したパーツであり、かつ「装備」アクションだった場合
-                            const showOneShotEffect = lastActionedPartName === part.name && actionType === 'equip';
+                            // fixedPartInfoが一致する場合は「装備完了」直後
+                            const showOneShotEffect = fixedPartInfo && fixedPartInfo.name === part.name;
 
                             const showMutualExclusiveOverlay = disabledByCombination || disabledByKind;
                             const showNotEquipableOverlay = disabledByOtherReasons;
@@ -361,17 +393,14 @@ const PartList = ({
                                         const deviceType = getDeviceType();
                                         
                                         if (isInstantAction) {
-                                            // マウス優先デバイス: 即座に装備・解除
                                             if (!reallyDisabled || selected) {
                                                 handleSelect(part);
                                             }
                                             onPreviewSelect?.(part);
                                         } else if (deviceType === 'touch' || window.innerWidth <= 1024) {
-                                            // タッチデバイスまたは小画面: プレビューのみ
                                             setPreviewPart(part.name);
                                             onPreviewSelect?.(part);
                                         } else {
-                                            // ハイブリッドデバイス（大画面）: 従来の動作
                                             if (!reallyDisabled || selected) {
                                                 handleSelect(part);
                                             }
@@ -391,7 +420,6 @@ const PartList = ({
                                 >
                                     <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />
 
-                                    {/* 併用不可の表示（disabledByCombination優先） */}
                                     {disabledByCombination && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-red-400 text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
@@ -401,7 +429,6 @@ const PartList = ({
                                         </div>
                                     )}
 
-                                    {/* 装備不可の表示（disabledByCombinationでない場合のみ） */}
                                     {!disabledByCombination && showNotEquipableOverlay && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-orange text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
@@ -411,7 +438,6 @@ const PartList = ({
                                         </div>
                                     )}
 
-                                    {/* ホバー時のオレンジ半透明レイヤー (ワンクッション表示と重複しないように調整) */}
                                     {((partHovered && window.innerWidth > 1024) || (previewPart === part.name && window.innerWidth <= 1024)) && !selected && !showNotEquipableOverlay && !showMutualExclusiveOverlay && !showOneShotEffect && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-orange-500 bg-opacity-60 text-gray-200 text-base z-20 pointer-events-none">
                                             <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
@@ -421,7 +447,6 @@ const PartList = ({
                                         </div>
                                     )}
 
-                                    {/* 装備中の表示 (ワンクッション表示と重ねて表示) */}
                                     {selected && (
                                         <div 
                                             className="absolute inset-0 flex items-center justify-center bg-gray-700 bg-opacity-70 text-neon-offwhite text-base z-20"
@@ -432,10 +457,8 @@ const PartList = ({
                                                 const deviceType = getDeviceType();
                                                 
                                                 if (isInstantAction) {
-                                                    // マウス優先デバイス: 即座に装備解除
                                                     handleSelect(part);
                                                 } else if (showGuide && (deviceType === 'touch' || window.innerWidth <= 1024)) {
-                                                    // タッチデバイス: スワイプヒントを表示
                                                     const element = e.currentTarget;
                                                     element.classList.add('show-swipe-hint');
                                                     setTimeout(() => {

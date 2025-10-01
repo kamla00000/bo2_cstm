@@ -1,3 +1,7 @@
+/* PickedMs.module.css に追加 */
+.previewDescription,h3 {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+}
 
 /* pickedms-main-container のスタイルをモジュール化 */
 .pickedmsMainContainer {
@@ -959,7 +963,7 @@ span{
         }
       }
       .clearAllButton span {
-        text-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 6px #fff;
+        /* text-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 6px #fff; */
         display: inline-block!important;
         margin: 0 4px!important;
         vertical-align: middle!important;
