@@ -47,6 +47,104 @@ const MSSelector = ({
       .replace(/[ΩωＯｏOo]/g, 'O');
   };
 
+  // 柔軟な検索用正規化関数
+  const createFlexibleNormalize = (str) => {
+    if (!str) return '';
+    
+    return str
+      .toLowerCase()
+      // 全角英数字を半角に変換
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+      // ひらがなをカタカナに変換
+      .replace(/[ぁ-ん]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0x60))
+      // 濁点・半濁点の正規化（ひらがな）
+      .replace(/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/g, (s) => {
+        const map = {
+          'が': 'か', 'ぎ': 'き', 'ぐ': 'く', 'げ': 'け', 'ご': 'こ',
+          'ざ': 'さ', 'じ': 'し', 'ず': 'す', 'ぜ': 'せ', 'ぞ': 'そ',
+          'だ': 'た', 'ぢ': 'ち', 'づ': 'つ', 'で': 'て', 'ど': 'と',
+          'ば': 'は', 'び': 'ひ', 'ぶ': 'ふ', 'べ': 'へ', 'ぼ': 'ほ',
+          'ぱ': 'は', 'ぴ': 'ひ', 'ぷ': 'ふ', 'ぺ': 'へ', 'ぽ': 'ほ'
+        };
+        return map[s] || s;
+      })
+      // 濁点・半濁点の正規化（カタカナ）
+      .replace(/[ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ]/g, (s) => {
+        const map = {
+          'ガ': 'カ', 'ギ': 'キ', 'グ': 'ク', 'ゲ': 'ケ', 'ゴ': 'コ',
+          'ザ': 'サ', 'ジ': 'シ', 'ズ': 'ス', 'ゼ': 'セ', 'ゾ': 'ソ',
+          'ダ': 'タ', 'ヂ': 'チ', 'ヅ': 'ツ', 'デ': 'テ', 'ド': 'ト',
+          'バ': 'ハ', 'ビ': 'ヒ', 'ブ': 'フ', 'ベ': 'ヘ', 'ボ': 'ホ',
+          'パ': 'ハ', 'ピ': 'ヒ', 'プ': 'フ', 'ペ': 'ヘ', 'ポ': 'ホ'
+        };
+        return map[s] || s;
+      })
+      // ギリシャ文字の完全対応（大文字・小文字・全角・半角）
+      .replace(/[ΑαＡａAa]/g, 'a')
+      .replace(/[ΒβＢｂBb]/g, 'b')
+      .replace(/[ΓγＧｇGg]/g, 'g')
+      .replace(/[ΔδＤｄDd]/g, 'd')
+      .replace(/[ΕεＥｅEe]/g, 'e')
+      .replace(/[ΖζＺｚZz]/g, 'z')
+      .replace(/[ΗηＨｈHh]/g, 'h')
+      .replace(/[ΘθＴｔTt]/g, 't')
+      .replace(/[ΙιＩｉIi]/g, 'i')
+      .replace(/[ΚκＫｋKk]/g, 'k')
+      .replace(/[ΛλＬｌLl]/g, 'l')
+      .replace(/[ΜμＭｍMm]/g, 'm')
+      .replace(/[ΝνＮｎNn]/g, 'n')
+      .replace(/[ΞξＸｘXx]/g, 'x')
+      .replace(/[ΟοＯｏOo]/g, 'o')
+      .replace(/[ΠπＰｐPp]/g, 'p')
+      .replace(/[ΡρＲｒRr]/g, 'r')
+      .replace(/[ΣσςＳｓSs]/g, 's')
+      .replace(/[ΤτＴｔTt]/g, 't')
+      .replace(/[ΥυＵｕUu]/g, 'u')
+      .replace(/[ΦφＦｆFf]/g, 'f')
+      .replace(/[ΧχＸｘXx]/g, 'x')
+      .replace(/[ΨψＰｐPp]/g, 'p')
+      .replace(/[ΩωＯｏOo]/g, 'o')
+      // 特殊なギリシャ文字変換（ガンダムでよく使われるもの）
+      .replace(/[Νν]/g, 'v')  // ニューガンダム等
+      .replace(/[Ζζ]/g, 'z')  // Ζガンダム等
+      // 長音符の正規化
+      .replace(/[ーｰ]/g, '')
+      // 特殊文字・記号の正規化
+      .replace(/[・･]/g, '')
+      .replace(/[（）\(\)]/g, '')
+      .replace(/[［］\[\]]/g, '')
+      .replace(/[【】]/g, '')
+      .replace(/[『』「」]/g, '')
+      .replace(/[〈〉＜＞]/g, '')
+      // ローマ数字の拡張対応
+      .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ]/g, (s) => {
+        const map = {
+          'Ⅰ': '1', 'Ⅱ': '2', 'Ⅲ': '3', 'Ⅳ': '4', 'Ⅴ': '5',
+          'Ⅵ': '6', 'Ⅶ': '7', 'Ⅷ': '8', 'Ⅸ': '9', 'Ⅹ': '10',
+          'Ⅺ': '11', 'Ⅻ': '12'
+        };
+        return map[s] || s;
+      })
+      // 半角ローマ数字対応
+      .replace(/\bI\b/g, '1')
+      .replace(/\bII\b/g, '2')
+      .replace(/\bIII\b/g, '3')
+      .replace(/\bIV\b/g, '4')
+      .replace(/\bV\b/g, '5')
+      .replace(/\bVI\b/g, '6')
+      .replace(/\bVII\b/g, '7')
+      .replace(/\bVIII\b/g, '8')
+      .replace(/\bIX\b/g, '9')
+      .replace(/\bX\b/g, '10')
+      // その他の特殊文字
+      .replace(/[†‡§¶]/g, '')
+      .replace(/[★☆]/g, '')
+      .replace(/[♠♣♥♦]/g, '')
+      // スペース・記号の除去
+      .replace(/[\u0009\s　\-_]/g, '')
+      .normalize('NFKC');
+  };
+
   // 複数パターンの画像パスを生成
   const generateImagePaths = (baseName) => {
     const normalized = normalizeImageName(baseName);
@@ -85,7 +183,8 @@ const MSSelector = ({
   };
 
   useEffect(() => {
-      console.log('🌟filterType:', filterType, 'filterCost:', filterCost, 'filterLv:', filterLv, 'msData.length:', msData?.length);
+    console.log('🌟filterType:', filterType, 'filterCost:', filterCost, 'filterLv:', filterLv, 'msData.length:', msData?.length);
+    
     if (isDataLoading) {
       setIsLoading(true);
       return;
@@ -138,10 +237,10 @@ const MSSelector = ({
       if (filterLv && filterLv !== '') {
         matchesLv = msLv === filterLv;
       }
-      const normalize = (str) => (str ?? '').toLowerCase().replace(/[\u0009\s　]/g, '').normalize('NFKC');
-      const matchesSearch =
-        !searchText ||
-        normalize(msName).includes(normalize(searchText));
+      
+      // 柔軟な検索マッチング
+      const matchesSearch = !searchText || 
+        createFlexibleNormalize(msName).includes(createFlexibleNormalize(searchText));
 
       return matchesType && matchesCost && matchesLv && matchesSearch;
     });
@@ -223,10 +322,10 @@ const MSSelector = ({
               >{cost}</button>
             ))}
             <button
-  onClick={() => setFilterCost('low')}
-  className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
-  style={{ minWidth: 0 }}
->低</button>
+              onClick={() => setFilterCost('low')}
+              className={`hex-filter-btn text-lg sm:text-xl transition ${filterCost === 'low' ? 'hex-filter-btn-active' : ''}`}
+              style={{ minWidth: 0 }}
+            >低</button>
           </div>
           <div className={`${styles['msselector-filter-group']} ${styles.lv}`}> 
             {LV_FILTERS.map(lv => (
@@ -247,7 +346,7 @@ const MSSelector = ({
               onChange={e => setSearchText(e.target.value)}
               placeholder="MS名で検索"
               className="search-input px-2 py-1 text-lg sm:text-xl bg-gray-900 text-gray-200 border border-gray-600 pr-8"
-              style={{ minWidth: 120, maxWidth: 155, textDecoration: 'none' }}
+              style={{ minWidth: 140, maxWidth: 180, textDecoration: 'none' }}
             />
             {searchText && (
               <button
@@ -439,7 +538,9 @@ const MSSelector = ({
                     <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                     <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
-                  <span className="text-white">MSデータをロード中...</span>
+                  <div className="text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 6px rgba(0,0,0,0.6)' }}>
+                    MSデータをロード中...
+                  </div>
                 </div>
               ) : msData.length === 0 ? (
                 <p className="text-gray-200 text-center py-8 col-span-full">MSデータがありません。データがロードされていない可能性があります。</p>
