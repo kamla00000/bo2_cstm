@@ -119,8 +119,9 @@ function AppContent() {
     const [pendingFullStrengthen, setPendingFullStrengthen] = useState(null);
     const [showBuildShareModal, setShowBuildShareModal] = useState(false);
     const [urlConfigLoaded, setUrlConfigLoaded] = useState(false);
-    const [partsRestored, setPartsRestored] = useState(false);
-    const [pendingRestoreParts, setPendingRestoreParts] = useState(null);
+    
+    // URL復元用の状態（PickedMsに渡す用）
+    const [urlBuildData, setUrlBuildData] = useState(null);
 
     useEffect(() => {
         console.log('[AppContent] filterType:', filterType, 'filterCost:', filterCost, 'filterLv:', filterLv, 'selectedMs:', selectedMs, 'msData.length:', msData?.length);
@@ -132,117 +133,51 @@ function AppContent() {
         handleMsSelect(ms);
         setShowSelector(false);
         setUrlConfigLoaded(false);
-        setPartsRestored(false);
-        setPendingRestoreParts(null);
+        setUrlBuildData(null);
         if (ms && ms["MS名"]) {
             navigate(`/${encodeURIComponent(ms["MS名"])}`);
         }
     };
 
-    // MS名復元処理
+    // MS名復元とURL復元処理を統合
     useEffect(() => {
-        try {
-            if (
-                msData && Array.isArray(msData) && msData.length > 0 &&
-                msName && !urlConfigLoaded
-            ) {
-                const decodedName = decodeURIComponent(msName);
-                const normalizedDecoded = normalizeMsName(decodedName);
-                msData.forEach(ms => {
-                    console.log('[DEBUG] ms["MS名"]:', ms["MS名"], 'normalized:', normalizeMsName(ms["MS名"]));
-                });
-                const foundMs = msData.find(ms => {
-                    const norm = normalizeMsName(ms["MS名"]);
-                    return norm === normalizedDecoded;
-                });
-                if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
-                    handleMsSelect(foundMs);
-                    setShowSelector(false);
-                    const buildConfig = parseBuildFromUrl();
-                    if (buildConfig.fullst) setIsFullStrengthened(true);
-                    if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
-                    setUrlConfigLoaded(true);
-                } else if (!foundMs) {
-                    setShowSelector(true);
-                    setUrlConfigLoaded(true);
+    try {
+        if (
+            msData && Array.isArray(msData) && msData.length > 0 &&
+            msName && !urlConfigLoaded
+        ) {
+            const decodedName = decodeURIComponent(msName);
+            const normalizedDecoded = normalizeMsName(decodedName);
+            const foundMs = msData.find(ms => {
+                const norm = normalizeMsName(ms["MS名"]);
+                return norm === normalizedDecoded;
+            });
+            
+            if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
+                const buildConfig = parseBuildFromUrl();
+                console.log('[DEBUG App.js URL復元] buildConfig:', buildConfig);
+                
+                // URL復元データがある場合、PickedMsに渡すためのパーツ配列を作成
+                if (buildConfig.parts && buildConfig.parts.length > 0) {
+                    console.log('[DEBUG App.js] URL復元パーツ一覧:', buildConfig.parts);
+                    setUrlBuildData(buildConfig.parts); // 配列形式で渡す
                 }
+                
+                handleMsSelect(foundMs);
+                setShowSelector(false);
+                if (buildConfig.fullst) setIsFullStrengthened(true);
+                if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
+                setUrlConfigLoaded(true);
+            } else if (!foundMs) {
+                setShowSelector(true);
+                setUrlConfigLoaded(true);
             }
-        } catch (err) {
-            console.error('[DEBUG] MS名復元処理で例外:', err);
         }
-    }, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
+    } catch (err) {
+        console.error('[DEBUG] MS名復元処理で例外:', err);
+    }
+}, [msName, msData, urlConfigLoaded, handleMsSelect, setIsFullStrengthened, setExpansionType, selectedMs]);
 
-    // パーツ復元処理（2段階）
-    useEffect(() => {
-        try {
-            if (!selectedMs || !msName || !urlConfigLoaded || partsRestored) {
-                return;
-            }
-            if (!allPartsCache || Object.keys(allPartsCache).length === 0) {
-                setPartsRestored(false);
-                return;
-            }
-            const buildConfig = parseBuildFromUrl();
-            console.log('[DEBUG] buildConfig.parts:', buildConfig.parts);
-            if (buildConfig.parts && buildConfig.parts.length > 0) {
-                setPendingRestoreParts(buildConfig.parts);
-                handleClearAllParts();
-            } else {
-                setPartsRestored(true);
-            }
-        } catch (err) {
-            console.error('[DEBUG] パーツ復元処理1で例外:', err);
-        }
-    }, [selectedMs, urlConfigLoaded, allPartsCache, partsRestored, handleClearAllParts, msName]);
-
-    // PickedMsからのロード（localStorage）でも pendingRestoreParts を使う
-    useEffect(() => {
-        (async () => {
-            try {
-                if (
-                    pendingRestoreParts &&
-                    !partsRestored &&
-                    selectedMs &&
-                    allPartsCache &&
-                    Object.keys(allPartsCache).length > 0
-                ) {
-                    // デバッグ: allPartsCacheの内容
-                    const allParts = [];
-                    for (const categoryName of Object.keys(allPartsCache)) {
-                        if (allPartsCache[categoryName]) {
-                            allParts.push(...allPartsCache[categoryName]);
-                        }
-                    }
-                    console.log('[DEBUG] allPartsCache names:', allParts.map(p => p.name));
-                    for (const partName of pendingRestoreParts) {
-                        if (!partName || partName.trim() === '') continue;
-                        const normalizedTarget = normalizePartName(partName);
-                        const foundPart = allParts.find(part =>
-                            normalizePartName(part.name) === normalizedTarget
-                        );
-                        if (foundPart) {
-                            await Promise.resolve(handlePartSelect(foundPart));
-                        } else {
-                            // 詳細ログ
-                            console.warn('[復元失敗] partName:', partName, 'normalizedTarget:', normalizedTarget, '候補:', allParts.map(p => normalizePartName(p.name)));
-                        }
-                    }
-                    setPartsRestored(true);
-                    setPendingRestoreParts(null);
-                }
-            } catch (err) {
-                console.error('[DEBUG] パーツ復元処理2で例外:', err);
-            }
-        })();
-    }, [
-        pendingRestoreParts,
-        partsRestored,
-        selectedMs,
-        expansionType,
-        isFullStrengthened,
-        allPartsCache,
-        handlePartSelect
-    ]);
 
     useEffect(() => {
         if (!selectedMs) setShowSelector(true);
@@ -255,36 +190,34 @@ function AppContent() {
     }, []);
 
     // 警告モーダル付きフル強化切り替え
-    // ...existing code...
-const handleFullStrengthenToggle = (next) => {
-    if (isFullStrengthened && !next) {
-        // 完→零（パーツ装備中なら警告）
-        if (selectedParts && selectedParts.length > 0) {
-            setPendingFullStrengthen(next);
-            setShowFullStrengthenWarning(true);
-        } else {
+    const handleFullStrengthenToggle = (next) => {
+        if (isFullStrengthened && !next) {
+            // 完→零（パーツ装備中なら警告）
+            if (selectedParts && selectedParts.length > 0) {
+                setPendingFullStrengthen(next);
+                setShowFullStrengthenWarning(true);
+            } else {
+                setIsFullStrengthened(next);
+                handleClearAllParts(); // パーツを必ず外す
+            }
+        } else if (!isFullStrengthened && next) {
+            // 零→完
             setIsFullStrengthened(next);
-            handleClearAllParts(); // パーツを必ず外す
+        } else if (isFullStrengthened && next) {
+            // 完→完（何もしない）
+            setIsFullStrengthened(next);
+        } else {
+            // 零→零（何もしない）
+            setIsFullStrengthened(next);
         }
-    } else if (!isFullStrengthened && next) {
-        // 零→完
-        setIsFullStrengthened(next);
-    } else if (isFullStrengthened && next) {
-        // 完→完（何もしない）
-        setIsFullStrengthened(next);
-    } else {
-        // 零→零（何もしない）
-        setIsFullStrengthened(next);
-    }
-};
+    };
 
-const handleFullStrengthenWarningOk = () => {
-    setShowFullStrengthenWarning(false);
-    setIsFullStrengthened(pendingFullStrengthen);
-    setPendingFullStrengthen(null);
-    handleClearAllParts(); // パーツを必ず外す
-};
-// ...existing code...
+    const handleFullStrengthenWarningOk = () => {
+        setShowFullStrengthenWarning(false);
+        setIsFullStrengthened(pendingFullStrengthen);
+        setPendingFullStrengthen(null);
+        handleClearAllParts(); // パーツを必ず外す
+    };
 
     const handleFullStrengthenWarningCancel = () => {
         setShowFullStrengthenWarning(false);
@@ -419,9 +352,8 @@ const handleFullStrengthenWarningOk = () => {
                         videoRef={videoRef}
                         bgVideo={bgVideo}
                         allPartsCache={allPartsCache}
-                        pendingRestoreParts={pendingRestoreParts} 
-                        setPendingRestoreParts={setPendingRestoreParts}
-                        setPartsRestored={setPartsRestored} 
+                        urlBuildData={urlBuildData} // URL復元データを渡す
+                        onUrlRestoreComplete={() => setUrlBuildData(null)} // URL復元完了コールバック
                     />
                 </div>
                 {selectedMs && !showSelector && (
