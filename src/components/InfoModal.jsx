@@ -1,9 +1,9 @@
 import React from "react";
 
-const InfoModal = ({ open, title, message, onOk, okButtonText = "OK" }) => {
+const InfoModal = ({ open, title, message, onOk, onCancel, okButtonText = "OK", cancelButtonText = "キャンセル" }) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60" style={{ zIndex: 10000 }}>
       <div className="relative flex items-center justify-center w-full max-w-2xl px-2">
         {/* 六角形の背景 */}
         <div
@@ -16,14 +16,26 @@ const InfoModal = ({ open, title, message, onOk, okButtonText = "OK" }) => {
           <div className="text-lg text-orange-300 mb-4 whitespace-pre-line break-words">
             {message}
           </div>
+          {(onOk || onCancel) && (
           <div className="flex justify-center gap-6 mt-6">
-            <button
-              className="modal-btn px-6 py-2 text-white rounded transition"
-              onClick={onOk}
-            >
-              {okButtonText}
-            </button>
+            {onCancel && (
+              <button
+                className="modal-btn px-6 py-2 text-white rounded transition"
+                onClick={onCancel}
+              >
+                {cancelButtonText}
+              </button>
+            )}
+            {onOk && (
+              <button
+                className="modal-btn px-6 py-2 text-white rounded transition"
+                onClick={onOk}
+              >
+                {okButtonText}
+              </button>
+            )}
           </div>
+          )}
         </div>
       </div>
       {/* 六角形CSS */}

@@ -224,6 +224,11 @@ function AppContent() {
         setPendingFullStrengthen(null);
     };
 
+    // セーブデータ呼び出し専用：警告なしで直接フル強化状態を設定
+    const setFullStrengthenDirectly = (value) => {
+        setIsFullStrengthened(value);
+    };
+
     const handleBuildShare = async () => {
         if (!selectedMs) return;
         const buildUrl = generateBuildUrl(selectedMs, selectedParts, isFullStrengthened, expansionType);
@@ -333,6 +338,7 @@ function AppContent() {
                         usageWithPreview={usageWithPreview}
                         hoveredOccupiedSlots={hoveredOccupiedSlots}
                         setIsFullStrengthened={handleFullStrengthenToggle}
+                        setFullStrengthenDirectly={setFullStrengthenDirectly}
                         setExpansionType={setExpansionType}
                         handleMsSelect={handleMsSelectWithVideo}
                         handlePartRemove={handlePartRemove}
