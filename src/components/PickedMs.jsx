@@ -38,9 +38,6 @@ function saveBuildToLocal(build, msName) {
 
         let builds = JSON.parse(localStorage.getItem(storageKey) || '[]');
         
-        // 既存の同名ビルドを削除
-        builds = builds.filter(b => b.name !== build.name);
-        
         // 新しいビルドを先頭に追加
         builds.unshift(build);
         
@@ -53,7 +50,6 @@ function saveBuildToLocal(build, msName) {
         console.log('[saveBuildToLocal] 保存成功:', {
             msName: msName,
             storageKey: storageKey,
-            buildName: build.name,
             totalBuilds: builds.length,
             maxBuilds: MAX_SAVED_BUILDS_PER_MS,
             partsCount: build.parts?.length || 0,
@@ -82,7 +78,6 @@ function loadBuildsFromLocal(msName) {
             totalBuilds: builds.length,
             maxBuilds: MAX_SAVED_BUILDS_PER_MS,
             builds: builds.map(b => ({ 
-                name: b.name, 
                 partsCount: b.parts?.length || 0,
                 parts: b.parts 
             }))
@@ -139,16 +134,16 @@ const RenderPartImage = ({ partName }) => {
     };
 
     return (
-        <div style={{ position: 'relative', display: 'inline-block', width: 40, height: 40, marginRight: 4 }}>
+        <div style={{ position: 'relative', display: 'inline-block', width: 32, height: 32, marginRight: 2 }}>
             <img
                 src={imgSrc}
                 alt={partName}
                 style={{
-                    width: 40,
-                    height: 40,
+                    width: 32,
+                    height: 32,
                     objectFit: 'cover',
-                    borderRadius: 6,
-                    background: '#222',
+                    borderRadius: 4,
+                    background: '#333',
                     opacity: 0.95,
                 }}
                 onError={handleError}
@@ -158,11 +153,11 @@ const RenderPartImage = ({ partName }) => {
                     position: 'absolute',
                     bottom: 0,
                     right: 0,
-                    background: 'rgba(0,0,0,0.6)',
+                    background: 'rgba(0,0,0,0.8)',
                     color: '#fff',
-                    fontSize: '0.8em',
-                    padding: '1px 5px',
-                    borderRadius: '0 0 6px 0',
+                    fontSize: '0.7em',
+                    padding: '1px 3px',
+                    borderRadius: '0 0 4px 0',
                     pointerEvents: 'none',
                 }}>
                     LV{lv}
@@ -224,7 +219,6 @@ const PickedMs = React.forwardRef(({
     // セーブ＆ロード機能
     const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
     const [savedBuilds, setSavedBuilds] = useState([]);
-    const [saveName, setSaveName] = useState('');
     const [saveError, setSaveError] = useState('');
 
     // 追加: ロード用フラグと一時保存
@@ -354,7 +348,6 @@ const PickedMs = React.forwardRef(({
             // 現在のMSのビルドのみを読み込み
             setSavedBuilds(loadBuildsFromLocal(selectedMs["MS名"]));
             setShowSaveLoadModal(true);
-            setSaveName('');
             setSaveError('');
             
             // デバッグ用：全MS別ビルド数を表示
@@ -362,7 +355,7 @@ const PickedMs = React.forwardRef(({
         }
     };
 
-    // セーブ処理
+    // セーブ処理（名前なし）
     const handleSaveBuild = () => {
         console.log('[handleSaveBuild] 開始');
         console.log('[handleSaveBuild] selectedMs:', selectedMs);
@@ -370,20 +363,6 @@ const PickedMs = React.forwardRef(({
         
         if (!selectedMs) {
             setSaveError('MSが選択されていません');
-            return;
-        }
-        
-        const name = saveName.trim();
-        if (!name) {
-            setSaveError('名前を入力してください');
-            return;
-        }
-        if (name.length > 20) {
-            setSaveError('名前は20文字以内で入力してください');
-            return;
-        }
-        if (savedBuilds.some(b => b.name === name)) {
-            setSaveError('同じ名前のビルドが既に存在します');
             return;
         }
 
@@ -399,16 +378,15 @@ const PickedMs = React.forwardRef(({
             return p.name;
         }) : [];
 
-        // より詳細なビルドデータを作成
+        // より詳細なビルドデータを作成（名前なし）
         const build = {
-            name,
             msName: selectedMs["MS名"],
             parts: partsArray,
             isFullStrengthened: Boolean(isFullStrengthened),
             expansionType: expansionType || 'なし',
             // 追加のメタデータ
             timestamp: new Date().toISOString(),
-            version: '1.4', // バージョン情報を更新
+            version: '1.5', // バージョン情報を更新
             msData: {
                 cost: selectedMs["コスト"],
                 type: selectedMs["属性"]
@@ -421,7 +399,6 @@ const PickedMs = React.forwardRef(({
             const success = saveBuildToLocal(build, selectedMs["MS名"]);
             if (success) {
                 setSavedBuilds(loadBuildsFromLocal(selectedMs["MS名"]));
-                setSaveName('');
                 setSaveError('');
                 console.log('[handleSaveBuild] 保存完了');
             } else {
@@ -707,10 +684,12 @@ const PickedMs = React.forwardRef(({
     ]);
 
     // 削除処理
-    const handleDeleteBuild = (name) => {
+    const handleDeleteBuild = (index) => {
         if (!selectedMs) return;
         
-        const builds = savedBuilds.filter(b => b.name !== name);
+        const builds = [...savedBuilds];
+        builds.splice(index, 1);
+        
         const storageKey = getMsStorageKey(selectedMs["MS名"]);
         
         if (storageKey) {
@@ -974,139 +953,103 @@ const PickedMs = React.forwardRef(({
                 title={null}
                 message={
                     <div>
-                        {/* セーブフォーム */}
-                        <div style={{
-                            marginBottom: 12,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            width: '100%',
-                        }}>
-                            <div style={{ flex: 1 }}>
-                                <input
-                                    type="text"
-                                    value={saveName}
-                                    onChange={e => {
-                                        setSaveName(e.target.value);
-                                        setSaveError('');
-                                    }}
-                                    maxLength={20}
-                                    placeholder="ビルド名（20文字以内）"
-                                    style={{
-                                        padding: '4px 8px',
-                                        fontSize: '1em',
-                                        borderRadius: 4,
-                                        border: '1px solid #888',
-                                        width: '100%',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                    }}
-                                />
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 90 }}>
-                                <button
-                                    onClick={() => {
-                                        console.log('[セーブボタン] クリック時 selectedParts:', selectedParts);
-                                        handleSaveBuild();
-                                    }}
-                                    disabled={!selectedMs || !saveName || saveName.length > 20 || savedBuilds.length >= MAX_SAVED_BUILDS_PER_MS}
-                                    className="hex-badge"
-                                    style={{ height: 32, minWidth: 64, marginBottom: 2 }}
-                                >
-                                    セーブ
-                                </button>
-                                <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95em' }}>
-                                    {savedBuilds.length}/{MAX_SAVED_BUILDS_PER_MS}
-                                </span>
-                            </div>
-                            {saveError && <span style={{ color: 'red', marginLeft: 8 }}>{saveError}</span>}
-                        </div>
                         {/* MS名表示 */}
                         {selectedMs && (
                             <div style={{
                                 textAlign: 'center',
-                                marginBottom: 8,
-                                padding: '4px 8px',
+                                marginBottom: 16,
+                                padding: '8px 12px',
                                 background: '#444',
-                                borderRadius: 4,
+                                borderRadius: 6,
                                 color: '#fff',
-                                fontSize: '0.9em'
+                                fontSize: '1.1em',
+                                fontWeight: 'bold'
                             }}>
-                                📂 {selectedMs["MS名"]} のビルド
+                                📂 {selectedMs["MS名"]} のビルド ({savedBuilds.length}/{MAX_SAVED_BUILDS_PER_MS})
                             </div>
                         )}
-                        {/* ロード一覧 */}
-                        <div>
+                        
+                        {/* ビルド一覧 */}
+                        <div style={{ marginBottom: 16, maxHeight: '400px', overflowY: 'auto' }}>
                             {savedBuilds.map((build, idx) => (
-                                <div key={idx} className="flex items-center mb-2" style={{
+                                <div key={idx} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    marginBottom: 8,
                                     background: '#222',
                                     borderRadius: 8,
-                                    padding: 4,
-                                    minHeight: 48,
-                                    alignItems: 'center',
+                                    padding: 8,
+                                    minHeight: 60,
                                 }}>
                                     {/* MS画像 */}
-                                    <img src={getMsImageSrc(build.msName)} alt={build.msName} style={{
-                                        width: 40,
-                                        height: 40,
-                                        borderRadius: 6,
-                                        marginRight: 8,
-                                        background: '#333',
-                                        objectFit: 'cover',
-                                    }} />
-                                    {/* MS名・ビルド名 */}
+                                    <img 
+                                        src={getMsImageSrc(build.msName)} 
+                                        alt={build.msName} 
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            borderRadius: 6,
+                                            marginRight: 12,
+                                            background: '#333',
+                                            objectFit: 'cover',
+                                        }} 
+                                    />
+                                    
+                                    {/* パーツ画像群（2行4列） */}
                                     <div style={{
-                                        minWidth: 100,
-                                        maxWidth: 120,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'center',
-                                        alignItems: 'flex-start',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(4, 32px)',
+                                        gridTemplateRows: 'repeat(2, 32px)',
+                                        gap: 2,
+                                        marginRight: 12,
+                                        minWidth: 136,
                                     }}>
-                                        <span style={{
-                                            fontWeight: 'bold',
-                                            color: '#fff',
-                                            fontSize: '1.1em',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                        }}>{build.name}</span>
-                                        <span style={{
-                                            color: '#aaa',
-                                            fontSize: '0.8em',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                        }}>
-                                            {build.parts?.length || 0} パーツ
-                                            {build.isFullStrengthened ? ' 完' : ' 零'}
-                                            {build.expansionType && build.expansionType !== 'なし' ? ` ${build.expansionType}` : ''}
-                                        </span>
+                                        {Array.from({ length: 8 }).map((_, i) => {
+                                            const partName = build.parts && build.parts[i];
+                                            return partName ? (
+                                                <RenderPartImage key={i} partName={partName} />
+                                            ) : (
+                                                <div key={i} style={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    background: '#444',
+                                                    borderRadius: 4,
+                                                }} />
+                                            );
+                                        })}
                                     </div>
-                                    {/* パーツ画像群 */}
-                                    <div className="flex gap-1" style={{
-                                        flexWrap: 'wrap',
-                                        minWidth: 160,
-                                        marginLeft: 8,
-                                    }}>
-                                        {build.parts && build.parts.map((partName, i) => (
-                                            <RenderPartImage key={i} partName={partName} />
-                                        ))}
-                                    </div>
-                                    {/* 呼び出し・削除ボタン（縦並び中央） */}
+                                    
+                                    {/* 呼出・削除ボタン（縦並び） */}
                                     <div style={{
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginLeft: 12,
+                                        gap: 4,
+                                        marginLeft: 'auto',
                                     }}>
-                                        <button onClick={() => handleLoadBuild(build)} className="hex-badge" style={{ marginBottom: 4, minWidth: 56, height: 28 }}>呼出</button>
-                                        <button onClick={() => handleDeleteBuild(build.name)} className="hex-badge" style={{ minWidth: 56, height: 28, background: '#a00', color: '#fff' }}>削除</button>
+                                        <button 
+                                            onClick={() => handleLoadBuild(build)} 
+                                            className="hex-badge" 
+                                            style={{ 
+                                                minWidth: 60, 
+                                                height: 28,
+                                                fontSize: '0.9em'
+                                            }}
+                                        >
+                                            呼出
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteBuild(idx)} 
+                                            className="hex-badge" 
+                                            style={{ 
+                                                minWidth: 60, 
+                                                height: 28, 
+                                                background: '#a00', 
+                                                color: '#fff',
+                                                fontSize: '0.9em'
+                                            }}
+                                        >
+                                            削除
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -1114,19 +1057,65 @@ const PickedMs = React.forwardRef(({
                                 <div style={{ 
                                     color: '#fff', 
                                     textAlign: 'center', 
-                                    padding: '20px',
+                                    padding: '40px 20px',
                                     background: '#333',
                                     borderRadius: 8,
-                                    marginTop: 8
+                                    fontSize: '1.1em'
                                 }}>
                                     このMSのセーブデータはまだありません
                                 </div>
                             )}
                         </div>
+                        
+                        {/* 下部ボタン */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: 12,
+                            paddingTop: 12,
+                            borderTop: '1px solid #444'
+                        }}>
+                            <button
+                                onClick={() => setShowSaveLoadModal(false)}
+                                className="hex-badge"
+                                style={{ 
+                                    minWidth: 80, 
+                                    height: 36,
+                                    fontSize: '1em'
+                                }}
+                            >
+                                閉じる
+                            </button>
+                            <button
+                                onClick={handleSaveBuild}
+                                disabled={!selectedMs || savedBuilds.length >= MAX_SAVED_BUILDS_PER_MS}
+                                className="hex-badge"
+                                style={{ 
+                                    minWidth: 80, 
+                                    height: 36,
+                                    fontSize: '1em',
+                                    background: savedBuilds.length >= MAX_SAVED_BUILDS_PER_MS ? '#666' : undefined
+                                }}
+                            >
+                                保存
+                            </button>
+                        </div>
+                        
+                        {/* エラー表示 */}
+                        {saveError && (
+                            <div style={{ 
+                                color: '#ff6b6b', 
+                                textAlign: 'center', 
+                                marginTop: 8,
+                                fontSize: '0.9em'
+                            }}>
+                                {saveError}
+                            </div>
+                        )}
                     </div>
                 }
                 onOk={() => setShowSaveLoadModal(false)}
-                okButtonText="閉じる"
+                okButtonText=""
             />
         </div>
     );
