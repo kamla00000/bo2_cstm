@@ -1,5 +1,5 @@
 import { useFlick } from '../hooks/useFlick';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MSSelector from './MSSelector';
 import StatusDisplay from './StatusDisplay';
@@ -12,13 +12,31 @@ import InfoModal from './InfoModal';
 import { EXPANSION_OPTIONS, EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
 import styles from './PickedMs.module.css';
 
-const MAX_SAVED_BUILDS = 3;
-const LOCAL_KEY = 'gbo2cstm_builds';
+const MAX_SAVED_BUILDS_PER_MS = 10; // MS別の最大保存数を10に変更
+const LOCAL_KEY_PREFIX = 'gbo2cstm_builds_'; // MS別にキーを分ける
 const DEBUG_PARTS_LOADING = true; // デバッグフラグ
 
-function saveBuildToLocal(build) {
+// MS名からストレージキーを生成する関数
+const getMsStorageKey = (msName) => {
+    if (!msName) return null;
+    // MS名を正規化してキーに使用
+    const normalized = msName
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_') // 特殊文字をアンダースコアに変換
+        .replace(/_+/g, '_') // 連続するアンダースコアを1つに
+        .replace(/^_+|_+$/g, ''); // 先頭末尾のアンダースコアを削除
+    return `${LOCAL_KEY_PREFIX}${normalized}`;
+};
+
+function saveBuildToLocal(build, msName) {
     try {
-        let builds = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+        const storageKey = getMsStorageKey(msName);
+        if (!storageKey) {
+            console.error('[saveBuildToLocal] 無効なMS名:', msName);
+            return false;
+        }
+
+        let builds = JSON.parse(localStorage.getItem(storageKey) || '[]');
         
         // 既存の同名ビルドを削除
         builds = builds.filter(b => b.name !== build.name);
@@ -26,15 +44,18 @@ function saveBuildToLocal(build) {
         // 新しいビルドを先頭に追加
         builds.unshift(build);
         
-        // 最大数を超えた場合は古いものを削除
-        if (builds.length > MAX_SAVED_BUILDS) {
-            builds = builds.slice(0, MAX_SAVED_BUILDS);
+        // MS別の最大数を超えた場合は古いものを削除
+        if (builds.length > MAX_SAVED_BUILDS_PER_MS) {
+            builds = builds.slice(0, MAX_SAVED_BUILDS_PER_MS);
         }
         
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(builds));
+        localStorage.setItem(storageKey, JSON.stringify(builds));
         console.log('[saveBuildToLocal] 保存成功:', {
+            msName: msName,
+            storageKey: storageKey,
             buildName: build.name,
             totalBuilds: builds.length,
+            maxBuilds: MAX_SAVED_BUILDS_PER_MS,
             partsCount: build.parts?.length || 0,
             parts: build.parts
         });
@@ -46,11 +67,20 @@ function saveBuildToLocal(build) {
     }
 }
 
-function loadBuildsFromLocal() {
+function loadBuildsFromLocal(msName) {
     try {
-        const builds = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+        const storageKey = getMsStorageKey(msName);
+        if (!storageKey) {
+            console.error('[loadBuildsFromLocal] 無効なMS名:', msName);
+            return [];
+        }
+
+        const builds = JSON.parse(localStorage.getItem(storageKey) || '[]');
         console.log('[loadBuildsFromLocal] ロード成功:', {
+            msName: msName,
+            storageKey: storageKey,
             totalBuilds: builds.length,
+            maxBuilds: MAX_SAVED_BUILDS_PER_MS,
             builds: builds.map(b => ({ 
                 name: b.name, 
                 partsCount: b.parts?.length || 0,
@@ -61,6 +91,31 @@ function loadBuildsFromLocal() {
     } catch (error) {
         console.error('[loadBuildsFromLocal] ロード失敗:', error);
         return [];
+    }
+}
+
+// 全MSのビルド数を取得する関数（デバッグ用）
+function getAllBuildsCount() {
+    try {
+        let totalCount = 0;
+        const msBuilds = {};
+        
+        // localStorageの全キーをチェック
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(LOCAL_KEY_PREFIX)) {
+                const msKey = key.replace(LOCAL_KEY_PREFIX, '');
+                const builds = JSON.parse(localStorage.getItem(key) || '[]');
+                msBuilds[msKey] = builds.length;
+                totalCount += builds.length;
+            }
+        }
+        
+        console.log('[getAllBuildsCount] 全ビルド数:', { totalCount, msBuilds });
+        return { totalCount, msBuilds };
+    } catch (error) {
+        console.error('[getAllBuildsCount] エラー:', error);
+        return { totalCount: 0, msBuilds: {} };
     }
 }
 
@@ -125,8 +180,6 @@ const PickedMs = React.forwardRef(({
     selectedPreviewPart,
     isFullStrengthened,
     expansionType,
-    expansionOptions,
-    expansionDescriptions,
     currentStats,
     slotUsage,
     usageWithPreview,
@@ -152,12 +205,11 @@ const PickedMs = React.forwardRef(({
     bgVideo,
     videoRef,
     handleBuildShare,
-    // 新しく追加されたURL復元用プロパティ
-    urlBuildData = null,
-    onUrlRestoreComplete = null,
-    // localStorage復元用プロパティ（既存）
-    onLoadStart = null,
-    onLoadEnd = null
+    pendingRestoreParts,
+    setPendingRestoreParts,
+    setPartsRestored,
+    urlBuildData,
+    onUrlRestoreComplete,
 }, ref) => {
     const navigate = useNavigate();
 
@@ -175,29 +227,13 @@ const PickedMs = React.forwardRef(({
     const [saveName, setSaveName] = useState('');
     const [saveError, setSaveError] = useState('');
 
-    // localStorage復元用のパーツ管理（App.jsと完全に分離）
+    // 追加: ロード用フラグと一時保存
     const [pendingLoadParts, setPendingLoadParts] = useState(null);
-    const [loadingStatus, setLoadingStatus] = useState('');
-
-    // パーツ名正規化関数（URL復元とlocalStorage復元の両方で使用）
-    const normalizePartName = (name) => {
-        if (!name) return '';
-        return String(name)
-            .trim()
-            .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // 全角英数→半角
-            .replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)) // 全角記号→半角
-            .replace(/[ΖＺZｚ]/g, 'z')
-            .replace(/[νｖV]/g, 'v')
-            .replace(/[αａA]/g, 'a')
-            .replace(/[βｂB]/g, 'b')
-            .replace(/[［\[]/g, '[').replace(/[］\]]/g, ']')
-            .replace(/【/g, '[').replace(/】/g, ']')
-            .replace(/_lv(\d+)/gi, (_, lv) => `_lv${lv}`) // _LV1→_lv1
-            .replace(/[ＬＶ]/gi, 'lv')
-            .replace(/[\s　]+/g, '')
-            .normalize('NFKC')
-            .toLowerCase();
-    };
+    const [loadingStatus, setLoadingStatus] = useState(''); // ロード状況表示用
+    
+    // パーツ復元処理の重複実行防止用フラグ
+    const [isRestoring, setIsRestoring] = useState(false);
+    const restorationInProgressRef = useRef(false);
 
     // MSリストの絞り込み
     const filteredMsData = msData
@@ -218,107 +254,6 @@ const PickedMs = React.forwardRef(({
             return typeMatch && costMatch && lvMatch;
         })
         : [];
-
-    // 共通のパーツ復元処理
-    // ...existing code...
-
-// 共通のパーツ復元処理の修正
-const restoreParts = async (partsData, source = 'unknown') => {
-    console.log(`${source}からパーツ復元開始:`, partsData);
-    
-    if (!selectedMs || !allPartsCache || !partsData) {
-        console.log('復元に必要なデータが不足');
-        return false;
-    }
-
-    setLoadingStatus(`${source}復元中...`);
-    if (onLoadStart) onLoadStart();
-
-    try {
-        let restoredCount = 0;
-        const allPartsFlat = Object.values(allPartsCache).flat();
-        
-        // 配列形式（URL復元とlocalStorage復元の両方）として処理
-        const partsToRestore = Array.isArray(partsData) ? partsData : [];
-        
-        console.log(`${source}: 復元対象パーツ数:`, partsToRestore.length);
-        console.log(`${source}: 復元対象パーツ一覧:`, partsToRestore);
-        console.log(`${source}: 利用可能パーツ総数:`, allPartsFlat.length);
-
-        for (let i = 0; i < partsToRestore.length; i++) {
-            const partName = partsToRestore[i];
-            if (!partName || partName === 'なし') continue;
-
-            console.log(`${source}: ${i + 1}/${partsToRestore.length} "${partName}"を検索中...`);
-            
-            const normalizedPartName = normalizePartName(partName);
-            let foundPart = null;
-
-            // パーツ検索（正規化名で比較）
-            foundPart = allPartsFlat.find(part => {
-                const normalizedCacheName = normalizePartName(part.name);
-                const match = normalizedCacheName === normalizedPartName;
-                if (match) {
-                    console.log(`${source}: マッチ発見 "${part.name}" (正規化: "${normalizedCacheName}")`);
-                }
-                return match;
-            });
-
-            if (foundPart) {
-                console.log(`${source}: ${foundPart.name}を装備`);
-                try {
-                    await new Promise(resolve => {
-                        handlePartSelect(foundPart);
-                        setTimeout(resolve, 150); // 少し長めの間隔
-                    });
-                    restoredCount++;
-                    console.log(`${source}: 装備成功 (${restoredCount}/${partsToRestore.length})`);
-                } catch (selectError) {
-                    console.error(`${source}: パーツ装備エラー:`, selectError);
-                }
-            } else {
-                console.warn(`${source}: ${partName}が見つかりませんでした (正規化: "${normalizedPartName}")`);
-                // デバッグ用：類似パーツを検索
-                const similarParts = allPartsFlat.filter(part => 
-                    normalizePartName(part.name).includes(normalizedPartName.substring(0, 5))
-                ).slice(0, 3);
-                if (similarParts.length > 0) {
-                    console.log(`${source}: 類似パーツ候補:`, similarParts.map(p => p.name));
-                }
-            }
-        }
-
-        console.log(`${source}復元完了: ${restoredCount}/${partsToRestore.length}`);
-        return restoredCount === partsToRestore.length;
-    } catch (error) {
-        console.error(`${source}復元エラー:`, error);
-        return false;
-    } finally {
-        setLoadingStatus('');
-        if (onLoadEnd) onLoadEnd();
-    }
-};
-
-// ...existing code...
-
-    // URL復元用のuseEffect（新規追加）
-    useEffect(() => {
-        if (urlBuildData && selectedMs && allPartsCache) {
-            console.log('URL復元処理開始');
-            
-            const performUrlRestore = async () => {
-                const success = await restoreParts(urlBuildData, 'URL');
-                
-                if (onUrlRestoreComplete) {
-                    onUrlRestoreComplete(success);
-                }
-            };
-
-            // 少し遅延を入れてMS選択後に実行
-            const timer = setTimeout(performUrlRestore, 300);
-            return () => clearTimeout(timer);
-        }
-    }, [urlBuildData, selectedMs, allPartsCache]);
 
     // アニメーション付きで右カラムを表示
     const showRightColumnWithAnimation = () => {
@@ -380,7 +315,6 @@ const restoreParts = async (partsData, source = 'unknown') => {
             }
         }
     );
-
     const baseName = selectedMs
         ? selectedMs["MS名"]
             .replace(/_LV\d+$/, '')
@@ -416,10 +350,16 @@ const restoreParts = async (partsData, source = 'unknown') => {
 
     // セーブ/ロードボタン
     const handleShowSaveLoadModal = () => {
-        setSavedBuilds(loadBuildsFromLocal());
-        setShowSaveLoadModal(true);
-        setSaveName('');
-        setSaveError('');
+        if (selectedMs) {
+            // 現在のMSのビルドのみを読み込み
+            setSavedBuilds(loadBuildsFromLocal(selectedMs["MS名"]));
+            setShowSaveLoadModal(true);
+            setSaveName('');
+            setSaveError('');
+            
+            // デバッグ用：全MS別ビルド数を表示
+            getAllBuildsCount();
+        }
     };
 
     // セーブ処理
@@ -427,10 +367,6 @@ const restoreParts = async (partsData, source = 'unknown') => {
         console.log('[handleSaveBuild] 開始');
         console.log('[handleSaveBuild] selectedMs:', selectedMs);
         console.log('[handleSaveBuild] selectedParts:', selectedParts);
-        console.log('[handleSaveBuild] selectedParts.length:', selectedParts?.length || 0);
-        console.log('[handleSaveBuild] selectedParts.map(p => p.name):', selectedParts?.map(p => p.name) || []);
-        console.log('[handleSaveBuild] isFullStrengthened:', isFullStrengthened);
-        console.log('[handleSaveBuild] expansionType:', expansionType);
         
         if (!selectedMs) {
             setSaveError('MSが選択されていません');
@@ -451,6 +387,12 @@ const restoreParts = async (partsData, source = 'unknown') => {
             return;
         }
 
+        // MS別の最大保存数をチェック
+        if (savedBuilds.length >= MAX_SAVED_BUILDS_PER_MS) {
+            setSaveError(`このMSのビルド保存上限（${MAX_SAVED_BUILDS_PER_MS}個）に達しています`);
+            return;
+        }
+
         // パーツ名配列を作成（詳細なログ付き）
         const partsArray = selectedParts ? selectedParts.map(p => {
             console.log('[handleSaveBuild] パーツ処理:', { original: p, name: p.name });
@@ -466,7 +408,7 @@ const restoreParts = async (partsData, source = 'unknown') => {
             expansionType: expansionType || 'なし',
             // 追加のメタデータ
             timestamp: new Date().toISOString(),
-            version: '1.2', // バージョン情報を更新
+            version: '1.4', // バージョン情報を更新
             msData: {
                 cost: selectedMs["コスト"],
                 type: selectedMs["属性"]
@@ -476,9 +418,9 @@ const restoreParts = async (partsData, source = 'unknown') => {
         console.log('[handleSaveBuild] 保存するビルド:', JSON.stringify(build, null, 2));
         
         try {
-            const success = saveBuildToLocal(build);
+            const success = saveBuildToLocal(build, selectedMs["MS名"]);
             if (success) {
-                setSavedBuilds(loadBuildsFromLocal());
+                setSavedBuilds(loadBuildsFromLocal(selectedMs["MS名"]));
                 setSaveName('');
                 setSaveError('');
                 console.log('[handleSaveBuild] 保存完了');
@@ -520,10 +462,10 @@ const restoreParts = async (partsData, source = 'unknown') => {
             setLoadingStatus('MSを選択中...');
             handleMsSelect(foundMs);
 
-            // 4. MS選択後にフル強化状態を設定
+            // 4. フル強化状態を設定
             setTimeout(() => {
                 console.log('[handleLoadBuild] フル強化設定:', build.isFullStrengthened);
-                setLoadingStatus('フル強化設定中...');
+                setLoadingStatus('設定を復元中...');
                 setIsFullStrengthened(build.isFullStrengthened || false);
 
                 // 5. 拡張タイプを設定
@@ -541,6 +483,14 @@ const restoreParts = async (partsData, source = 'unknown') => {
                         console.log('[handleLoadBuild] 復元対象パーツ一覧:', partsToRestore);
                         
                         setPendingLoadParts(partsToRestore);
+                        
+                        // App側のpendingRestorePartsにもセット
+                        if (typeof setPendingRestoreParts === 'function') {
+                            setPendingRestoreParts(partsToRestore);
+                        }
+                        if (typeof setPartsRestored === 'function') {
+                            setPartsRestored(false);
+                        }
                     }, 200);
                 }, 200);
             }, 200);
@@ -549,74 +499,229 @@ const restoreParts = async (partsData, source = 'unknown') => {
         setShowSaveLoadModal(false);
     };
 
-    // localStorage復元用のuseEffect（App.jsとは完全に独立）
-    useEffect(() => {
-        if (DEBUG_PARTS_LOADING) {
-            console.log('[useEffect] ===== localStorage パーツ復元チェック =====');
-            console.log('[useEffect] pendingLoadParts:', pendingLoadParts);
-            console.log('[useEffect] pendingLoadParts.length:', pendingLoadParts?.length || 0);
-            console.log('[useEffect] selectedMs:', selectedMs?.["MS名"]);
-            console.log('[useEffect] allPartsCache存在:', !!allPartsCache);
-            console.log('[useEffect] allPartsCacheKeys:', allPartsCache ? Object.keys(allPartsCache) : []);
-            console.log('[useEffect] allPartsCacheLength:', allPartsCache ? Object.values(allPartsCache).flat().length : 0);
-            console.log('[useEffect] handlePartSelectType:', typeof handlePartSelect);
-            console.log('[useEffect] 現在のselectedParts数:', selectedParts?.length || 0);
-        }
-
-        // URL復元処理との競合を避けるため、URLパラメータをチェック
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasUrlParts = urlParams.get('parts') && urlParams.get('parts').length > 0;
+    // パーツ復元の統一処理関数
+    const restorePartsSequentially = async (partsToRestore, source = 'unknown') => {
+        console.log(`[restorePartsSequentially] ===== パーツ復元開始 (${source}) =====`);
         
-        if (hasUrlParts) {
-            console.log('[useEffect] URL復元が優先されるため、localStorage復元をスキップ');
+        // refを使った重複実行防止
+        if (restorationInProgressRef.current) {
+            console.log('[restorePartsSequentially] 既に復元処理中のためスキップ');
             return;
         }
 
-        // pendingLoadPartsのみを処理（localStorage復元専用）
-        if (pendingLoadParts && 
-            pendingLoadParts.length > 0 && 
-            selectedMs && 
-            allPartsCache && 
-            Object.keys(allPartsCache).length > 0 && 
-            typeof handlePartSelect === 'function') {
-            
-            console.log('[useEffect] ===== localStorage内パーツ復元開始 =====');
-            
-            // 重複実行を防ぐため、復元実行前に状態を即座にクリア
-            const currentRestoreParts = [...pendingLoadParts];
-            setPendingLoadParts(null);
+        if (!partsToRestore || partsToRestore.length === 0) {
+            console.log('[restorePartsSequentially] 復元するパーツがありません');
+            return;
+        }
 
-            // 配列形式でrestorePartsを呼び出し
-            restoreParts(currentRestoreParts, 'localStorage').then(success => {
-                console.log('[useEffect] localStorage復元結果:', success);
-            }).catch(error => {
-                console.error('[useEffect] localStorage復元処理でエラー:', error);
-                setLoadingStatus('');
-            });
-        } else {
-            if (DEBUG_PARTS_LOADING && pendingLoadParts && pendingLoadParts.length > 0) {
-                console.log('[useEffect] localStorage復元条件未満:');
-                console.log('  - pendingLoadParts:', !!pendingLoadParts, pendingLoadParts?.length);
-                console.log('  - selectedMs:', !!selectedMs);
-                console.log('  - allPartsCache:', !!allPartsCache);
-                console.log('  - handlePartSelect:', typeof handlePartSelect);
+        restorationInProgressRef.current = true;
+        setIsRestoring(true);
+        setLoadingStatus('パーツを復元中...');
+
+        try {
+            const allPartsFlat = Object.values(allPartsCache).flat();
+            console.log('[restorePartsSequentially] 利用可能パーツ総数:', allPartsFlat.length);
+            console.log('[restorePartsSequentially] 利用可能パーツ一覧（最初の10個）:', allPartsFlat.slice(0, 10).map(p => p.name));
+            
+            let successCount = 0;
+            let failedParts = [];
+            let processedParts = [];
+
+            for (let index = 0; index < partsToRestore.length; index++) {
+                const partName = partsToRestore[index];
+                
+                console.log(`[restorePartsSequentially] パーツ検索 ${index + 1}/${partsToRestore.length}: "${partName}"`);
+                
+                // より柔軟なパーツ検索
+                let foundPart = null;
+                
+                // 1. 完全一致
+                foundPart = allPartsFlat.find(p => p.name === partName);
+                if (foundPart) {
+                    console.log(`[restorePartsSequentially] 完全一致で発見: "${foundPart.name}"`);
+                }
+                
+                // 2. トリム後の完全一致
+                if (!foundPart) {
+                    foundPart = allPartsFlat.find(p => p.name.trim() === partName.trim());
+                    if (foundPart) {
+                        console.log(`[restorePartsSequentially] トリム一致で発見: "${foundPart.name}"`);
+                    }
+                }
+                
+                // 3. 大文字小文字を無視した一致
+                if (!foundPart) {
+                    foundPart = allPartsFlat.find(p => p.name.toLowerCase() === partName.toLowerCase());
+                    if (foundPart) {
+                        console.log(`[restorePartsSequentially] 大文字小文字無視一致で発見: "${foundPart.name}"`);
+                    }
+                }
+                
+                // 4. トリム+大文字小文字無視
+                if (!foundPart) {
+                    foundPart = allPartsFlat.find(p => p.name.trim().toLowerCase() === partName.trim().toLowerCase());
+                    if (foundPart) {
+                        console.log(`[restorePartsSequentially] トリム+大文字小文字無視一致で発見: "${foundPart.name}"`);
+                    }
+                }
+                
+                // 5. 部分一致（前方一致）
+                if (!foundPart) {
+                    foundPart = allPartsFlat.find(p => p.name.startsWith(partName) || partName.startsWith(p.name));
+                    if (foundPart) {
+                        console.log(`[restorePartsSequentially] 前方一致で発見: "${foundPart.name}"`);
+                    }
+                }
+                
+                // 6. 部分一致（包含）
+                if (!foundPart) {
+                    foundPart = allPartsFlat.find(p => p.name.includes(partName) || partName.includes(p.name));
+                    if (foundPart) {
+                        console.log(`[restorePartsSequentially] 包含一致で発見: "${foundPart.name}"`);
+                    }
+                }
+
+                if (foundPart) {
+                    try {
+                        console.log(`[restorePartsSequentially] パーツ装備実行: "${foundPart.name}"`);
+                        handlePartSelect(foundPart);
+                        successCount++;
+                        processedParts.push({ original: partName, found: foundPart.name, status: 'success' });
+                        
+                        // 装備処理の間隔を少し空ける
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    } catch (error) {
+                        console.error(`[restorePartsSequentially] パーツ装備エラー: "${foundPart.name}"`, error);
+                        failedParts.push({ original: partName, error: error.message });
+                        processedParts.push({ original: partName, found: foundPart.name, status: 'error', error: error.message });
+                    }
+                } else {
+                    console.warn(`[restorePartsSequentially] パーツ未発見: "${partName}"`);
+                    
+                    // 類似パーツを検索してログに出力
+                    const similarParts = allPartsFlat.filter(p => {
+                        const similarity = partName.toLowerCase().split('').filter(char => 
+                            p.name.toLowerCase().includes(char)
+                        ).length / partName.length;
+                        return similarity > 0.5;
+                    }).slice(0, 3);
+                    
+                    if (similarParts.length > 0) {
+                        console.log(`[restorePartsSequentially] 類似パーツ候補:`, similarParts.map(p => p.name));
+                    }
+                    
+                    failedParts.push({ original: partName, error: 'not found' });
+                    processedParts.push({ original: partName, status: 'not_found' });
+                }
             }
+            
+            // 復元完了処理
+            console.log('[restorePartsSequentially] ===== パーツ復元完了 =====');
+            console.log(`[restorePartsSequentially] 成功: ${successCount}/${partsToRestore.length}`);
+            console.log('[restorePartsSequentially] 処理詳細:', processedParts);
+            
+            if (failedParts.length > 0) {
+                console.warn('[restorePartsSequentially] 復元に失敗したパーツ:', failedParts);
+                
+                const failedNames = failedParts.map(f => f.original);
+                if (failedParts.length < partsToRestore.length) {
+                    console.warn(`一部のパーツ (${failedParts.length}個) が見つかりませんでした:`, failedNames);
+                } else {
+                    console.error('すべてのパーツが見つかりませんでした。データが古い可能性があります。');
+                }
+            }
+            
+        } catch (error) {
+            console.error('[restorePartsSequentially] パーツ復元処理でエラー:', error);
+        } finally {
+            // クリーンアップ（確実に実行される）
+            console.log('[restorePartsSequentially] クリーンアップ開始');
+            restorationInProgressRef.current = false;
+            setIsRestoring(false);
+            setPendingLoadParts(null);
+            if (typeof setPendingRestoreParts === 'function') {
+                setPendingRestoreParts(null);
+            }
+            if (typeof setPartsRestored === 'function') {
+                setPartsRestored(true);
+            }
+            if (typeof onUrlRestoreComplete === 'function') {
+                onUrlRestoreComplete();
+            }
+            setLoadingStatus('');
+            console.log('[restorePartsSequentially] ===== パーツ復元処理終了 =====');
         }
-    }, [selectedMs, allPartsCache, handlePartSelect, pendingLoadParts]);
+    };
 
-    // pendingLoadPartsの変更を監視する別のuseEffect
+    // 統一された復元処理のuseEffect
     useEffect(() => {
-        if (pendingLoadParts && pendingLoadParts.length > 0) {
-            console.log('[useEffect] localStorage復元パーツが設定されました:', pendingLoadParts.length, '個');
+        if (DEBUG_PARTS_LOADING) {
+            console.log('[useEffect Unified] ===== 統一復元チェック =====');
+            console.log('[useEffect Unified] urlBuildData:', urlBuildData);
+            console.log('[useEffect Unified] pendingRestoreParts:', pendingRestoreParts);
+            console.log('[useEffect Unified] pendingLoadParts:', pendingLoadParts);
+            console.log('[useEffect Unified] selectedMs:', selectedMs?.["MS名"]);
+            console.log('[useEffect Unified] allPartsCache存在:', !!allPartsCache);
+            console.log('[useEffect Unified] allPartsCacheKeys:', allPartsCache ? Object.keys(allPartsCache).length : 0);
+            console.log('[useEffect Unified] handlePartSelectType:', typeof handlePartSelect);
+            console.log('[useEffect Unified] restorationInProgress:', restorationInProgressRef.current);
         }
-    }, [pendingLoadParts]);
+
+        // 復元が必要な条件をチェック
+        if (!selectedMs || 
+            !allPartsCache || 
+            Object.keys(allPartsCache).length === 0 || 
+            typeof handlePartSelect !== 'function' ||
+            restorationInProgressRef.current) {
+            return;
+        }
+
+        // URL復元を優先
+        if (urlBuildData && urlBuildData.length > 0) {
+            console.log('[useEffect Unified] URL復元を実行:', urlBuildData);
+            restorePartsSequentially(urlBuildData, 'URL');
+            return;
+        }
+
+        // 次にApp側のpendingRestorePartsをチェック
+        if (pendingRestoreParts && pendingRestoreParts.length > 0) {
+            console.log('[useEffect Unified] App側復元を実行:', pendingRestoreParts);
+            restorePartsSequentially(pendingRestoreParts, 'App');
+            return;
+        }
+
+        // 最後にローカルのpendingLoadPartsをチェック
+        if (pendingLoadParts && pendingLoadParts.length > 0) {
+            console.log('[useEffect Unified] ローカル復元を実行:', pendingLoadParts);
+            restorePartsSequentially(pendingLoadParts, 'Local');
+            return;
+        }
+
+    }, [
+        urlBuildData, 
+        pendingRestoreParts, 
+        pendingLoadParts, 
+        selectedMs, 
+        allPartsCache, 
+        handlePartSelect
+    ]);
 
     // 削除処理
     const handleDeleteBuild = (name) => {
+        if (!selectedMs) return;
+        
         const builds = savedBuilds.filter(b => b.name !== name);
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(builds));
-        setSavedBuilds(builds);
-        console.log('[handleDeleteBuild] 削除後:', builds);
+        const storageKey = getMsStorageKey(selectedMs["MS名"]);
+        
+        if (storageKey) {
+            localStorage.setItem(storageKey, JSON.stringify(builds));
+            setSavedBuilds(builds);
+            console.log('[handleDeleteBuild] 削除後:', {
+                msName: selectedMs["MS名"],
+                storageKey: storageKey,
+                remainingBuilds: builds.length
+            });
+        }
     };
 
     // MS画像取得
@@ -757,9 +862,9 @@ const restoreParts = async (partsData, source = 'unknown') => {
                                     </span>
                                 </button>
                                 {/* セーブ/ロードボタン（アイコンのみ） */}
-                                {/* <button onClick={handleShowSaveLoadModal} className="w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition" style={{ zIndex: 2, borderRadius: 0 }} title="セーブ/ロード">
+                                <button onClick={handleShowSaveLoadModal} className="w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition" style={{ zIndex: 2, borderRadius: 0 }} title="セーブ/ロード">
                                     {SaveLoadIcon}
-                                </button> */}
+                                </button>
                                 {/* ビルド共有ボタン */}
                                 {selectedMs && (
                                     <button
@@ -778,7 +883,7 @@ const restoreParts = async (partsData, source = 'unknown') => {
                                 <a
                                     href="https://x.com/GBO2CSTM"
                                     className={styles.xIcon + " w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition"}
-                                    style={{ zIndex: 2, borderRadius: 0 }}
+                    style={{ zIndex: 2, borderRadius: 0 }}
                                     aria-label="Xでシェア" target="_blank"
                                 >
                                     <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
@@ -796,8 +901,8 @@ const restoreParts = async (partsData, source = 'unknown') => {
                                 setIsFullStrengthened={setIsFullStrengthened}
                                 expansionType={expansionType}
                                 setExpansionType={setExpansionType}
-                                expansionOptions={expansionOptions}
-                                expansionDescriptions={expansionDescriptions}
+                                expansionOptions={EXPANSION_OPTIONS}
+                                expansionDescriptions={EXPANSION_DESCRIPTIONS}
                                 getTypeColor={getTypeColor}
                                 onMsImageClick={handleOpenSelector}
                                 msData={msData}
@@ -905,18 +1010,32 @@ const restoreParts = async (partsData, source = 'unknown') => {
                                         console.log('[セーブボタン] クリック時 selectedParts:', selectedParts);
                                         handleSaveBuild();
                                     }}
-                                    disabled={!selectedMs || !saveName || saveName.length > 20 || savedBuilds.length >= MAX_SAVED_BUILDS}
+                                    disabled={!selectedMs || !saveName || saveName.length > 20 || savedBuilds.length >= MAX_SAVED_BUILDS_PER_MS}
                                     className="hex-badge"
                                     style={{ height: 32, minWidth: 64, marginBottom: 2 }}
                                 >
                                     セーブ
                                 </button>
                                 <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95em' }}>
-                                    {savedBuilds.length}/{MAX_SAVED_BUILDS}
+                                    {savedBuilds.length}/{MAX_SAVED_BUILDS_PER_MS}
                                 </span>
                             </div>
                             {saveError && <span style={{ color: 'red', marginLeft: 8 }}>{saveError}</span>}
                         </div>
+                        {/* MS名表示 */}
+                        {selectedMs && (
+                            <div style={{
+                                textAlign: 'center',
+                                marginBottom: 8,
+                                padding: '4px 8px',
+                                background: '#444',
+                                borderRadius: 4,
+                                color: '#fff',
+                                fontSize: '0.9em'
+                            }}>
+                                📂 {selectedMs["MS名"]} のビルド
+                            </div>
+                        )}
                         {/* ロード一覧 */}
                         <div>
                             {savedBuilds.map((build, idx) => (
@@ -958,11 +1077,15 @@ const restoreParts = async (partsData, source = 'unknown') => {
                                         }}>{build.name}</span>
                                         <span style={{
                                             color: '#aaa',
-                                            fontSize: '0.95em',
+                                            fontSize: '0.8em',
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
-                                        }}>{build.msName}</span>
+                                        }}>
+                                            {build.parts?.length || 0} パーツ
+                                            {build.isFullStrengthened ? ' 完' : ' 零'}
+                                            {build.expansionType && build.expansionType !== 'なし' ? ` ${build.expansionType}` : ''}
+                                        </span>
                                     </div>
                                     {/* パーツ画像群 */}
                                     <div className="flex gap-1" style={{
@@ -987,7 +1110,18 @@ const restoreParts = async (partsData, source = 'unknown') => {
                                     </div>
                                 </div>
                             ))}
-                            {savedBuilds.length === 0 && <div style={{ color: '#fff' }}>保存データなし</div>}
+                            {savedBuilds.length === 0 && (
+                                <div style={{ 
+                                    color: '#fff', 
+                                    textAlign: 'center', 
+                                    padding: '20px',
+                                    background: '#333',
+                                    borderRadius: 8,
+                                    marginTop: 8
+                                }}>
+                                    このMSのセーブデータはまだありません
+                                </div>
+                            )}
                         </div>
                     </div>
                 }
