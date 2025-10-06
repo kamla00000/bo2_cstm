@@ -19,10 +19,10 @@
   text-align: center;
   width: 200px;
   box-sizing: border-box;
-}
-
-.loadingSpinnerContainer {
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .loadingSpinner {
@@ -32,7 +32,12 @@
   border-top-color: transparent;
   border-radius: 50%;
   animation: loadingSpinner 1s linear infinite;
-  margin: 0 auto;
+  display: block;
+}
+
+.loadingOverlay p {
+  margin: 0;
+  font-size: 14px;
 }
 
 .previewDescription,h3 {
@@ -609,6 +614,7 @@ span{
     gap: 24px !important;
     align-items: stretch !important;
   }
+  /* これが原因 */
   .pickedmsMainContainer > div {
     width: 100% !important;
     max-width: none !important;

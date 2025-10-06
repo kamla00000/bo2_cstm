@@ -222,13 +222,13 @@ const PickedMs = React.forwardRef(({
     const handleSaveBuild = () => {
         if (!selectedMs) {
             setSaveError('MSが選択されていません');
-            return;
+            return false;
         }
 
         // MS別の最大保存数をチェック
         if (savedBuilds.length >= MAX_SAVED_BUILDS_PER_MS) {
             setSaveError(`このMSのビルド保存上限（${MAX_SAVED_BUILDS_PER_MS}個）に達しています`);
-            return;
+            return false;
         }
 
         try {
@@ -239,12 +239,15 @@ const PickedMs = React.forwardRef(({
                 setSavedBuilds(loadBuildsFromLocal(selectedMs["MS名"]));
                 setSaveError('');
                 console.log('[handleSaveBuild] 保存完了');
+                return true;
             } else {
                 setSaveError('保存に失敗しました');
+                return false;
             }
         } catch (error) {
             console.error('[handleSaveBuild] 保存エラー:', error);
             setSaveError('保存に失敗しました');
+            return false;
         }
     };
 
@@ -443,7 +446,7 @@ const PickedMs = React.forwardRef(({
 
     // アイコンSVG（コピーアイコンと同じシリーズ）
     const SaveLoadIcon = (
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff9100" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <rect width="14" height="14" x="5" y="5" rx="2" ry="2"/>
             <path d="M12 9v6M9 12h6"/>
         </svg>
@@ -463,12 +466,10 @@ const PickedMs = React.forwardRef(({
         >
             {/* ロード状況表示 */}
             {loadingStatus && (
-                <div className={styles.loadingOverlay}>
-                    <div className={styles.loadingSpinnerContainer}>
-                        <div className={styles.loadingSpinner}></div>
-                    </div>
-                    <div>{loadingStatus}</div>
-                </div>
+                <section className={styles.loadingOverlay}>
+                    <span className={styles.loadingSpinner}></span>
+                    <p>{loadingStatus}</p>
+                </section>
             )}
             
             {/* 左側のカラム */}
@@ -556,9 +557,9 @@ const PickedMs = React.forwardRef(({
                                     </span>
                                 </button>
                                 {/* セーブ/ロードボタン（アイコンのみ） */}
-                                {/* <button onClick={handleShowSaveLoadModal} className="w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition" style={{ zIndex: 2, borderRadius: 0 }} title="セーブ/ロード">
+                                <button onClick={handleShowSaveLoadModal} className="w-16 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-600 shadow transition" style={{ zIndex: 2, borderRadius: 0 }} title="セーブ/ロード">
                                     {SaveLoadIcon}
-                                </button> */}
+                                </button>
                                 {/* ビルド共有ボタン */}
                                 {selectedMs && (
                                     <button
@@ -670,8 +671,20 @@ const PickedMs = React.forwardRef(({
                 saveError={saveError}
                 onClose={() => setShowSaveLoadModal(false)}
                 onSave={handleSaveBuild}
+                onSaveComplete={() => {
+                    if (selectedMs) {
+                        const updatedBuilds = loadBuildsFromLocal(selectedMs["MS名"]);
+                        setSavedBuilds(updatedBuilds);
+                    }
+                }}
                 onLoad={handleLoadBuild}
                 onDelete={handleDeleteBuild}
+                msData={msData}
+                partsData={allPartsCache}
+                fullStrengtheningData={undefined}
+                currentParts={selectedParts}
+                isCurrentFullStrengthened={isFullStrengthened}
+                currentExpansionType={expansionType}
             />
         </div>
     );

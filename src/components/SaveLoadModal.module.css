@@ -1,0 +1,280 @@
+/* SaveLoadModal用CSS */
+
+/* アニメーション定義 */
+@keyframes pulse {
+    0%, 100% { 
+        box-shadow: 0 0 8px 4px rgba(255, 145, 0, 0.15), 
+                    0 0 15px 6px rgba(255, 145, 0, 0.08), 
+                    0 0 20px 8px rgba(255, 145, 0, 0.04),
+                    -3px 0 8px 2px rgba(255, 145, 0, 0.1),
+                    3px 0 8px 2px rgba(255, 145, 0, 0.1),
+                    0 -3px 8px 2px rgba(255, 145, 0, 0.1),
+                    0 3px 8px 2px rgba(255, 145, 0, 0.1),
+                    inset 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    50% { 
+        box-shadow: 0 0 12px 6px rgba(255, 145, 0, 0.25), 
+                    0 0 20px 8px rgba(255, 145, 0, 0.15), 
+                    0 0 30px 12px rgba(255, 145, 0, 0.08),
+                    -4px 0 12px 3px rgba(255, 145, 0, 0.18),
+                    4px 0 12px 3px rgba(255, 145, 0, 0.18),
+                    0 -4px 12px 3px rgba(255, 145, 0, 0.18),
+                    0 4px 12px 3px rgba(255, 145, 0, 0.18),
+                    inset 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* ビルド一覧ウィンドウ用CSS */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.container {
+    width: fit-content;
+    min-width: 800px;
+    max-width: 90vw;
+    max-height: 80vh;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 24px 60px;
+    color: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 12px;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+.title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.5em;
+}
+
+.slotUsage {
+    color: #ff9100;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.slotUsageFull {
+    color: #ff4444;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.content {
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    padding-right: 8px;
+}
+
+.previewWrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding-top: 20px;
+    padding-bottom: 10px;
+}
+
+.buildWrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.preview {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(255, 145, 0, 0.25) 0%, rgba(255, 165, 50, 0.15) 100%);
+    border-radius: 12px;
+    padding: 16px;
+    border: 2px solid #ff9100;
+    position: relative;
+    box-shadow: 0 0 20px rgba(255, 145, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: pulse 2s infinite;
+    width: fit-content;
+    min-width: 600px;
+}
+
+.build {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 16px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #444;
+    width: fit-content;
+    min-width: 600px;
+}
+
+.partsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 64px);
+    grid-template-rows: repeat(2, 64px);
+    gap: 4px;
+    margin-right: 16px;
+    margin-bottom: 0;
+    justify-content: center;
+    justify-self: center;
+}
+
+.statusArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 128px;
+}
+
+.statusGrid {
+    display: grid;
+    grid-template-columns: 140px 140px;
+    gap: 4px 20px;
+    font-size: 0.9em;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    margin-bottom: 8px;
+}
+
+.buttons {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #444;
+}
+
+.buttonArea {
+    display: flex;
+    gap: 8px;
+    align-self: flex-end;
+    margin-top: auto;
+}
+
+.saveButtonArea {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+}
+
+.empty {
+    color: #fff;
+    text-align: center;
+    padding: 60px 20px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    font-size: 1.1em;
+    border: 1px solid #444;
+}
+
+.errorMessage {
+    color: #ff6b6b;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.9em;
+}
+
+.emptyPartSlot {
+    background: rgba(68, 68, 68, 0.5);
+    border-radius: 4px;
+    border: 1px dashed #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* 767px以下のレスポンシブ調整 */
+@media (max-width: 767px) {
+    .container {
+        min-width: 0;
+        max-width: 95vw;
+        width: 95vw;
+        padding: 16px 20px;
+    }
+    
+    .preview,
+    .build {
+        min-width: 0;
+        width: 100%;
+        padding: 16px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .partsGrid {
+        margin-right: 0;
+        margin-bottom: 16px;
+        justify-self: center;
+    }
+    
+    .statusArea {
+        width: 100%;
+        min-height: auto;
+        align-items: center;
+    }
+    
+    .statusGrid {
+        grid-template-columns: 140px 140px;
+        gap: 4px 20px;
+        width: 280px;
+        max-width: none;
+        justify-items: start;
+    }
+    
+    .saveButtonArea {
+        width: 280px;
+        justify-content: flex-end;
+        align-items: flex-end;
+    }
+    
+    .buttonArea {
+        width: 280px;
+        justify-content: flex-end;
+    }
+}
