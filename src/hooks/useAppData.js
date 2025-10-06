@@ -19,6 +19,13 @@ export const useAppData = () => {
         console.log('[useAppData] msData.length:', msData?.length, 'isDataLoaded:', isDataLoaded);
     }, [msData, isDataLoaded]);
 
+    // 復元検証用の状態
+    const [restorationValidation, setRestorationValidation] = useState({
+        expectedParts: [],
+        actualParts: [],
+        isValidating: false
+    });
+
     const [partData, setPartData] = useState([]);
     const [selectedMs, setSelectedMs] = useState(null);
     const [selectedParts, setSelectedParts] = useState([]);

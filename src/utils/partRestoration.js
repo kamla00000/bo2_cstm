@@ -96,7 +96,31 @@ export const restorePartsSequentially = async (
                 }
             }
             
-            // 5. 部分一致（前方一致）
+            // 5. 括弧の種類を統一して検索 [Type-A] vs ［Type-A］
+            if (!foundPart) {
+                const normalizedPartName = partName.replace(/［/g, '[').replace(/］/g, ']');
+                foundPart = allPartsFlat.find(p => {
+                    const normalizedPName = p.name.replace(/［/g, '[').replace(/］/g, ']');
+                    return normalizedPName === normalizedPartName;
+                });
+                if (foundPart) {
+                    console.log(`[restorePartsSequentially] 括弧統一一致で発見: "${foundPart.name}"`);
+                }
+            }
+            
+            // 6. 括弧統一+トリム+大文字小文字無視
+            if (!foundPart) {
+                const normalizedPartName = partName.replace(/［/g, '[').replace(/］/g, ']').trim().toLowerCase();
+                foundPart = allPartsFlat.find(p => {
+                    const normalizedPName = p.name.replace(/［/g, '[').replace(/］/g, ']').trim().toLowerCase();
+                    return normalizedPName === normalizedPartName;
+                });
+                if (foundPart) {
+                    console.log(`[restorePartsSequentially] 括弧統一+正規化一致で発見: "${foundPart.name}"`);
+                }
+            }
+            
+            // 7. 部分一致（前方一致）
             if (!foundPart) {
                 foundPart = allPartsFlat.find(p => p.name.startsWith(partName) || partName.startsWith(p.name));
                 if (foundPart) {
@@ -104,27 +128,100 @@ export const restorePartsSequentially = async (
                 }
             }
             
-            // 6. 部分一致（包含）
+            // 8. 部分一致（包含）
             if (!foundPart) {
                 foundPart = allPartsFlat.find(p => p.name.includes(partName) || partName.includes(p.name));
                 if (foundPart) {
                     console.log(`[restorePartsSequentially] 包含一致で発見: "${foundPart.name}"`);
                 }
             }
+            
+            // 9. レーベンシュタイン距離による類似度検索
+            if (!foundPart) {
+                const levenshteinDistance = (a, b) => {
+                    const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+                    for (let i = 0; i <= a.length; i += 1) {
+                        matrix[0][i] = i;
+                    }
+                    for (let j = 0; j <= b.length; j += 1) {
+                        matrix[j][0] = j;
+                    }
+                    for (let j = 1; j <= b.length; j += 1) {
+                        for (let i = 1; i <= a.length; i += 1) {
+                            const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+                            matrix[j][i] = Math.min(
+                                matrix[j][i - 1] + 1,
+                                matrix[j - 1][i] + 1,
+                                matrix[j - 1][i - 1] + indicator,
+                            );
+                        }
+                    }
+                    return matrix[b.length][a.length];
+                };
+                
+                const maxDistance = Math.max(3, Math.floor(partName.length * 0.2)); // 20%以下の差異
+                let bestMatch = null;
+                let bestDistance = Infinity;
+                
+                allPartsFlat.forEach(p => {
+                    const distance = levenshteinDistance(partName.toLowerCase(), p.name.toLowerCase());
+                    if (distance <= maxDistance && distance < bestDistance) {
+                        bestDistance = distance;
+                        bestMatch = p;
+                    }
+                });
+                
+                if (bestMatch) {
+                    foundPart = bestMatch;
+                    console.log(`[restorePartsSequentially] 類似度検索で発見: "${foundPart.name}" (距離: ${bestDistance})`);
+                }
+            }
 
             if (foundPart) {
-                try {
-                    console.log(`[restorePartsSequentially] パーツ装備実行: "${foundPart.name}"`);
-                    handlePartSelect(foundPart);
-                    successCount++;
-                    processedParts.push({ original: partName, found: foundPart.name, status: 'success' });
-                    
-                    // 装備処理の間隔を少し空ける
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                } catch (error) {
-                    console.error(`[restorePartsSequentially] パーツ装備エラー: "${foundPart.name}"`, error);
-                    failedParts.push({ original: partName, error: error.message });
-                    processedParts.push({ original: partName, found: foundPart.name, status: 'error', error: error.message });
+                // リトライ機能付きでパーツ装備を実行
+                let retryCount = 0;
+                const maxRetries = 3;
+                let success = false;
+                
+                while (retryCount < maxRetries && !success) {
+                    try {
+                        if (retryCount > 0) {
+                            console.log(`[restorePartsSequentially] パーツ装備リトライ ${retryCount}回目: "${foundPart.name}"`);
+                            await new Promise(resolve => setTimeout(resolve, 200 * retryCount)); // リトライ間隔を増加
+                        } else {
+                            console.log(`[restorePartsSequentially] パーツ装備実行: "${foundPart.name}"`);
+                        }
+                        
+                        // パーツ装備実行
+                        handlePartSelect(foundPart);
+                        
+                        success = true;
+                        successCount++;
+                        processedParts.push({ 
+                            original: partName, 
+                            found: foundPart.name, 
+                            status: 'success',
+                            retries: retryCount 
+                        });
+                        
+                        // 装備処理後の安定化待機
+                        await new Promise(resolve => setTimeout(resolve, 150));
+                        
+                    } catch (error) {
+                        retryCount++;
+                        console.error(`[restorePartsSequentially] パーツ装備エラー (試行${retryCount}/${maxRetries}): "${foundPart.name}"`, error);
+                        
+                        if (retryCount >= maxRetries) {
+                            failedParts.push({ original: partName, found: foundPart.name, error: error.message });
+                            processedParts.push({ 
+                                original: partName, 
+                                found: foundPart.name, 
+                                status: 'error', 
+                                error: error.message,
+                                retries: retryCount 
+                            });
+                        }
+                    }
                 }
             } else {
                 console.warn(`[restorePartsSequentially] パーツ未発見: "${partName}"`);
@@ -150,6 +247,17 @@ export const restorePartsSequentially = async (
         console.log('[restorePartsSequentially] ===== パーツ復元完了 =====');
         console.log(`[restorePartsSequentially] 成功: ${successCount}/${partsToRestore.length}`);
         console.log('[restorePartsSequentially] 処理詳細:', processedParts);
+        
+        // 復元結果の詳細統計
+        const statistics = {
+            total: partsToRestore.length,
+            successful: successCount,
+            failed: failedParts.length,
+            successRate: Math.round((successCount / partsToRestore.length) * 100),
+            retriedCount: processedParts.filter(p => p.retries > 0).length
+        };
+        
+        console.log('[restorePartsSequentially] 復元統計:', statistics);
         
         if (failedParts.length > 0) {
             console.warn('[restorePartsSequentially] 復元に失敗したパーツ:', failedParts);
