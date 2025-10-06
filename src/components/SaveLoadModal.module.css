@@ -172,6 +172,7 @@
 .statusGrid {
     display: grid;
     grid-template-columns: 140px 140px;
+    grid-template-rows: repeat(4, auto);
     gap: 4px 20px;
     font-size: 0.9em;
     color: #fff;
@@ -218,17 +219,6 @@
     font-size: 0.9em;
 }
 
-.emptyPartSlot {
-    background: rgba(68, 68, 68, 0.5);
-    border-radius: 4px;
-    border: 1px dashed #666;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: bold;
-}
-
 /* 767px以下のレスポンシブ調整 */
 @media (max-width: 767px) {
     .container {
@@ -261,6 +251,7 @@
     
     .statusGrid {
         grid-template-columns: 140px 140px;
+        grid-template-rows: repeat(4, auto);
         gap: 4px 20px;
         width: 280px;
         max-width: none;

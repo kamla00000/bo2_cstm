@@ -449,6 +449,8 @@ const SaveLoadModal = ({
                             <div>耐ビーム補正：{Math.round(stats.armorBeam).toLocaleString()}</div>
                             <div>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                             <div>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
+                            <div>強化：{build.isFullStrengthened ? '完' : '零'}</div>
+                            <div>{build.expansionType || 'なし'}</div>
                         </div>
                         
                         {/* 保存ボタン（右詰） */}
@@ -554,6 +556,8 @@ const SaveLoadModal = ({
                                         <div style={{ color: '#fff' }}>耐ビーム補正：{Math.round(stats.armorBeam).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
+                                        <div style={{ color: '#fff' }}>強化：{build.isFullStrengthened ? '完' : '零'}</div>
+                                        <div style={{ color: '#fff' }}>{build.expansionType || 'なし'}</div>
                                     </div>
                                     
                                     {/* 呼出・削除ボタン（下揃え） */}
