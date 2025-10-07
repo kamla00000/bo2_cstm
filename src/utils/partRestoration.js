@@ -399,13 +399,16 @@ export const generatePartsDataForUrl = (selectedParts) => {
 
 // ビルドデータを生成する関数
 export const generateBuildData = (selectedMs, selectedParts, isFullStrengthened, expansionType) => {
+    console.log('[DEBUG generateBuildData] セーブ対象MS:', selectedMs?.["MS名"]);
+    console.log('[DEBUG generateBuildData] 選択されたMS詳細:', selectedMs);
+    
     if (!selectedMs) {
         throw new Error('MSが選択されていません');
     }
 
     const partsNames = generatePartsDataForUrl(selectedParts);
     
-    return {
+    const buildData = {
         msName: selectedMs["MS名"],
         parts: partsNames,
         isFullStrengthened: !!isFullStrengthened,
@@ -418,4 +421,7 @@ export const generateBuildData = (selectedMs, selectedParts, isFullStrengthened,
             type: selectedMs["属性"]
         }
     };
+    
+    console.log('[DEBUG generateBuildData] 生成されたビルドデータ:', buildData);
+    return buildData;
 };
