@@ -255,5 +255,6 @@ export const useAppData = () => {
         handlePartPreviewSelect,
         isPartDisabled, 
         allPartsCache,
+        isDataLoaded,
     };
 };

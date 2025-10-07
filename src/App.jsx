@@ -64,13 +64,38 @@ const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) 
 
 const parseBuildFromUrl = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    return {
+    const rawParts = urlParams.get('parts');
+    
+    console.log('[DEBUG parseBuildFromUrl] ===== URL解析開始 =====');
+    console.log('[DEBUG parseBuildFromUrl] 生のpartsパラメータ:', rawParts);
+    
+    let parts = [];
+    if (rawParts) {
+        const splitParts = rawParts.split(',');
+        console.log('[DEBUG parseBuildFromUrl] 分割後のパーツ:', splitParts);
+        
+        parts = splitParts.map((name, index) => {
+            const decoded = decodeURIComponent(name);
+            console.log(`[DEBUG parseBuildFromUrl] パーツ${index + 1}: "${name}" -> "${decoded}"`);
+            
+            // 複合フレーム系の詳細ログ
+            if (decoded.includes('複合フレーム')) {
+                console.log(`[DEBUG parseBuildFromUrl] 複合フレーム解析: 文字長=${decoded.length}`);
+                console.log(`[DEBUG parseBuildFromUrl] 複合フレーム文字コード:`, Array.from(decoded).map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
+            }
+            
+            return decoded;
+        });
+    }
+    
+    const result = {
         fullst: urlParams.get('fullst') === '1',
         expansion: urlParams.get('expansion') || 'なし',
-        parts: urlParams.get('parts')
-            ? urlParams.get('parts').split(',').map(name => decodeURIComponent(name))
-            : []
+        parts: parts
     };
+    
+    console.log('[DEBUG parseBuildFromUrl] 最終結果:', result);
+    return result;
 };
 
 function AppContent() {
@@ -101,6 +126,7 @@ function AppContent() {
         handleClearAllParts,
         isPartDisabled,
         allPartsCache,
+        isDataLoaded,
     } = useAppData();
 
     const navigate = useNavigate();
@@ -153,21 +179,47 @@ function AppContent() {
                 return norm === normalizedDecoded;
             });
             
+            console.log('[DEBUG App.js MS復元] ===== MS検索結果 =====');
+            console.log('[DEBUG App.js MS復元] URLからのMS名:', msName);
+            console.log('[DEBUG App.js MS復元] デコード後:', decodedName);
+            console.log('[DEBUG App.js MS復元] 正規化後:', normalizedDecoded);
+            console.log('[DEBUG App.js MS復元] 検索結果MS:', foundMs ? foundMs["MS名"] : 'null');
+            console.log('[DEBUG App.js MS復元] 現在選択中MS:', selectedMs ? selectedMs["MS名"] : 'null');
+            
             if (foundMs && (!selectedMs || selectedMs["MS名"] !== foundMs["MS名"])) {
+                console.log('[DEBUG App.js MS復元] MSを選択します:', foundMs["MS名"]);
                 const buildConfig = parseBuildFromUrl();
                 console.log('[DEBUG App.js URL復元] buildConfig:', buildConfig);
                 
                 // URL復元データがある場合、PickedMsに渡すためのパーツ配列を作成
                 if (buildConfig.parts && buildConfig.parts.length > 0) {
-                    console.log('[DEBUG App.js] URL復元パーツ一覧:', buildConfig.parts);
+                    console.log('[DEBUG App.js] ===== URL復元パーツ一覧 =====');
+                    console.log('[DEBUG App.js] パーツ数:', buildConfig.parts.length);
+                    buildConfig.parts.forEach((part, index) => {
+                        console.log(`[DEBUG App.js] パーツ${index + 1}: "${part}"`);
+                        // 特に問題となる複合フレーム系パーツを詳しく
+                        if (part.includes('複合フレーム')) {
+                            console.log(`[DEBUG App.js] 複合フレーム検出: "${part}"`);
+                            console.log(`[DEBUG App.js] 文字コード:`, Array.from(part).map(c => c.charCodeAt(0)));
+                        }
+                    });
                     setUrlBuildData(buildConfig.parts); // 配列形式で渡す
                 }
                 
+                console.log('[DEBUG App.js MS復元] handleMsSelect実行前 - 復元予定MS:', foundMs["MS名"]);
                 handleMsSelect(foundMs);
+                console.log('[DEBUG App.js MS復元] handleMsSelect実行後');
                 setShowSelector(false);
-                if (buildConfig.fullst) setIsFullStrengthened(true);
-                if (buildConfig.expansion && buildConfig.expansion !== 'なし') setExpansionType(buildConfig.expansion);
+                if (buildConfig.fullst) {
+                    console.log('[DEBUG App.js] フル強化を有効化');
+                    setIsFullStrengthened(true);
+                }
+                if (buildConfig.expansion && buildConfig.expansion !== 'なし') {
+                    console.log('[DEBUG App.js] 拡張設定:', buildConfig.expansion);
+                    setExpansionType(buildConfig.expansion);
+                }
                 setUrlConfigLoaded(true);
+                console.log('[DEBUG App.js MS復元] URL設定完了');
             } else if (!foundMs) {
                 setShowSelector(true);
                 setUrlConfigLoaded(true);
@@ -358,6 +410,7 @@ function AppContent() {
                         videoRef={videoRef}
                         bgVideo={bgVideo}
                         allPartsCache={allPartsCache}
+                        isDataLoaded={isDataLoaded}
                         urlBuildData={urlBuildData} // URL復元データを渡す
                         onUrlRestoreComplete={() => setUrlBuildData(null)} // URL復元完了コールバック
                     />

@@ -49,6 +49,7 @@ const PickedMs = React.forwardRef(({
     handlePartRemove,
     handleClearAllParts,
     allPartsCache,
+    isDataLoaded,
     className,
     onSelectedPartDisplayHover,
     onSelectedPartDisplayLeave,
@@ -377,6 +378,12 @@ const PickedMs = React.forwardRef(({
 
     // 統一された復元処理のuseEffect
     useEffect(() => {
+        // データ読み込み完了を待つ
+        if (!isDataLoaded) {
+            console.log('[useEffect Unified] データ読み込み未完了、復元を待機');
+            return;
+        }
+        
         // 復元条件をチェック
         if (!checkRestorationConditions(selectedMs, allPartsCache, handlePartSelect, restorationInProgressRef)) {
             return;
@@ -384,7 +391,16 @@ const PickedMs = React.forwardRef(({
 
         // URL復元を優先
         if (urlBuildData && urlBuildData.length > 0) {
-            console.log('[useEffect Unified] URL復元を実行:', urlBuildData);
+            console.log('[useEffect Unified] ===== URL復元を実行 =====');
+            console.log('[useEffect Unified] URL復元データ:', urlBuildData);
+            console.log('[useEffect Unified] 選択中MS:', selectedMs?.["MS名"]);
+            console.log('[useEffect Unified] データ読み込み済み:', isDataLoaded);
+            console.log('[useEffect Unified] allPartsCacheキー数:', allPartsCache ? Object.keys(allPartsCache).length : 0);
+            
+            // 問題のパーツが復元対象に含まれているかチェック
+            const hasComplexFrame = urlBuildData.includes('複合フレーム[Type-A]_LV1') || urlBuildData.includes('複合フレーム[Type-B]_LV1');
+            console.log('[useEffect Unified] 複合フレーム系パーツ含む:', hasComplexFrame);
+            
             handlePartsRestoration(urlBuildData, 'URL');
             return;
         }
@@ -418,6 +434,7 @@ const PickedMs = React.forwardRef(({
         }
 
     }, [
+        isDataLoaded,
         urlBuildData, 
         pendingRestoreParts, 
         pendingLoadParts, 

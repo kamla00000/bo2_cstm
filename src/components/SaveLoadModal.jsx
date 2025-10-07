@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import InfoModal from './InfoModal';
 import { MAX_SAVED_BUILDS_PER_MS } from '../utils/buildStorage';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
+import { EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
 import styles from './SaveLoadModal.module.css';
 
 // ホバーエフェクト付きボタンコンポーネント
@@ -191,7 +192,7 @@ const calculateBuildStats = (build, msDataArray, partsData, fullStrengtheningDat
 
         const parts = build.parts || [];
         const isFullStrengthened = build.isFullStrengthened || false;
-        const expansionType = build.expansionType || 'なし';
+        const expansionType = build.expansionType || '拡張スキル無し';
         
         // パーツ名からパーツオブジェクトを取得
         const partObjects = parts.map(partName => {
@@ -388,7 +389,7 @@ const SaveLoadModal = ({
             msName: selectedMs["MS名"],
             parts: partNames,
             isFullStrengthened: isCurrentFullStrengthened || false,
-            expansionType: currentExpansionType || 'なし'
+            expansionType: currentExpansionType || '拡張スキル無し'
         };
     };
 
@@ -450,7 +451,7 @@ const SaveLoadModal = ({
                             <div>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                             <div>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
                             <div>強化：{build.isFullStrengthened ? '完' : '零'}</div>
-                            <div>{build.expansionType || 'なし'}</div>
+                            <div>{EXPANSION_DESCRIPTIONS[build.expansionType] || EXPANSION_DESCRIPTIONS['無し']}</div>
                         </div>
                         
                         {/* 保存ボタン（右詰） */}
@@ -557,7 +558,7 @@ const SaveLoadModal = ({
                                         <div style={{ color: '#fff' }}>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>強化：{build.isFullStrengthened ? '完' : '零'}</div>
-                                        <div style={{ color: '#fff' }}>{build.expansionType || 'なし'}</div>
+                                        <div style={{ color: '#fff' }}>{EXPANSION_DESCRIPTIONS[build.expansionType] || EXPANSION_DESCRIPTIONS['無し']}</div>
                                     </div>
                                     
                                     {/* 呼出・削除ボタン（下揃え） */}
@@ -593,7 +594,7 @@ const SaveLoadModal = ({
                         
                         {savedBuilds.length === 0 && (
                             <div className={styles.empty}>
-                                セーブデータなし
+                                <span>セーブデータなし</span>
                             </div>
                         )}
                     </div>
@@ -639,7 +640,7 @@ const SaveLoadModal = ({
 
         <ConfirmDialog
             open={confirmDialog.open}
-            title={confirmDialog.type === 'delete' ? '削除確認' : '保存確認'}
+            title={confirmDialog.type === 'delete' ? '削　除　確　認' : '保　存　確　認'}
             message={
                 confirmDialog.type === 'delete' 
                     ? 'このビルドデータを削除しますか？'

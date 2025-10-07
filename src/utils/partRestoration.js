@@ -2,6 +2,35 @@
 
 const DEBUG_PARTS_LOADING = true; // デバッグフラグ
 
+// デバッグ用: パーツデータの詳細状況を表示
+const debugPartsDataStatus = (allPartsCache) => {
+    console.log('[DEBUG] ===== パーツデータ状況 =====');
+    if (!allPartsCache) {
+        console.log('[DEBUG] allPartsCache が null/undefined');
+        return;
+    }
+    
+    const categories = Object.keys(allPartsCache);
+    console.log('[DEBUG] 利用可能カテゴリ:', categories);
+    
+    categories.forEach(category => {
+        const parts = allPartsCache[category];
+        if (Array.isArray(parts)) {
+            console.log(`[DEBUG] ${category}: ${parts.length}個のパーツ`);
+            if (category === '特殊') {
+                // 複合フレーム系パーツの存在をチェック
+                const complexFrames = parts.filter(p => p.name && p.name.includes('複合フレーム'));
+                console.log(`[DEBUG] 複合フレーム系パーツ: ${complexFrames.length}個`);
+                complexFrames.forEach(frame => {
+                    console.log(`[DEBUG] - ${frame.name}`);
+                });
+            }
+        } else {
+            console.log(`[DEBUG] ${category}: パーツ配列ではない (${typeof parts})`);
+        }
+    });
+};
+
 // パーツを順次復元する関数
 export const restorePartsSequentially = async (
     partsToRestore, 
@@ -33,6 +62,9 @@ export const restorePartsSequentially = async (
     console.log('[restorePartsSequentially] 復元対象パーツ:', partsToRestore);
     console.log('[restorePartsSequentially] allPartsCache存在:', !!allPartsCache);
 
+    // デバッグ情報を表示
+    debugPartsDataStatus(allPartsCache);
+
     restorationInProgressRef.current = true;
     setIsRestoring(true);
     setLoadingStatus(`パーツ復元中 (${source})...`);
@@ -53,6 +85,16 @@ export const restorePartsSequentially = async (
 
         console.log('[restorePartsSequentially] 利用可能パーツ総数:', allPartsFlat.length);
         console.log('[restorePartsSequentially] 利用可能パーツ一覧（最初の10個）:', allPartsFlat.slice(0, 10).map(p => p.name));
+        
+        // 特定の問題パーツが含まれているかチェック
+        const problemParts = ['複合フレーム[Type-A]_LV1', '複合フレーム[Type-B]_LV1'];
+        problemParts.forEach(problemPart => {
+            const exists = allPartsFlat.find(p => p.name === problemPart);
+            console.log(`[restorePartsSequentially] 問題パーツ "${problemPart}" 存在チェック:`, exists ? 'あり' : 'なし');
+            if (exists) {
+                console.log(`[restorePartsSequentially] 問題パーツ詳細:`, exists);
+            }
+        });
         
         let successCount = 0;
         let failedParts = [];
@@ -312,22 +354,38 @@ export const checkRestorationConditions = (
     handlePartSelect,
     restorationInProgressRef
 ) => {
+    // パーツデータの詳細チェック
+    const partsDataCount = allPartsCache ? Object.values(allPartsCache).reduce((total, categoryParts) => {
+        return total + (Array.isArray(categoryParts) ? categoryParts.length : 0);
+    }, 0) : 0;
+    
     if (DEBUG_PARTS_LOADING) {
         console.log('[checkRestorationConditions] 復元条件チェック:');
         console.log('- selectedMs:', selectedMs?.["MS名"]);
         console.log('- allPartsCache存在:', !!allPartsCache);
         console.log('- allPartsCacheKeys:', allPartsCache ? Object.keys(allPartsCache).length : 0);
+        console.log('- パーツデータ総数:', partsDataCount);
         console.log('- handlePartSelectType:', typeof handlePartSelect);
         console.log('- restorationInProgress:', restorationInProgressRef.current);
     }
 
-    return !!(
-        selectedMs && 
-        allPartsCache && 
-        Object.keys(allPartsCache).length > 0 && 
-        typeof handlePartSelect === 'function' &&
-        !restorationInProgressRef.current
-    );
+    // より厳密な条件チェック
+    const hasValidMs = selectedMs && selectedMs["MS名"];
+    const hasValidPartsCache = allPartsCache && Object.keys(allPartsCache).length > 0 && partsDataCount > 0;
+    const hasValidHandler = typeof handlePartSelect === 'function';
+    const notInProgress = !restorationInProgressRef.current;
+    
+    const canRestore = hasValidMs && hasValidPartsCache && hasValidHandler && notInProgress;
+    
+    if (DEBUG_PARTS_LOADING && !canRestore) {
+        console.log('[checkRestorationConditions] 復元条件不足:');
+        console.log('- MS選択済み:', hasValidMs);
+        console.log('- パーツデータ有効:', hasValidPartsCache);
+        console.log('- ハンドラ有効:', hasValidHandler);
+        console.log('- 復元未実行:', notInProgress);
+    }
+
+    return canRestore;
 };
 
 // URL生成用のパーツデータ取得関数
