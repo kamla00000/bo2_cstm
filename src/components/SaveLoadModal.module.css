@@ -171,7 +171,7 @@
 
 .statusGrid {
     display: grid;
-    grid-template-columns: 140px 140px;
+    grid-template-columns: 120px 160px;
     grid-template-rows: repeat(4, auto);
     gap: 4px 20px;
     font-size: 0.9em;
@@ -275,22 +275,22 @@
     }
     
     .statusGrid {
-        grid-template-columns: 140px 140px;
+        grid-template-columns: 120px 160px;
         grid-template-rows: repeat(4, auto);
         gap: 4px 20px;
-        width: 280px;
+        width: 300px;
         max-width: none;
         justify-items: start;
     }
     
     .saveButtonArea {
-        width: 280px;
+        width: 300px;
         justify-content: flex-end;
         align-items: flex-end;
     }
     
     .buttonArea {
-        width: 280px;
+        width: 300px;
         justify-content: flex-end;
     }
 }

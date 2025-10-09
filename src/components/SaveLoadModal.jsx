@@ -451,7 +451,7 @@ const SaveLoadModal = ({
                             <div>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                             <div>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
                             <div>強化：{build.isFullStrengthened ? '完' : '零'}</div>
-                            <div>{EXPANSION_DESCRIPTIONS[build.expansionType] || EXPANSION_DESCRIPTIONS['無し']}</div>
+                            <div>{build.expansionType || '無し'}</div>
                         </div>
                         
                         {/* 保存ボタン（右詰） */}
@@ -558,7 +558,7 @@ const SaveLoadModal = ({
                                         <div style={{ color: '#fff' }}>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>強化：{build.isFullStrengthened ? '完' : '零'}</div>
-                                        <div style={{ color: '#fff' }}>{EXPANSION_DESCRIPTIONS[build.expansionType] || EXPANSION_DESCRIPTIONS['無し']}</div>
+                                        <div style={{ color: '#fff' }}>{build.expansionType || '無し'}</div>
                                     </div>
                                     
                                     {/* 呼出・削除ボタン（下揃え） */}
