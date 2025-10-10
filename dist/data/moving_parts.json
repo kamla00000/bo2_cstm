@@ -61,8 +61,8 @@
     "mid": 4,
     "long": 3,
     "thruster": 10,
-    "highSpeedMovement": 1,
-    "description": "高速移動が1増加。スラスターが10増加。"
+    "highSpeedMovement": 5,
+    "description": "高速移動が5増加。スラスターが10増加。"
   },
   {
     "name": "オーバーチューン[機動]_LV1",
@@ -120,6 +120,9 @@
     "mid": 2,
     "long": 4,
     "thruster": 15,
+    "limitIncreases": {
+    "thruster": 10
+    },
     "description": "スラスターが15増加。スラスターの上限値が10増加する。スラスターの回復速度が10%上昇。"
   }
 ]

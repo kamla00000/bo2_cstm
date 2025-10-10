@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import InfoModal from './InfoModal';
-import { MAX_SAVED_BUILDS_PER_MS } from '../utils/buildStorage';
+import { MAX_SAVED_BUILDS_PER_MS, debugMsBuilds, debugAllStorageKeys, migrateOldStorageData } from '../utils/buildStorage';
 import { calculateMSStatsLogic } from '../utils/calculateStats';
 import { EXPANSION_DESCRIPTIONS } from '../constants/appConstants';
 import styles from './SaveLoadModal.module.css';
@@ -284,6 +284,35 @@ const SaveLoadModal = ({
         console.log('[SaveLoadModal] savedBuilds updated:', savedBuilds);
         setForceUpdate(prev => prev + 1);
     }, [savedBuilds]);
+    
+    // 初回のみデータ移行を実行
+    useEffect(() => {
+        const migrationKey = 'gbo2cstm_migration_v1_5';
+        if (!localStorage.getItem(migrationKey)) {
+            const migratedCount = migrateOldStorageData();
+            localStorage.setItem(migrationKey, 'completed');
+            console.log(`[SaveLoadModal] データ移行完了: ${migratedCount}件`);
+        }
+    }, []);
+
+    // SaveLoadModalが開かれた時にデバッグ情報を出力
+    useEffect(() => {
+        if (open && selectedMs) {
+            console.log('=== SaveLoadModal Debug Info ===');
+            console.log('[SaveLoadModal] Selected MS:', selectedMs["MS名"]);
+            console.log('[SaveLoadModal] Received savedBuilds:', savedBuilds);
+            
+            // 実際のストレージからのデータをデバッグ
+            debugMsBuilds(selectedMs["MS名"]);
+            
+            // 全ストレージキーの状況をデバッグ
+            debugAllStorageKeys();
+            
+            // フィルタリング後のビルドを確認
+            const filteredBuilds = savedBuilds.filter(build => build.msName === selectedMs?.["MS名"]);
+            console.log('[SaveLoadModal] Filtered builds for current MS:', filteredBuilds);
+        }
+    }, [open, selectedMs, savedBuilds]);
 
     // currentPartsが変更された時にスロット使用量を再計算
     useEffect(() => {

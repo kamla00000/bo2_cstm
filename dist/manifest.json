@@ -1,0 +1,16 @@
+{
+  "name": "GBO2 カスタムパーツ シミュレーター",
+  "short_name": "GBO2-CSTM",
+  "description": "機動戦士ガンダム バトルオペレーション2のカスタムパーツシミュレーター",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#ff9100",
+  "icons": [
+    {
+      "src": "/images/ms/default.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    }
+  ]
+}
