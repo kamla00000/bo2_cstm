@@ -590,7 +590,7 @@ const SaveLoadModal = ({
                                         <div style={{ color: '#fff' }}>{build.expansionType || '無し'}</div>
                                     </div>
                                     
-                                    {/* 呼出・削除ボタン（下揃え */}
+                                    {/* 呼出・削除ボタン下揃え */}
                                     <div className={styles.buttonArea}>
                                         <HoverButton 
                                             onClick={() => onLoad && onLoad(build)}
