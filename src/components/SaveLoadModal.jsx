@@ -191,7 +191,7 @@ const calculateBuildStats = (build, msDataArray, partsData, fullStrengtheningDat
         }
 
         const parts = build.parts || [];
-        const isFullStrengthened = build.isFullStrengthened || false;
+        const isFullStrengthened = typeof build.isFullStrengthened === 'number' ? build.isFullStrengthened : (build.isFullStrengthened ? 6 : 0);
         const expansionType = build.expansionType || '拡張スキル無し';
         
         // パーツ名からパーツオブジェクトを取得
@@ -388,7 +388,7 @@ const SaveLoadModal = ({
         return {
             msName: selectedMs["MS名"],
             parts: partNames,
-            isFullStrengthened: isCurrentFullStrengthened || false,
+            isFullStrengthened: isCurrentFullStrengthened || 0,
             expansionType: currentExpansionType || '拡張スキル無し'
         };
     };
@@ -450,7 +450,7 @@ const SaveLoadModal = ({
                             <div>耐ビーム補正：{Math.round(stats.armorBeam).toLocaleString()}</div>
                             <div>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                             <div>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
-                            <div>強化：{build.isFullStrengthened ? '完' : '零'}</div>
+                            <div>強化：{typeof build.isFullStrengthened === 'number' ? (build.isFullStrengthened === 0 ? '零' : build.isFullStrengthened === 4 ? '四' : '完') : (build.isFullStrengthened ? '完' : '零')}</div>
                             <div>{build.expansionType || '無し'}</div>
                         </div>
                         
@@ -557,7 +557,7 @@ const SaveLoadModal = ({
                                         <div style={{ color: '#fff' }}>耐ビーム補正：{Math.round(stats.armorBeam).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>格闘補正：{Math.round(stats.meleeCorrection).toLocaleString()}</div>
                                         <div style={{ color: '#fff' }}>耐格闘補正：{Math.round(stats.armorMelee).toLocaleString()}</div>
-                                        <div style={{ color: '#fff' }}>強化：{build.isFullStrengthened ? '完' : '零'}</div>
+                                        <div style={{ color: '#fff' }}>強化：{typeof build.isFullStrengthened === 'number' ? (build.isFullStrengthened === 0 ? '零' : build.isFullStrengthened === 4 ? '四' : '完') : (build.isFullStrengthened ? '完' : '零')}</div>
                                         <div style={{ color: '#fff' }}>{build.expansionType || '無し'}</div>
                                     </div>
                                     

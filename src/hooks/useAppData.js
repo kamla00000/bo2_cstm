@@ -32,7 +32,7 @@ export const useAppData = () => {
     const [hoveredPart, setHoveredPart] = useState(null);
     const [hoverSource, setHoverSource] = useState(null); 
     const [filterCategory, setFilterCategory] = useState('防御');
-    const [isFullStrengthened, setIsFullStrengthened] = useState(false);
+    const [isFullStrengthened, setIsFullStrengthened] = useState(6);
     const [expansionType, setExpansionType] = useState('無し');
     const [selectedPreviewPart, setSelectedPreviewPart] = useState(null);
 
@@ -162,7 +162,7 @@ export const useAppData = () => {
             setSelectedParts([]);
             setHoveredPart(null);
             setHoverSource(null);
-            setIsFullStrengthened(false);
+            setIsFullStrengthened(6); // デフォルトを完に設定
             setExpansionType('無し');
             setFilterCategory('防御');
             setSelectedPreviewPart(null);

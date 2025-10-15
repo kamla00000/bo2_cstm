@@ -51,7 +51,7 @@ const generateBuildUrl = (ms, selectedParts, isFullStrengthened, expansionType) 
     const encodedMsName = encodeURIComponent(ms["MS名"]);
     const baseUrl = `${window.location.origin}/${encodedMsName}`;
     const params = new URLSearchParams();
-    if (isFullStrengthened) params.set('fullst', '1');
+    if (isFullStrengthened && isFullStrengthened > 0) params.set('fullst', isFullStrengthened.toString());
     if (expansionType && expansionType !== 'なし') params.set('expansion', expansionType);
     if (selectedParts && selectedParts.length > 0) {
         const partIds = selectedParts.map(part => encodeURIComponent(part.name)).join(',');
@@ -89,7 +89,7 @@ const parseBuildFromUrl = () => {
     }
     
     const result = {
-        fullst: urlParams.get('fullst') === '1',
+        fullst: parseInt(urlParams.get('fullst') || '0') || 0,
         expansion: urlParams.get('expansion') || 'なし',
         parts: parts
     };
@@ -210,9 +210,9 @@ function AppContent() {
                 handleMsSelect(foundMs);
                 console.log('[DEBUG App.js MS復元] handleMsSelect実行後');
                 setShowSelector(false);
-                if (buildConfig.fullst) {
-                    console.log('[DEBUG App.js] フル強化を有効化');
-                    setIsFullStrengthened(true);
+                if (buildConfig.fullst && buildConfig.fullst !== 0) {
+                    console.log('[DEBUG App.js] フル強化を設定:', buildConfig.fullst);
+                    setIsFullStrengthened(buildConfig.fullst);
                 }
                 if (buildConfig.expansion && buildConfig.expansion !== 'なし') {
                     console.log('[DEBUG App.js] 拡張設定:', buildConfig.expansion);
@@ -243,8 +243,9 @@ function AppContent() {
 
     // 警告モーダル付きフル強化切り替え
     const handleFullStrengthenToggle = (next) => {
-        if (isFullStrengthened && !next) {
-            // 完→零（パーツ装備中なら警告）
+        const current = isFullStrengthened || 0;
+        if (current > next) {
+            // レベルダウン（パーツ装備中なら警告）
             if (selectedParts && selectedParts.length > 0) {
                 setPendingFullStrengthen(next);
                 setShowFullStrengthenWarning(true);
@@ -252,14 +253,8 @@ function AppContent() {
                 setIsFullStrengthened(next);
                 handleClearAllParts(); // パーツを必ず外す
             }
-        } else if (!isFullStrengthened && next) {
-            // 零→完
-            setIsFullStrengthened(next);
-        } else if (isFullStrengthened && next) {
-            // 完→完（何もしない）
-            setIsFullStrengthened(next);
         } else {
-            // 零→零（何もしない）
+            // レベルアップまたは同じレベル
             setIsFullStrengthened(next);
         }
     };

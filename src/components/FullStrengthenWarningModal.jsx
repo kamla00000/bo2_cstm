@@ -14,7 +14,7 @@ const FullStrengthenWarningModal = ({ open, onOk, onCancel }) => {
         <div className="relative z-10 flex flex-col items-center justify-center w-full py-10 px-8 text-center">
           <div className="text-3xl text-white font-extrabold mb-4 tracking-widest select-none">警　告</div>
           <div className="text-lg text-orange-300 mb-4 whitespace-pre-line break-words">
-            フル強化を解除すると、装着中のカスタムパーツは<br className="msg_br"/>全て解除されます。続行しますか？
+            強化段階を下げると、装着中のカスタムパーツは<br className="msg_br"/>全て解除されます。続行しますか？
           </div>
           <div className="flex justify-center gap-6 mt-6">
             <button

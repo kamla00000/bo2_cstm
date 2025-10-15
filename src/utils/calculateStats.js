@@ -176,28 +176,28 @@ export const calculateMSStatsLogic = (
 
     // HPだけはByLevelがなければ従来通り
     if (!Array.isArray(part.hpByLevel)) {
-      if (isFullStrengthened && typeof part.hp_full === 'number') {
+      if (isFullStrengthened > 0 && typeof part.hp_full === 'number') {
         partBonus.hp += part.hp_full;
       } else if (typeof part.hp === 'number') {
         partBonus.hp += part.hp;
       }
     }
     if (!Array.isArray(part.shootByLevel)) {
-      if (isFullStrengthened && typeof part.shoot_full === 'number') {
+      if (isFullStrengthened > 0 && typeof part.shoot_full === 'number') {
         partBonus.shoot += part.shoot_full;
       } else if (typeof part.shoot === 'number') {
         partBonus.shoot += part.shoot;
       }
     }
     if (!Array.isArray(part.meleeCorrectionByLevel)) {
-      if (isFullStrengthened && typeof part.melee_full === 'number') {
+      if (isFullStrengthened > 0 && typeof part.melee_full === 'number') {
         partBonus.meleeCorrection += part.melee_full;
       } else if (typeof part.melee === 'number') {
         partBonus.meleeCorrection += part.melee;
       }
     }
     if (!Array.isArray(part.armorRangeByLevel)) {
-      if (isFullStrengthened && typeof part.armor_range_full === 'number') {
+      if (isFullStrengthened > 0 && typeof part.armor_range_full === 'number') {
         partBonus.armorRange += part.armor_range_full;
       } else if (typeof part.armor_range === 'number') {
         partBonus.armorRange += part.armor_range;
@@ -206,7 +206,7 @@ export const calculateMSStatsLogic = (
       }
     }
     if (!Array.isArray(part.armorBeamByLevel)) {
-      if (isFullStrengthened && typeof part.armor_beam_full === 'number') {
+      if (isFullStrengthened > 0 && typeof part.armor_beam_full === 'number') {
         partBonus.armorBeam += part.armor_beam_full;
       } else if (typeof part.armor_beam === 'number') {
         partBonus.armorBeam += part.armor_beam;
@@ -215,7 +215,7 @@ export const calculateMSStatsLogic = (
       }
     }
     if (!Array.isArray(part.armorMeleeByLevel)) {
-      if (isFullStrengthened && typeof part.armor_melee_full === 'number') {
+      if (isFullStrengthened > 0 && typeof part.armor_melee_full === 'number') {
         partBonus.armorMelee += part.armor_melee_full;
       } else if (typeof part.armor_melee === 'number') {
         partBonus.armorMelee += part.armor_melee;
@@ -263,9 +263,12 @@ export const calculateMSStatsLogic = (
   });
   console.log("[calculateMSStatsLogic] currentLimits after MS & Part limit applications (before Expansion):", JSON.parse(JSON.stringify(currentLimits)));
 
-  // 4. フル強化ボーナス加算
-  if (isFullStrengthened && ms.fullst && Array.isArray(ms.fullst) && fullStrengtheningEffectsData && Array.isArray(fullStrengtheningEffectsData)) {
-    ms.fullst.forEach(fsEntry => {
+  // 4. フル強化ボーナス加算（3段階対応）
+  if (isFullStrengthened > 0 && ms.fullst && Array.isArray(ms.fullst) && fullStrengtheningEffectsData && Array.isArray(fullStrengtheningEffectsData)) {
+    // フル強化レベル4の場合は上から4つまで、6の場合は全て適用
+    const fsEntriesToProcess = isFullStrengthened === 4 ? ms.fullst.slice(0, 4) : ms.fullst;
+    
+    fsEntriesToProcess.forEach(fsEntry => {
       const baseFsEffect = fullStrengtheningEffectsData.find(
         fse => fse.name === fsEntry.name
       );

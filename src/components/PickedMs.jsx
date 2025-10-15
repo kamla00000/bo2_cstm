@@ -286,10 +286,11 @@ const PickedMs = React.forwardRef(({
                 console.log('[handleLoadBuild] フル強化設定:', build.isFullStrengthened);
                 setLoadingStatus('設定を復元中...');
                 // セーブデータ呼び出し時は警告を表示せずに直接設定
+                const loadedFullStrength = typeof build.isFullStrengthened === 'number' ? build.isFullStrengthened : (build.isFullStrengthened ? 6 : 0);
                 if (setFullStrengthenDirectly) {
-                    setFullStrengthenDirectly(build.isFullStrengthened || false);
+                    setFullStrengthenDirectly(loadedFullStrength);
                 } else {
-                    setIsFullStrengthened(build.isFullStrengthened || false);
+                    setIsFullStrengthened(loadedFullStrength);
                 }
 
                 // 5. 拡張タイプを設定

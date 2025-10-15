@@ -86,6 +86,7 @@ const MsInfoDisplay = ({
   handleMsSelect,
 }) => {
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -282,22 +283,53 @@ const MsInfoDisplay = ({
         </div>
 
   <div className={styles.msInfoDetailSection + " flex flex-col items-start gap-1 text-gray-200 text-base ml-4"}>
-          {/* スライドトグル */}
+          {/* 3段階選択トグル */}
 <div className={styles.msToggleRow}>
   <span
-    className={`text-md cursor-pointer select-none ${!isFullStrengthened ? 'text-orange-400' : 'text-gray-400'}`}
-    onClick={() => setIsFullStrengthened(false)}
+    className="text-md cursor-pointer select-none text-orange-400 hover:text-orange-200 transition-colors duration-200"
+    onClick={() => {
+      if (isFullStrengthened === 6) {
+        setIsFullStrengthened(4);
+      } else if (isFullStrengthened === 4) {
+        setIsFullStrengthened(0);
+      }
+      // 零の場合は無反応
+    }}
     tabIndex={0}
     role="button"
-    aria-pressed={!isFullStrengthened}
   >
-    零
+    ◀
   </span>
 <button
   type="button"
   className="relative flex items-center justify-center shadow-lg focus:outline-none hex-toggle"
-  onClick={() => setIsFullStrengthened(!isFullStrengthened)}
-  aria-pressed={isFullStrengthened}
+  onClick={(e) => {
+    // クリック位置を取得
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const centerX = rect.width / 2; // 四の位置（中央）
+    const isLeftSide = clickX < centerX;
+    
+    if (isFullStrengthened === 0) {
+      // 零の状態では右側クリックのみ反応（四へ）
+      if (!isLeftSide) {
+        setIsFullStrengthened(4);
+      }
+    } else if (isFullStrengthened === 4) {
+      // 四の状態では左右どちらでも反応
+      if (isLeftSide) {
+        setIsFullStrengthened(0); // 左側クリックで零へ
+      } else {
+        setIsFullStrengthened(6); // 右側クリックで完へ
+      }
+    } else if (isFullStrengthened === 6) {
+      // 完の状態では左側クリックのみ反応（四へ）
+      if (isLeftSide) {
+        setIsFullStrengthened(4);
+      }
+    }
+  }}
+  aria-pressed={true}
   tabIndex={0}
   style={{
     width: 64,
@@ -306,32 +338,44 @@ const MsInfoDisplay = ({
     padding: 0,
     transition: 'background 0.3s',
     clipPath: 'polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%)',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    cursor: 'pointer'
   }}
 >
-  {/* スライドする六角形ノブ */}
+  {/* 常時オレンジの六角形ノブ */}
   <span
-    className="absolute"
+    className="absolute flex items-center justify-center"
     style={{
       top: 0,
-      left: isFullStrengthened ? 32 : 0, // 64/2=32
+      left: isFullStrengthened === 0 ? 0 : isFullStrengthened === 4 ? 16 : 32,
       width: 32,
       height: 24,
-      background: isFullStrengthened ? '#f59e42' : '#d1d5db',
-      transition: 'left 0.3s, background 0.3s',
+      background: '#f59e42', // 常時オレンジ
+      transition: 'left 0.3s',
       clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)',
       boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
     }}
-  />
+  >
+    {/* ボタン内の白文字表示 */}
+    <span className="text-white text-sm font-bold" style={{ zIndex: 10, textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.6)' }}>
+      {isFullStrengthened === 0 ? '零' : isFullStrengthened === 4 ? '四' : '完'}
+    </span>
+  </span>
 </button>
   <span
-    className={`text-md cursor-pointer select-none ${isFullStrengthened ? 'text-orange-400' : 'text-gray-400'}`}
-    onClick={() => setIsFullStrengthened(true)}
+    className="text-md cursor-pointer select-none text-orange-400 hover:text-orange-200 transition-colors duration-200"
+    onClick={() => {
+      if (isFullStrengthened === 0) {
+        setIsFullStrengthened(4);
+      } else if (isFullStrengthened === 4) {
+        setIsFullStrengthened(6);
+      }
+      // 完の場合は無反応
+    }}
     tabIndex={0}
     role="button"
-    aria-pressed={isFullStrengthened}
   >
-    完
+    ▶
   </span>
 </div>
           <div className="flex items-center gap-2">

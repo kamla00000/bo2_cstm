@@ -411,7 +411,7 @@ export const generateBuildData = (selectedMs, selectedParts, isFullStrengthened,
     const buildData = {
         msName: selectedMs["MS名"],
         parts: partsNames,
-        isFullStrengthened: !!isFullStrengthened,
+        isFullStrengthened: isFullStrengthened || 0, // 数値型として保存
         expansionType: expansionType || 'なし',
         // 追加のメタデータ
         timestamp: new Date().toISOString(),

@@ -26,30 +26,34 @@ export const calculateSlotUsage = (selectedMs, selectedParts, isFullStrengthened
 
     let additionalSlots = { close: 0, mid: 0, long: 0 };
 
-    // フル強化によるスロット増加を計算
+    // フル強化によるスロット増加を計算（3段階対応）
     console.log('DEBUG: isFullStrengthened (param):', isFullStrengthened);
     console.log('DEBUG: MS fullst property:', selectedMs?.fullst);
     console.log('DEBUG: fullStrengtheningEffectsData exists:', !!fullStrengtheningEffectsData);
 
-    if (isFullStrengthened && selectedMs?.fullst && fullStrengtheningEffectsData) {
-        console.log('DEBUG: Entering full strengthening calculation loop.');
-        selectedMs.fullst.forEach(fsPart => {
+    if (isFullStrengthened > 0 && selectedMs?.fullst && fullStrengtheningEffectsData) {
+        console.log('DEBUG: Entering full strengthening calculation loop. Level:', isFullStrengthened);
+        
+        // フル強化レベル4の場合は上から4つまで、6の場合は全て適用
+        const partsToProcess = isFullStrengthened === 4 ? selectedMs.fullst.slice(0, 4) : selectedMs.fullst;
+        
+        partsToProcess.forEach(fsPart => {
             console.log('DEBUG: Processing fsPart:', fsPart);
             const effectEntry = fullStrengtheningEffectsData.find(effect => effect.name === fsPart.name);
             if (effectEntry) {
                 console.log('DEBUG: Found full strengthening effect:', effectEntry);
+                
+                // フル強化レベル4と6では最大レベル適用
                 const levelEffect = effectEntry.levels.find(level => level.level === fsPart.level);
+                
                 if (levelEffect) {
-                    console.log('DEBUG: Found level effect:', levelEffect);
+                    console.log('DEBUG: Found level effect for max level', fsPart.level, ':', levelEffect);
                     
-                    // ここを修正: levelEffect.effects からスロット値を取得し、null/undefinedチェックを強化
                     const slotIncreaseClose = (levelEffect.effects && typeof levelEffect.effects['近スロット'] === 'number') ? levelEffect.effects['近スロット'] : 0;
                     const slotIncreaseMid = (levelEffect.effects && typeof levelEffect.effects['中スロット'] === 'number') ? levelEffect.effects['中スロット'] : 0;
                     const slotIncreaseLong = (levelEffect.effects && typeof levelEffect.effects['遠スロット'] === 'number') ? levelEffect.effects['遠スロット'] : 0;
 
-                    console.log(`DEBUG: levelEffect.effects['近スロット']: ${levelEffect.effects?.['近スロット']} Type: ${typeof levelEffect.effects?.['近スロット']}`);
-                    console.log(`DEBUG: levelEffect.effects['中スロット']: ${levelEffect.effects?.['中スロット']} Type: ${typeof levelEffect.effects?.['中スロット']}`);
-                    console.log(`DEBUG: levelEffect.effects['遠スロット']: ${levelEffect.effects?.['遠スロット']} Type: ${typeof levelEffect.effects?.['遠スロット']}`);
+                    console.log(`DEBUG: Slot increases: Close ${slotIncreaseClose}, Mid ${slotIncreaseMid}, Long ${slotIncreaseLong}`);
 
                     additionalSlots.close += slotIncreaseClose;
                     additionalSlots.mid += slotIncreaseMid;
