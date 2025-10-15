@@ -6,10 +6,9 @@ const LOCAL_KEY_PREFIX = 'gbo2cstm_builds_'; // MS別にキーを分ける
 // MS名からストレージキーを生成する関数
 export const getMsStorageKey = (msName) => {
     if (!msName) return null;
-    // MS名を正規化してキーに使用
+    // MS名を正規化してキーに使用（MS名全体を保持）
     const normalized = msName
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '_') // 特殊文字をアンダースコアに変換
+        .replace(/[^a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '_') // 日本語文字、英数字、アンダースコア以外をアンダースコアに変換
         .replace(/_+/g, '_') // 連続するアンダースコアを1つに
         .replace(/^_+|_+$/g, ''); // 先頭末尾のアンダースコアを削除
     return `${LOCAL_KEY_PREFIX}${normalized}`;
