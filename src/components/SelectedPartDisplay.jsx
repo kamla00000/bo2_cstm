@@ -4,6 +4,7 @@ import React from 'react';
 import ImageWithFallback from './ImageWithFallback';
 import styles from './PickedMs.module.css';
 import { shouldInstantAction } from '../utils/deviceDetection';
+import { isPartDisabled } from '../utils/ngparts';
 
 const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, onLeavePart, hoveredPart, hoverSource }) => {
     // 解除用フリックstate
@@ -131,13 +132,14 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
         const levelDisplay = levelMatch ? `LV${levelMatch[1]}` : '';
         const isPreview = part?.isPreview || false;
 
+        const isDisabled = part ? isPartDisabled(part, parts) : false;
         return (
             <div
                 key={part ? part.name : `empty-${index}`}
                 className={
                     `${styles.partSlot} ${styles.partSquare} w-16 h-16 bg-gray-900 overflow-hidden relative flex-shrink-0 ` +
                     (part
-                        ? 'border border-orange-400 cursor-pointer'
+                        ? (isDisabled ? 'border border-gray-600 flex items-center justify-center text-gray-600' : 'border border-orange-400 cursor-pointer')
                         : 'border border-gray-600 flex items-center justify-center text-gray-600') +
                     (isPreview ? ` ${styles.previewBlink}` : '')
                 }
