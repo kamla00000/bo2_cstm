@@ -14,11 +14,6 @@ import { isPartDisabled as ngIsPartDisabled } from '../utils/ngparts';
 export const useAppData = () => {
     const { msData, fullStrengtheningEffects, allPartsCache, isDataLoaded } = useDataLoading();
 
-    // ★ログ追加
-    useEffect(() => {
-        console.log('[useAppData] msData.length:', msData?.length, 'isDataLoaded:', isDataLoaded);
-    }, [msData, isDataLoaded]);
-
     // 復元検証用の状態
     const [restorationValidation, setRestorationValidation] = useState({
         expectedParts: [],
@@ -32,7 +27,7 @@ export const useAppData = () => {
     const [hoveredPart, setHoveredPart] = useState(null);
     const [hoverSource, setHoverSource] = useState(null); 
     const [filterCategory, setFilterCategory] = useState('防御');
-    const [isFullStrengthened, setIsFullStrengthened] = useState(6);
+    const [isFullStrengthened, setIsFullStrengthened] = useState(0);
     const [expansionType, setExpansionType] = useState('無し');
     const [selectedPreviewPart, setSelectedPreviewPart] = useState(null);
 
@@ -75,6 +70,58 @@ export const useAppData = () => {
             fullStrengtheningEffects
         );
     }, [selectedMs, selectedParts, isFullStrengthened, expansionType, allPartsCache, fullStrengtheningEffects]);
+
+    // ホバー時の仮ステータス計算（パーツリストからのホバー時）
+    const previewStats = useMemo(() => {
+        console.log('[previewStats] 条件チェック:', {
+            hoveredPart: hoveredPart?.name || 'なし',
+            selectedMs: selectedMs?.["MS名"] || 'なし',
+            hoverSource: hoverSource || 'なし',
+            selectedPartsCount: selectedParts?.length || 0,
+            condition1: !hoveredPart,
+            condition2: !selectedMs,
+            condition3: hoverSource !== 'partList',
+            finalConditionResult: !hoveredPart || !selectedMs || hoverSource !== 'partList'
+        });
+
+        if (!hoveredPart || !selectedMs || hoverSource !== 'partList') {
+            return null;
+        }
+
+        // 既に装備済みのパーツの場合はプレビューしない
+        const isAlreadyEquipped = selectedParts.some(part => part.name === hoveredPart.name);
+        if (isAlreadyEquipped) {
+            console.log('[previewStats] 既に装備済みのため、プレビューをスキップ');
+            return null;
+        }
+
+        console.log('[previewStats] パーツリストからのホバー検出:', {
+            hoveredPart: hoveredPart?.name,
+            hoverSource,
+            selectedPartsCount: selectedParts?.length
+        });
+
+        // 現在のパーツにホバー中のパーツを追加
+        const partsWithHovered = [...selectedParts, hoveredPart];
+        
+        console.log('[previewStats] パーツ追加後:', {
+            original: selectedParts?.length,
+            withHovered: partsWithHovered?.length,
+            addedPart: hoveredPart?.name
+        });
+
+        const result = calculateMSStatsLogic(
+            selectedMs,
+            partsWithHovered,
+            isFullStrengthened,
+            expansionType,
+            allPartsCache,
+            fullStrengtheningEffects
+        );
+
+        console.log('[previewStats] 計算結果:', result);
+        return result;
+    }, [hoveredPart, hoverSource, selectedMs, selectedParts, isFullStrengthened, expansionType, allPartsCache, fullStrengtheningEffects]);
 
     const partBonuses = useMemo(() => {
         if (!selectedParts || selectedParts.length === 0) {
@@ -210,7 +257,7 @@ export const useAppData = () => {
     }, []);
 
     const setFullStrengthenedWrapper = useCallback((newValue) => {
-        setIsFullStrengthened(newValue);
+        setIsFullStrengthened(Number(newValue));
     }, []);
 
     const handlePartHover = useCallback((part, source) => {
@@ -241,6 +288,7 @@ export const useAppData = () => {
         expansionOptions: EXPANSION_OPTIONS,
         expansionDescriptions: EXPANSION_DESCRIPTIONS,
         currentStats,
+        previewStats,
         slotUsage,
         usageWithPreview,
         handlePartHover,

@@ -97,6 +97,12 @@ export const calculateMSStatsLogic = (
 
   // 2. カスタムパーツのボーナスと上限引き上げの収集
   parts.forEach(part => {
+    console.log(`[Part Debug] Processing part: ${part.name}`);
+    console.log(`[Part Debug] isFullStrengthened: ${isFullStrengthened}`);
+    console.log(`[Part Debug] Part has hpByLevel: ${Array.isArray(part.hpByLevel)}`);
+    console.log(`[Part Debug] Part has meleeCorrectionByLevel: ${Array.isArray(part.meleeCorrectionByLevel)}`);
+    console.log(`[Part Debug] FORCED UPDATE - timestamp: ${Date.now()}`); // 強制更新マーカー
+    
     // 総合強化プログラム_格闘_LV1の特殊処理
     // if (part.name === "総合強化プログラム_格闘_LV1") {
     //   const levelUpTable = [1, 2, 3, 4, 5, 5];
@@ -176,29 +182,49 @@ export const calculateMSStatsLogic = (
 
     // HPだけはByLevelがなければ従来通り
     if (!Array.isArray(part.hpByLevel)) {
-      if (isFullStrengthened > 0 && typeof part.hp_full === 'number') {
+      console.log(`[HP Debug] Part: ${part.name}, isFullStrengthened: ${isFullStrengthened}`);
+      console.log(`[HP Debug] hp: ${part.hp}, hp_4: ${part.hp_4}, hp_full: ${part.hp_full}`);
+      
+      if (isFullStrengthened === 6 && typeof part.hp_full === 'number') {
         partBonus.hp += part.hp_full;
+        console.log(`[HP Debug] Applied hp_full: ${part.hp_full}`);
+      } else if (isFullStrengthened === 4 && typeof part.hp_4 === 'number') {
+        partBonus.hp += part.hp_4;
+        console.log(`[HP Debug] Applied hp_4: ${part.hp_4}`);
       } else if (typeof part.hp === 'number') {
         partBonus.hp += part.hp;
+        console.log(`[HP Debug] Applied hp: ${part.hp}`);
       }
     }
     if (!Array.isArray(part.shootByLevel)) {
-      if (isFullStrengthened > 0 && typeof part.shoot_full === 'number') {
+      if (isFullStrengthened === 6 && typeof part.shoot_full === 'number') {
         partBonus.shoot += part.shoot_full;
+      } else if (isFullStrengthened === 4 && typeof part.shoot_4 === 'number') {
+        partBonus.shoot += part.shoot_4;
       } else if (typeof part.shoot === 'number') {
         partBonus.shoot += part.shoot;
       }
     }
     if (!Array.isArray(part.meleeCorrectionByLevel)) {
-      if (isFullStrengthened > 0 && typeof part.melee_full === 'number') {
+      console.log(`[Melee Debug] Part: ${part.name}, isFullStrengthened: ${isFullStrengthened}`);
+      console.log(`[Melee Debug] melee: ${part.melee}, melee_4: ${part.melee_4}, melee_full: ${part.melee_full}`);
+      
+      if (isFullStrengthened === 6 && typeof part.melee_full === 'number') {
         partBonus.meleeCorrection += part.melee_full;
+        console.log(`[Melee Debug] Applied melee_full: ${part.melee_full}`);
+      } else if (isFullStrengthened === 4 && typeof part.melee_4 === 'number') {
+        partBonus.meleeCorrection += part.melee_4;
+        console.log(`[Melee Debug] Applied melee_4: ${part.melee_4}`);
       } else if (typeof part.melee === 'number') {
         partBonus.meleeCorrection += part.melee;
+        console.log(`[Melee Debug] Applied melee: ${part.melee}`);
       }
     }
     if (!Array.isArray(part.armorRangeByLevel)) {
-      if (isFullStrengthened > 0 && typeof part.armor_range_full === 'number') {
+      if (isFullStrengthened === 6 && typeof part.armor_range_full === 'number') {
         partBonus.armorRange += part.armor_range_full;
+      } else if (isFullStrengthened === 4 && typeof part.armor_range_4 === 'number') {
+        partBonus.armorRange += part.armor_range_4;
       } else if (typeof part.armor_range === 'number') {
         partBonus.armorRange += part.armor_range;
       } else if (typeof part.shootDefense === 'number') {
@@ -206,8 +232,10 @@ export const calculateMSStatsLogic = (
       }
     }
     if (!Array.isArray(part.armorBeamByLevel)) {
-      if (isFullStrengthened > 0 && typeof part.armor_beam_full === 'number') {
+      if (isFullStrengthened === 6 && typeof part.armor_beam_full === 'number') {
         partBonus.armorBeam += part.armor_beam_full;
+      } else if (isFullStrengthened === 4 && typeof part.armor_beam_4 === 'number') {
+        partBonus.armorBeam += part.armor_beam_4;
       } else if (typeof part.armor_beam === 'number') {
         partBonus.armorBeam += part.armor_beam;
       } else if (typeof part.beamDefense === 'number') {
@@ -215,8 +243,10 @@ export const calculateMSStatsLogic = (
       }
     }
     if (!Array.isArray(part.armorMeleeByLevel)) {
-      if (isFullStrengthened > 0 && typeof part.armor_melee_full === 'number') {
+      if (isFullStrengthened === 6 && typeof part.armor_melee_full === 'number') {
         partBonus.armorMelee += part.armor_melee_full;
+      } else if (isFullStrengthened === 4 && typeof part.armor_melee_4 === 'number') {
+        partBonus.armorMelee += part.armor_melee_4;
       } else if (typeof part.armor_melee === 'number') {
         partBonus.armorMelee += part.armor_melee;
       } else if (typeof part.meleeDefense === 'number') {

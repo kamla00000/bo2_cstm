@@ -38,6 +38,7 @@ const PickedMs = React.forwardRef(({
     isFullStrengthened,
     expansionType,
     currentStats,
+    previewStats,
     slotUsage,
     usageWithPreview,
     hoveredOccupiedSlots,
@@ -201,7 +202,6 @@ const PickedMs = React.forwardRef(({
     };
 
     const handleSelectMs = (ms) => {
-        console.log('[handleSelectMs] MS選択:', ms);
         handleMsSelect(ms);
         setShowSelector(false);
     };
@@ -239,7 +239,6 @@ const PickedMs = React.forwardRef(({
             if (success) {
                 setSavedBuilds(loadBuildsFromLocal(selectedMs["MS名"]));
                 setSaveError('');
-                console.log('[handleSaveBuild] 保存完了');
                 return true;
             } else {
                 setSaveError('保存に失敗しました');
@@ -254,9 +253,6 @@ const PickedMs = React.forwardRef(({
 
     // ロード処理
     const handleLoadBuild = (build) => {
-        console.log('[handleLoadBuild] ===== ロード開始 =====');
-        console.log('[handleLoadBuild] ビルドデータ:', JSON.stringify(build, null, 2));
-        
         setLoadingStatus('MSを検索中...');
         
         // 1. MSを検索
@@ -268,22 +264,18 @@ const PickedMs = React.forwardRef(({
             return;
         }
 
-        console.log('[handleLoadBuild] MS発見:', foundMs["MS名"]);
         setLoadingStatus('現在のパーツをクリア中...');
 
         // 2. 現在のパーツを全てクリア
-        console.log('[handleLoadBuild] パーツクリア実行');
         handleClearAllParts();
 
         // 3. MSを選択
         setTimeout(() => {
-            console.log('[handleLoadBuild] MS選択:', foundMs["MS名"]);
             setLoadingStatus('MSを選択中...');
             handleMsSelect(foundMs);
 
             // 4. フル強化状態を設定（警告なし）
             setTimeout(() => {
-                console.log('[handleLoadBuild] フル強化設定:', build.isFullStrengthened);
                 setLoadingStatus('設定を復元中...');
                 // セーブデータ呼び出し時は警告を表示せずに直接設定
                 const loadedFullStrength = typeof build.isFullStrengthened === 'number' ? build.isFullStrengthened : (build.isFullStrengthened ? 6 : 0);
@@ -295,20 +287,14 @@ const PickedMs = React.forwardRef(({
 
                 // 5. 拡張タイプを設定
                 setTimeout(() => {
-                    console.log('[handleLoadBuild] 拡張タイプ設定:', build.expansionType);
                     setExpansionType(build.expansionType || 'なし');
 
                     // 6. パーツ復元処理
                     setTimeout(() => {
-                        console.log('[handleLoadBuild] パーツ復元準備:', build.parts);
-                        
                         const partsToRestore = build.parts || [];
-                        console.log('[handleLoadBuild] 復元対象パーツ数:', partsToRestore.length);
-                        console.log('[handleLoadBuild] 復元対象パーツ一覧:', partsToRestore);
                         
                         // パーツが空の場合は復元処理をスキップして完了
                         if (partsToRestore.length === 0) {
-                            console.log('[handleLoadBuild] パーツなし - 復元完了');
                             setLoadingStatus('');
                             if (typeof setPartsRestored === 'function') {
                                 setPartsRestored(true);
@@ -339,7 +325,6 @@ const PickedMs = React.forwardRef(({
     const handlePartsRestoration = async (partsToRestore, source = 'unknown') => {
         // 空配列または無効な値の場合は即座に完了
         if (!partsToRestore || !Array.isArray(partsToRestore) || partsToRestore.length === 0) {
-            console.log(`[handlePartsRestoration] 空配列検出 (${source}) - 即座に完了`);
             cleanupRestoration(
                 restorationInProgressRef,
                 setIsRestoring,
@@ -381,7 +366,6 @@ const PickedMs = React.forwardRef(({
     useEffect(() => {
         // データ読み込み完了を待つ
         if (!isDataLoaded) {
-            console.log('[useEffect Unified] データ読み込み未完了、復元を待機');
             return;
         }
         
@@ -392,37 +376,24 @@ const PickedMs = React.forwardRef(({
 
         // URL復元を優先
         if (urlBuildData && urlBuildData.length > 0) {
-            console.log('[useEffect Unified] ===== URL復元を実行 =====');
-            console.log('[useEffect Unified] URL復元データ:', urlBuildData);
-            console.log('[useEffect Unified] 選択中MS:', selectedMs?.["MS名"]);
-            console.log('[useEffect Unified] データ読み込み済み:', isDataLoaded);
-            console.log('[useEffect Unified] allPartsCacheキー数:', allPartsCache ? Object.keys(allPartsCache).length : 0);
-            
-            // 問題のパーツが復元対象に含まれているかチェック
-            const hasComplexFrame = urlBuildData.includes('複合フレーム[Type-A]_LV1') || urlBuildData.includes('複合フレーム[Type-B]_LV1');
-            console.log('[useEffect Unified] 複合フレーム系パーツ含む:', hasComplexFrame);
-            
             handlePartsRestoration(urlBuildData, 'URL');
             return;
         }
 
         // 次にApp側のpendingRestorePartsをチェック
         if (pendingRestoreParts && pendingRestoreParts.length > 0) {
-            console.log('[useEffect Unified] App側復元を実行:', pendingRestoreParts);
             handlePartsRestoration(pendingRestoreParts, 'App');
             return;
         }
 
         // 最後にローカルのpendingLoadPartsをチェック
         if (pendingLoadParts && pendingLoadParts.length > 0) {
-            console.log('[useEffect Unified] ローカル復元を実行:', pendingLoadParts);
             handlePartsRestoration(pendingLoadParts, 'Local');
             return;
         }
 
         // パーツが空配列の場合の処理（pendingLoadPartsが[]の場合）
         if (pendingLoadParts && Array.isArray(pendingLoadParts) && pendingLoadParts.length === 0) {
-            console.log('[useEffect Unified] 空配列検出 - 復元完了処理実行');
             cleanupRestoration(
                 restorationInProgressRef,
                 setIsRestoring,
@@ -651,6 +622,7 @@ const PickedMs = React.forwardRef(({
                                 <div className={pickedMsStyles['slotparts-status-mobile']}>
                                     <StatusDisplay
                                         stats={currentStats}
+                                        previewStats={previewStats}
                                         selectedMs={selectedMs}
                                         hoveredPart={hoveredPart}
                                         isFullStrengthened={isFullStrengthened}
@@ -668,6 +640,7 @@ const PickedMs = React.forwardRef(({
                 <div className={pickedMsStyles.statusListWrapper + " space-y-4 flex flex-col flex-grow w-full h-full justify-end items-end"}>
                     <StatusDisplay
                         stats={currentStats}
+                        previewStats={previewStats}
                         selectedMs={selectedMs}
                         hoveredPart={hoveredPart}
                         isFullStrengthened={isFullStrengthened}

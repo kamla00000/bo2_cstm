@@ -114,6 +114,7 @@ function AppContent() {
         expansionOptions,
         expansionDescriptions,
         currentStats,
+        previewStats,
         slotUsage,
         usageWithPreview,
         handlePartHover,
@@ -381,6 +382,7 @@ function AppContent() {
                         expansionOptions={expansionOptions}
                         expansionDescriptions={expansionDescriptions}
                         currentStats={currentStats}
+                        previewStats={previewStats}
                         slotUsage={slotUsage}
                         usageWithPreview={usageWithPreview}
                         hoveredOccupiedSlots={hoveredOccupiedSlots}

@@ -18,6 +18,7 @@ const initialLimits = {
 
 const StatusDisplay = ({
   stats,
+  previewStats,
   selectedMs,
   hoveredPart,
   isFullStrengthened,
@@ -27,9 +28,13 @@ const StatusDisplay = ({
   onClose,
 }) => {
   console.log("[StatusDisplay] props.stats:", stats);
+  console.log("[StatusDisplay] props.previewStats:", previewStats);
 
   // タブの状態管理
   const [activeTab, setActiveTab] = React.useState('graph'); // 'graph' または 'numbers'
+
+  // ホバー時は previewStats を使用、通常時は stats を使用
+  const displayStats = previewStats || stats;
 
   const {
     base,
@@ -40,9 +45,9 @@ const StatusDisplay = ({
     currentLimits,
     total,
     rawTotal,
-  } = stats;
+  } = displayStats;
 
-  if (!selectedMs || !stats) {
+  if (!selectedMs || !displayStats) {
     console.log("[StatusDisplay] No selected MS or stats data available.");
     return <div className="bg-gray-800 p-4 shadow-md">ステータス情報なし</div>;
   }
@@ -205,17 +210,22 @@ const StatusDisplay = ({
            statKey === 'turnPerformanceSpace' ? '旋回(宇宙)' : statKey}
         </div>
         {/* 合計値の表示 */}
-        <div className="text-sm text-right w-16 flex flex-col items-end justify-center">
+        <div className="text-sm text-right w-16 flex items-center justify-end gap-1">
+          {isOverLimit && (
+            <span className="inline-flex items-center justify-center gap-1 px-1 py-0.5 bg-red-500 rounded text-xs whitespace-nowrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="warning-pulse">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                <path d="M12 9v4"/>
+                <path d="m12 17 .01 0"/>
+              </svg>
+              <span className="text-white font-bold" style={{ textShadow: 'none', filter: 'none' }}>+{formatNumber(rawTotalValue - limit)}</span>
+            </span>
+          )}
           <span className={`transition-all duration-500 ease-in-out ${
             isOverLimit ? 'text-red-500' : totalValueColorClass
           }`}>
             {formatNumber(rawTotalValue)}
           </span>
-          {isOverLimit && (
-            <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
-              +{formatNumber(rawTotalValue - limit)} OVER
-            </span>
-          )}
         </div>
         {/* 補正値の表示 */}
         <div className={`text-sm text-right w-12 transition-all duration-500 ease-in-out ${bonusValue > 0 ? 'text-orange-300' : bonusValue < 0 ? 'text-red-500' : 'text-gray-200'}`}>
@@ -322,7 +332,7 @@ const StatusDisplay = ({
     const totalValueColorClass = isStatModified ? 'text-orange-500' : 'text-gray-200';
 
     return (
-      <div key={statKey} className={`grid gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center ${isMobile ? 'grid-cols-5' : 'grid-cols-7'}`}>
+      <div key={statKey} className={`grid gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center ${isMobile ? 'grid-cols-5' : 'grid-cols-7'} details-row`}>
         <div className="text-gray-200 text-sm whitespace-nowrap">{label}</div>
         <div className="text-gray-200 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
         <div className={`text-sm text-right whitespace-nowrap transition-all duration-500 ease-in-out ${combinedBonusValue > 0 ? 'text-orange-300' : (combinedBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
@@ -338,18 +348,23 @@ const StatusDisplay = ({
             {formatBonus(totalLimitBonusValue)}
           </div>
         )}
-        <div className="text-sm text-right flex flex-col items-end justify-center">
+        <div className="text-sm text-right w-20 flex items-center justify-end gap-[5px]">
+          {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
+            <span className="inline-flex items-center justify-center gap-1 px-1 py-0.5 bg-red-500 rounded text-xs whitespace-nowrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="warning-pulse">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                <path d="M12 9v4"/>
+                <path d="m12 17 .01 0"/>
+              </svg>
+              <span className="text-white font-bold" style={{ textShadow: 'none', filter: 'none' }}>+{formatNumber(rawTotalValue - currentLimits[statKey])}</span>
+            </span>
+          )}
           <span className={`transition-all duration-500 ease-in-out ${
             (currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && rawTotalValue > currentLimits[statKey] && currentLimits[statKey] !== Infinity)
               ? 'text-red-500' : totalValueColorClass
           }`}>
             {displayNumericValue(rawTotalValue)}
           </span>
-          {currentLimits[statKey] !== undefined && currentLimits[statKey] !== null && currentLimits[statKey] !== Infinity && rawTotalValue > currentLimits[statKey] && (
-            <span className="text-red-500 text-xs mt-0.5 whitespace-nowrap leading-none">
-              +{formatNumber(rawTotalValue - currentLimits[statKey])} OVER
-            </span>
-          )}
         </div>
         <div className="text-sm text-right whitespace-nowrap">
           <span className={limitColorClass}>{limitDisplay}</span>
@@ -381,6 +396,17 @@ const StatusDisplay = ({
               </span>
             </div>
           )}
+
+          {/* ホバーインジケーター - 768px未満でのみ表示 */}
+          <div className="relative mb-2 md:hidden" style={{ height: '24px' }}>
+            {hoveredPart && (
+              <div className="absolute inset-0 flex justify-center items-center bg-orange-900 bg-opacity-30 border border-orange-400 rounded text-orange-300 text-xs animate-pulse select-none pointer-events-none">
+                <span>{hoveredPart.name}の装備プレビュー中</span>
+              </div>
+            )}
+          </div>
+          {/* デスクトップ用の高さ調整（インジケーター非表示時） */}
+          <div className="hidden md:block mb-2"></div>
 
           {/* タブナビゲーション */}
           <div className="flex justify-end border-b border-gray-600 mb-2">
@@ -473,14 +499,14 @@ const StatusDisplay = ({
           ) : (
             // 数値表示（現在のステータス一覧）
             <>
-              <div className={`grid gap-2 pb-2 border-b border-gray-600 text-gray-200 ${isMobile ? 'grid-cols-5' : 'grid-cols-7'}`}>
+              <div className={`grid gap-2 pb-2 border-b border-gray-600 text-gray-200 ${isMobile ? 'grid-cols-5' : 'grid-cols-7'} details-header`}>
                 <div className="whitespace-nowrap">項目名</div>
                 <div className="text-right whitespace-nowrap">初期値</div>
                 <div className="text-right whitespace-nowrap">補正</div>
-                {!isMobile && <div className="text-right whitespace-nowrap">フル強化</div>}
+                {!isMobile && <div className="text-right whitespace-nowrap">強化</div>}
                 {!isMobile && <div className="text-right whitespace-nowrap">上限増</div>}
-                <div className="text-right whitespace-nowrap">合計値</div>
-                <div className="text-right whitespace-nowrap">上限合計</div>
+                <div className="text-right whitespace-nowrap w-20">合計値</div>
+                <div className="text-right whitespace-nowrap">上限</div>
               </div>
 
               {renderStatRow('HP', 'hp')}

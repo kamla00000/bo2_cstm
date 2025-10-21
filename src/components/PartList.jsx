@@ -217,10 +217,8 @@ const PartList = ({
                 index: currentIndex,
             };
             setFixedPartInfo(newFixedInfo);
-            console.log('🎯 新規装備でfixedPartInfo設定:', newFixedInfo, '現在のソート済み配列長さ:', currentSortedPartsRef.current.length);
         } else {
             setFixedPartInfo(null);
-            console.log('🎯 装備解除でfixedPartInfo解除');
         }
         onSelect(part);
         if (window.innerWidth <= 1279) {
@@ -233,32 +231,22 @@ const PartList = ({
     // selectedPartsの変化を監視
     React.useEffect(() => {
         const currentLength = selectedParts.length;
-        
-        console.log('🔍 selectedParts変化検出:', {
-            前回の長さ: lastSelectedPartsLength,
-            現在の長さ: currentLength,
-            固定中パーツ: fixedPartInfo?.name,
-            装備中パーツ: selectedParts.map(p => p.name)
-        });
 
         // 全パーツが外された場合
         if (currentLength === 0) {
             if (fixedPartInfo !== null) {
                 setFixedPartInfo(null);
-                console.log('🎯 全パーツ外れ、fixedPartInfo解除');
             }
         } 
         // パーツが新たに装備された場合（長さが増加）
         else if (currentLength > lastSelectedPartsLength) {
             // 新しくパーツが装備された時点で、前回の固定は既にhandleSelectで解除済み
-            console.log('🔧 パーツ新規装備検出、固定は既にhandleSelectで更新済み');
         }
         // パーツが外された場合（長さが減少）
         else if (currentLength < lastSelectedPartsLength) {
             // 固定中のパーツが外された場合は固定を解除
             if (fixedPartInfo && !selectedParts.some(p => p.name === fixedPartInfo.name)) {
                 setFixedPartInfo(null);
-                console.log('🎯 固定中パーツが外された、fixedPartInfo解除');
             }
         }
 
@@ -267,23 +255,21 @@ const PartList = ({
 
     // ソートロジック - 固定パーツがある場合は固定パーツを除外してソートし、後で挿入
     const sortedParts = React.useMemo(() => {
-        console.log('🔄 ソート実行 fixedPartInfo:', fixedPartInfo, 'selectedParts.length:', selectedParts.length);
-        
-        if (!Array.isArray(parts) || parts.length === 0) {
+        const partsList = parts || [];
+        if (!Array.isArray(partsList) || partsList.length === 0) {
             return [];
         }
         
         // 「装備完了」直後のパーツを完全にソート対象外にする
         let fixedPart = null;
         let fixedIndex = -1;
-        let partsToSort = parts;
+        let partsToSort = partsList;
         
         if (fixedPartInfo && fixedPartInfo.name) {
-            fixedPart = parts.find(p => p.name === fixedPartInfo.name);
+            fixedPart = partsList.find(p => p.name === fixedPartInfo.name);
             fixedIndex = fixedPartInfo.index;
             // 固定パーツをソート対象から完全に除外
-            partsToSort = parts.filter(p => p.name !== fixedPartInfo.name);
-            console.log('🔧 固定パーツをソート除外:', fixedPart?.name, '元位置:', fixedIndex);
+            partsToSort = partsList.filter(p => p.name !== fixedPartInfo.name);
         }
         
         // 固定パーツ以外のみをソート
@@ -334,7 +320,6 @@ const PartList = ({
             // 元の位置が配列範囲内に収まるように調整
             const insertIndex = Math.min(fixedIndex, sorted.length);
             sorted.splice(insertIndex, 0, fixedPart);
-            console.log('📍 固定パーツを位置', insertIndex, 'に挿入:', fixedPart.name);
         }
         
         // 現在のソート結果をrefに保存（次回のhandleSelectで使用）
@@ -415,7 +400,10 @@ const PartList = ({
                                         }
                                     }}
                                     onMouseLeave={() => {
-                                        onHover?.(null, null);
+                                        // モバイル（768px未満）ではonMouseLeaveでhoverをクリアしない
+                                        if (window.innerWidth >= 768) {
+                                            onHover?.(null, null);
+                                        }
                                     }}
                                 >
                                     <ImageWithFallback partName={part.name} level={partLevel} className="pointer-events-none" />

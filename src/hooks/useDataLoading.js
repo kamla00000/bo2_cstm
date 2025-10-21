@@ -20,37 +20,24 @@ export const useDataLoading = () => {
         if (!msResponse.ok) throw new Error(`HTTP error! status: ${msResponse.status} for msData.json`);
         if (!fullStrengtheningResponse.ok) throw new Error(`HTTP error! status: ${fullStrengtheningResponse.status} for fullst.json`);
 
-        const msJson = await msResponse.json();
-        const fullStrengtheningJson = await fullStrengtheningResponse.json();
+        const msJson = await msResponse.json();
+        const fullStrengtheningJson = await fullStrengtheningResponse.json();
 
-        // ここにデバッグログを追加
-        console.log('DEBUG: useDataLoading - msData.json loaded. First MS entry:', msJson[0]);
-        const cannonGun = msJson.find(ms => ms.MS名 === "キャノンガン_LV1");
-        if (cannonGun) {
-            console.log('DEBUG: useDataLoading - "キャノンガン_LV1" entry:', cannonGun);
-            console.log('DEBUG: "キャノンガン_LV1" 近スロット:', cannonGun["近スロット"]);
-            console.log('DEBUG: "キャノンガン_LV1" 中スロット:', cannonGun["中スロット"]);
-            console.log('DEBUG: "キャノンガン_LV1" 遠スロット:', cannonGun["遠スロット"]);
-        } else {
-            console.log('DEBUG: "キャノンガン_LV1" not found in loaded msData.json.');
-        }
-
-
-        setMsData(msJson);
+        setMsData(msJson);
         setFullStrengtheningEffects(fullStrengtheningJson);
 
         // 全てのパーツデータをキャッシュにロード
         const partsPromises = CATEGORIES.map(async (cat) => {
-          if (!allPartsCache.current[cat.name]) {
-            try {
-              const response = await fetch(`/data/${cat.fileName}`);
-              if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${cat.fileName}`);
-              const data = await response.json();
-              allPartsCache.current[cat.name] = data;
-            } catch (error) {
-              console.error(`パーツデータ読み込みエラー (${cat.fileName}):`, error);
-            }
-          }
+                    if (!allPartsCache.current[cat.name]) {
+                        try {
+                            const response = await fetch(`/data/${cat.fileName}`);
+                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${cat.fileName}`);
+                            const data = await response.json();
+                            allPartsCache.current[cat.name] = data;
+                        } catch (error) {
+                            console.error(`パーツデータ読み込みエラー (${cat.fileName}):`, error);
+                        }
+                    }
         });
         await Promise.all(partsPromises);
         setIsDataLoaded(true); // 全てのデータロードが完了

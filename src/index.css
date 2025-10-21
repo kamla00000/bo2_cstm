@@ -38,6 +38,20 @@ li {
 .overflow-x-auto {
     scrollbar-gutter: stable;
 }
+
+/* カスタム警告アイコン点滅アニメーション */
+@keyframes warning-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.warning-pulse {
+  animation: warning-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 .hex-badge {
   display: inline-block;
   position: relative;
