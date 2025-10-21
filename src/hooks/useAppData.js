@@ -304,5 +304,6 @@ export const useAppData = () => {
         isPartDisabled, 
         allPartsCache,
         isDataLoaded,
+        hoverSource,
     };
 };

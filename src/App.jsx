@@ -128,6 +128,7 @@ function AppContent() {
         isPartDisabled,
         allPartsCache,
         isDataLoaded,
+        hoverSource,
     } = useAppData();
 
     const navigate = useNavigate();
@@ -376,6 +377,7 @@ function AppContent() {
                         selectedMs={selectedMs}
                         selectedParts={selectedParts}
                         hoveredPart={hoveredPart}
+                        hoverSource={hoverSource}
                         selectedPreviewPart={selectedPreviewPart}
                         isFullStrengthened={isFullStrengthened}
                         expansionType={expansionType}

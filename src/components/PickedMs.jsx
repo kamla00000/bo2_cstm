@@ -34,6 +34,7 @@ const PickedMs = React.forwardRef(({
     selectedMs,
     selectedParts,
     hoveredPart,
+    hoverSource,
     selectedPreviewPart,
     isFullStrengthened,
     expansionType,
@@ -611,6 +612,8 @@ const PickedMs = React.forwardRef(({
                                     onClearAllParts={handleClearAllParts}
                                     onHoverPart={onSelectedPartDisplayHover}
                                     onLeavePart={onSelectedPartDisplayLeave}
+                                    hoveredPart={hoveredPart}
+                                    hoverSource={hoverSource}
                                 />
                                 <div className={styles.partPreviewArea}>
                                     <PartPreview part={hoveredPart || selectedPreviewPart} />

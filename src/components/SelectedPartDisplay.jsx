@@ -5,7 +5,7 @@ import ImageWithFallback from './ImageWithFallback';
 import styles from './PickedMs.module.css';
 import { shouldInstantAction } from '../utils/deviceDetection';
 
-const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, onLeavePart }) => {
+const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, onLeavePart, hoveredPart, hoverSource }) => {
     // 解除用フリックstate
     const [removePreviewPart, setRemovePreviewPart] = React.useState(null);
     
@@ -116,9 +116,20 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
         allSlots.push(null);
     }
 
+    // プレビュー用のパーツをスロットに追加（PartListからホバー時のみ）
+    const shouldShowPreview = hoveredPart && hoverSource === 'partList' && !parts.some(p => p.name === hoveredPart.name);
+    if (shouldShowPreview && allSlots.filter(p => p !== null).length < maxParts) {
+        // 最初の空きスロットにプレビューパーツを配置
+        const firstEmptyIndex = allSlots.findIndex(p => p === null);
+        if (firstEmptyIndex !== -1) {
+            allSlots[firstEmptyIndex] = { ...hoveredPart, isPreview: true };
+        }
+    }
+
     const renderSlot = (part, index) => {
         const levelMatch = part ? part.name.match(/_LV(\d+)$/) : null;
         const levelDisplay = levelMatch ? `LV${levelMatch[1]}` : '';
+        const isPreview = part?.isPreview || false;
 
         return (
             <div
@@ -127,11 +138,13 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                     `${styles.partSlot} ${styles.partSquare} w-16 h-16 bg-gray-900 overflow-hidden relative flex-shrink-0 ` +
                     (part
                         ? 'border border-orange-400 cursor-pointer'
-                        : 'border border-gray-600 flex items-center justify-center text-gray-600')
+                        : 'border border-gray-600 flex items-center justify-center text-gray-600') +
+                    (isPreview ? ` ${styles.previewBlink}` : '')
                 }
+                style={isPreview ? { pointerEvents: 'none' } : {}}
                 data-selected-part-name={part ? part.name : undefined}
                 onClick={(e) => {
-                    if (part) {
+                    if (part && !isPreview) {
                         const isInstantAction = shouldInstantAction();
                         
                         if (isInstantAction) {
@@ -146,18 +159,18 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                         }
                     }
                 }}
-                title={part ? `「${part.name}」を外す` : '空きスロット'}
+                title={part ? (isPreview ? `「${part.name}」のプレビュー` : `「${part.name}」を外す`) : '空きスロット'}
                 onMouseEnter={() => {
-                    if (onHoverPart) {
+                    if (onHoverPart && !isPreview) {
                         onHoverPart(part, 'selectedParts');
                     }
                     // デスクトップでホバー時に解除レイヤーを表示
-                    if (window.innerWidth > 1024 && part) {
+                    if (window.innerWidth > 1024 && part && !isPreview) {
                         setRemoveLayerPart(part.name);
                     }
                 }}
                 onMouseLeave={() => {
-                    if (onLeavePart) {
+                    if (onLeavePart && !isPreview) {
                         onLeavePart(null, null);
                     }
                     // デスクトップでマウス離脱時に解除レイヤーをクリア
@@ -167,7 +180,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                 }}
                 onTouchStart={(e) => {
                     // タッチ開始時の処理（モバイルのみ）
-                    if (window.innerWidth <= 1024 && part) {
+                    if (window.innerWidth <= 1024 && part && !isPreview) {
                         // 既存のタイマーがあればクリア
                         if (layerDisplayTimerRef.current) {
                             clearTimeout(layerDisplayTimerRef.current);
@@ -201,7 +214,7 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                             </div>
                         )}
                         {/* 装備解除レイヤー（タップ・クリック時に表示） */}
-                        {removeLayerPart === part.name && (
+                        {!isPreview && removeLayerPart === part.name && (
                             <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-60 text-gray-200 text-base z-30 pointer-events-none">
                                 <span className="[text-shadow:1px_1px_2px_black] flex flex-col items-center justify-center leading-tight space-y-1">
                                     <span>装 備</span>

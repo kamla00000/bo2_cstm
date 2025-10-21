@@ -1354,3 +1354,16 @@ span{
   }
 }
 
+/* プレビューパーツのシンプルな明滅アニメーション */
+@keyframes simple-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.previewBlink {
+  animation: simple-blink 2s ease-in-out infinite;
+}
