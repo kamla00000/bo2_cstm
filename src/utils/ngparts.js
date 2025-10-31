@@ -6,23 +6,28 @@ export const specialTurnPartNames = [
     "コンポジットモーター"
 ];
 
+// 特殊系パーツ判定
 export const isSpecialTurnPart = (part) => {
-    const result = specialTurnPartNames.some(name => part.name && part.name.includes(name));
-    return result;
+    return specialTurnPartNames.some(name => part && part.name && part.name.includes(name));
 };
 
-export const isSpeedOrTurnPart = (part) => {
-    const isSpeedPositive = typeof part.speed === 'number' && part.speed > 0;
+
+// スピード上昇パーツ判定
+export const isSpeedPart = (part) => {
+    // コネクティングシステム［強襲Ⅰ型］_LV1は常にスピード上昇パーツ扱い（併用不可判定対象）
+    if (part.name && part.name.includes('コネクティングシステム') && part.name.includes('強襲')) return true;
+    return (typeof part.speed === 'number' && part.speed > 0);
+};
+
+// 旋回性能上昇パーツ判定
+export const isTurnPart = (part) => {
     const isTurnGroundPositive = typeof part.turnPerformanceGround === 'number' && part.turnPerformanceGround > 0;
     const isTurnSpacePositive = typeof part.turnPerformanceSpace === 'number' && part.turnPerformanceSpace > 0;
-
-    // レベル依存の旋回性能上昇パーツも判定
     const isTurnGroundByLevelPositive = Array.isArray(part.turnPerformanceGroundByLevel) && part.turnPerformanceGroundByLevel.some(v => typeof v === 'number' && v > 0);
     const isTurnSpaceByLevelPositive = Array.isArray(part.turnPerformanceSpaceByLevel) && part.turnPerformanceSpaceByLevel.some(v => typeof v === 'number' && v > 0);
-
-    const result = isSpeedPositive || isTurnGroundPositive || isTurnSpacePositive || isTurnGroundByLevelPositive || isTurnSpaceByLevelPositive;
-    return result;
+    return isTurnGroundPositive || isTurnSpacePositive || isTurnGroundByLevelPositive || isTurnSpaceByLevelPositive;
 };
+
 
 export const isPartDisabled = (part, selectedParts) => {
     // --- 併用不可ルール追加 ---
@@ -60,20 +65,32 @@ export const isPartDisabled = (part, selectedParts) => {
     }
 
     const isPartSpecial = isSpecialTurnPart(part);
-    const isPartSpeedOrTurn = isSpeedOrTurnPart(part);
+
+    const isPartSpeed = isSpeedPart(part);
+    const isPartTurn = isTurnPart(part);
 
     const hasSpecialSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpecialTurnPart(p));
-    const hasSpeedOrTurnSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpeedOrTurnPart(p) && !isSpecialTurnPart(p));
+    const hasSpeedSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpeedPart(p) && !isSpecialTurnPart(p));
+    const hasTurnSelected = Array.isArray(selectedParts) && selectedParts.some(p => isTurnPart(p) && !isSpecialTurnPart(p));
     const hasOtherSpecialSelected = Array.isArray(selectedParts) && selectedParts.some(p => isSpecialTurnPart(p) && p.name !== part.name);
 
     // kind重複判定（同種パーツの重複装備不可）
     const partKind = part.kind;
     const hasSameKindSelected = partKind && Array.isArray(selectedParts) && selectedParts.some(p => p.kind === partKind && p.name !== part.name);
 
-    if (isPartSpeedOrTurn && hasSpecialSelected && !isPartSpecial) {
+
+
+    // スピード上昇パーツ同士の併用不可（双方向）
+    if (isPartSpeed && hasSpeedSelected) {
+        if (!isAlreadySelected) {
+            return true;
+        }
+    }
+    // 特殊系とスピード/旋回系の併用不可
+    if ((isPartSpeed || isPartTurn) && hasSpecialSelected && !isPartSpecial) {
         return true;
     }
-    if (isPartSpecial && hasSpeedOrTurnSelected) {
+    if (isPartSpecial && (hasSpeedSelected || hasTurnSelected)) {
         return true;
     }
     if (isPartSpecial && hasOtherSpecialSelected) {

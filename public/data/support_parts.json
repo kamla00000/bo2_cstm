@@ -192,8 +192,8 @@
   },
   {
     "name": "フィールドモーター_LV3",
-    "close": 8,
-    "mid": 6,
+    "close": 6,
+    "mid": 4,
     "long": 1,
     "turnPerformanceGround": 15,
     "turnPerformanceSpace": 15,

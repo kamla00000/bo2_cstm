@@ -143,20 +143,20 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                         : 'border border-gray-600 flex items-center justify-center text-gray-600') +
                     (isPreview ? ` ${styles.previewBlink}` : '')
                 }
-                style={isPreview ? { pointerEvents: 'none' } : {}}
+                style={{
+                    ...(isPreview ? { pointerEvents: 'none' } : {}),
+                    userSelect: 'none'
+                }}
                 data-selected-part-name={part ? part.name : undefined}
                 onClick={(e) => {
                     if (part && !isPreview) {
                         const isInstantAction = shouldInstantAction();
-                        
                         if (isInstantAction) {
-                            // マウス優先デバイス：クリックで直接解除
                             onRemove(part);
                         } else if (window.innerWidth <= 1024) {
                             // タッチデバイス（モバイル）：タップで解除レイヤー表示、フリックで解除
                             // onTouchStartで既に設定済み
                         } else {
-                            // ハイブリッドデバイス（デスクトップ）：クリックで直接解除
                             onRemove(part);
                         }
                     }
@@ -166,7 +166,6 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                     if (onHoverPart && !isPreview) {
                         onHoverPart(part, 'selectedParts');
                     }
-                    // デスクトップでホバー時に解除レイヤーを表示
                     if (window.innerWidth > 1024 && part && !isPreview) {
                         setRemoveLayerPart(part.name);
                     }
@@ -175,32 +174,23 @@ const SelectedPartDisplay = ({ parts, onRemove, onClearAllParts, onHoverPart, on
                     if (onLeavePart && !isPreview) {
                         onLeavePart(null, null);
                     }
-                    // デスクトップでマウス離脱時に解除レイヤーをクリア
                     if (window.innerWidth > 1024) {
                         setRemoveLayerPart(null);
                     }
                 }}
                 onTouchStart={(e) => {
-                    // タッチ開始時の処理（モバイルのみ）
                     if (window.innerWidth <= 1024 && part && !isPreview) {
-                        // 既存のタイマーがあればクリア
                         if (layerDisplayTimerRef.current) {
                             clearTimeout(layerDisplayTimerRef.current);
                         }
-                        
-                        // フリック用の情報を保存
                         setRemovePreviewPart(part.name);
-                        
-                        // 解除レイヤー表示は遅延実行（フリックされた場合はキャンセル）
                         const currentPartName = part.name;
                         layerDisplayTimerRef.current = setTimeout(() => {
-                            // タイマーがクリアされていない場合のみレイヤーを表示
                             setRemoveLayerPart(currentPartName);
                             layerDisplayTimerRef.current = null;
-                        }, 150); // 150ms後に表示（フリックには十分な時間）
+                        }, 150);
                     }
                 }}
-                style={{ userSelect: 'none' }}
             >
                 {part ? (
                     <>

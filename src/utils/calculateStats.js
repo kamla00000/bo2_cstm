@@ -28,6 +28,7 @@ export const calculateMSStatsLogic = (
   console.log("   Full Strengthened:", isFullStrengthened);
   console.log("   Expansion Type:", expansionType);
   console.log("   fullStrengtheningEffectsData exists:", !!fullStrengtheningEffectsData);
+  console.log("[DEBUG] ms object full dump:", ms);
 
   if (!ms) {
     const defaultStatsValues = {
@@ -97,6 +98,25 @@ export const calculateMSStatsLogic = (
 
   // 2. カスタムパーツのボーナスと上限引き上げの収集
   parts.forEach(part => {
+    // コネクティングシステム[強襲Ⅰ型]の加算ロジック（melee, armor_meleeは全属性、speedのみ強襲限定）
+    if (part.name && part.name.includes('コネクティングシステム') && (part.name.includes('強襲Ⅰ型') || part.name.includes('強襲I型'))) {
+      partBonus.melee += part.melee || 0;
+      partBonus.meleeCorrection += part.melee || 0;
+      partBonus.armorMelee += part.armor_melee || 0;
+      const msCategory = ms.属性 || ms.カテゴリ || ms.category;
+      if (msCategory === '強襲') {
+        partBonus.speed += 7;
+        console.log(`[connectingsystem-raid] ${part.name}：属性「強襲」なのでスピード+7適用`);
+      } else {
+        console.log(`[connectingsystem-raid] ${part.name}：属性「${msCategory}」なのでスピード+7は適用しない`);
+      }
+      // 通常speed加算は絶対に行わない
+      return;
+    }
+    // 通常のspeed加算（コネクティングシステム強襲Ⅰ型以外）
+    if (!Array.isArray(part.speedByLevel)) {
+      if (typeof part.speed === 'number') partBonus.speed += part.speed;
+    }
     console.log(`[Part Debug] Processing part: ${part.name}`);
     console.log(`[Part Debug] isFullStrengthened: ${isFullStrengthened}`);
     console.log(`[Part Debug] Part has hpByLevel: ${Array.isArray(part.hpByLevel)}`);
