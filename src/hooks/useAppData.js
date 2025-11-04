@@ -217,11 +217,14 @@ export const useAppData = () => {
     }, []);
 
     const handlePartRemove = useCallback((partToRemove) => {
+        console.log('[handlePartRemove] パーツを削除:', partToRemove?.name);
+        // パーツ削除前にホバー状態をクリア（重要：previewStatsをnullにするため）
+        setHoveredPart(null);
+        setHoverSource(null);
+        setSelectedPreviewPart(null);
+        
         startTransition(() => {
             setSelectedParts(prevParts => prevParts.filter(part => part.name !== partToRemove.name));
-            setHoveredPart(null);
-            setHoverSource(null);
-            setSelectedPreviewPart(null);
         });
     }, []);
 
