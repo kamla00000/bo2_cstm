@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://gbo2cstm.vercel.app/sitemap.xml
+
+# 不要なファイルのクロールを防ぐ
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /*.json$

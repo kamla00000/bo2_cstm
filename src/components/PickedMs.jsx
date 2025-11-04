@@ -71,6 +71,7 @@ const PickedMs = React.forwardRef(({
     setPartsRestored,
     urlBuildData,
     onUrlRestoreComplete,
+    fullStrengtheningData,
 }, ref) => {
     const navigate = useNavigate();
 
@@ -675,7 +676,7 @@ const PickedMs = React.forwardRef(({
                 onDelete={handleDeleteBuild}
                 msData={msData}
                 partsData={allPartsCache}
-                fullStrengtheningData={undefined}
+                fullStrengtheningData={fullStrengtheningData}
                 currentParts={selectedParts}
                 isCurrentFullStrengthened={isFullStrengthened}
                 currentExpansionType={expansionType}

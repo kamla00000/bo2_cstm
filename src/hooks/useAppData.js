@@ -305,5 +305,6 @@ export const useAppData = () => {
         allPartsCache,
         isDataLoaded,
         hoverSource,
+        fullStrengtheningEffects,
     };
 };

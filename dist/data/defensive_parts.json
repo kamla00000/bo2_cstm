@@ -113,7 +113,6 @@
     "close": 0,
     "mid": 1,
     "long": 0,
-    "hp": 400,
     "armor_melee": 0,
     "armor_range": 0,
     "armor_beam": 0,
@@ -125,7 +124,6 @@
     "close": 0,
     "mid": 2,
     "long": 0,
-    "hp": 600,
     "armor_melee": 0,
     "armor_range": 0,
     "armor_beam": 0,
@@ -137,7 +135,6 @@
     "close": 0,
     "mid": 3,
     "long": 0,
-    "hp": 800,
     "armor_melee": 0,
     "armor_range": 0,
     "armor_beam": 0,
@@ -149,7 +146,6 @@
     "close": 0,
     "mid": 4,
     "long": 0,
-    "hp": 1400,
     "armor_melee": 0,
     "armor_range": 0,
     "armor_beam": 0,
@@ -161,7 +157,6 @@
     "close": 0,
     "mid": 5,
     "long": 0,
-    "hp": 1600,
     "armor_melee": 0,
     "armor_range": 0,
     "armor_beam": 0,
@@ -423,7 +418,7 @@
     "description": "ビーム属性から受けるダメージが3%軽減。\n機体LVが1上昇するごとにさらに4%増加。\n同一のパーツ効果による最大上昇値は15%。"
   },
   {
-    "name": "オーバーチューン[格闘装甲]_LV1",
+    "name": "オーバーチューン[格闘装甲]_LV1",
     "category": "防御",
     "close": 4,
     "mid": 1,
@@ -440,10 +435,9 @@
     "close": 5,
     "mid": 4,
     "long": 3,
-    "hp": 0,
-    "armor_melee": 1,
-    "armor_range": 1,
-    "armor_beam": 1,
+    "armorRangeByLevel": [1, 4, 7, 10, 10, 10],
+    "armorBeamByLevel":  [1, 4, 7, 10, 10, 10],
+    "armorMeleeByLevel": [1, 4, 7, 10, 10, 10],
     "description": "耐実弾、耐ビーム、耐格闘の各補正が1増加。\n機体LVが1上昇するごとにさらに3増加。\n同一のパーツ効果による最大上昇値は10。"
   },
   {
@@ -456,6 +450,8 @@
     "armor_melee": 0,
     "armor_range": 4,
     "armor_beam": 4,
+    "armor_range_4": 7,
+    "armor_beam_4": 7,
     "armor_range_full": 10,
     "armor_beam_full": 10,
     "kind":"複合装甲材",
@@ -470,6 +466,8 @@
     "hp": 0,
     "armor_melee": 4,
     "armor_beam": 4,
+    "armor_melee_4": 7,
+    "armor_beam_4": 7,
     "armor_melee_full": 10,
     "armor_beam_full": 10,
     "kind":"複合装甲材",
@@ -484,6 +482,8 @@
     "hp": 0,
     "armor_melee": 4,
     "armor_range": 4,
+    "armor_melee_4": 7,
+    "armor_range_4": 7,
     "armor_melee_full": 10,
     "armor_range_full": 10,
     "kind":"複合装甲材",
@@ -514,7 +514,7 @@
     "description": "機体HPに受けるダメージを3%軽減。\n加えて、緩衝材系スキルの効果である機体HPへのダメージ軽減効果をさらに8%強化。"
   },
   {
-    "name": "特殊強化フレーム[Type-A]_LV1",
+    "name": "特殊強化フレーム［Type-A］_LV1",
     "category": "防御",
     "close": 3,
     "mid": 7,
@@ -524,11 +524,11 @@
     "armor_range": 9,
     "armor_beam": 9,
     "hp_percent": 5,
-    "kind":"特殊強化",
+    "kind":"特殊強化フレーム",
     "description": "機体HPが5%増加。\n耐実弾補正と耐ビーム補正が9増加。\n特殊強化フレーム系パーツは複数装備できない。"
   },
   {
-    "name": "特殊強化フレーム[Type-B]_LV1",
+    "name": "特殊強化フレーム［Type-B］_LV1",
     "category": "防御",
     "close": 11,
     "mid": 1,
@@ -538,7 +538,7 @@
     "armor_range": 0,
     "armor_beam": 0,
     "hp_percent": 5,
-    "kind":"特殊強化",
+    "kind":"特殊強化フレーム",
     "description": "機体HPが5%増加。\n耐格闘補正が18増加。\n特殊強化フレーム系パーツは複数装備できない。"
   },
   {
@@ -559,9 +559,6 @@
     "close": 3,
     "mid": 0,
     "long": 3,
-    "armor_melee": 2,
-    "armor_range": 2,
-    "armor_beam": 2,
     "kind": "レベルリンク",
     "description": "耐実弾、耐ビーム、耐格闘補正が2増加。機体と主兵装のLVが一致すると効果量が上昇し、LVが高いほど効果量も高くなる。同系統のパーツは複数装備不可。"
   }

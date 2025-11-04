@@ -129,6 +129,7 @@ function AppContent() {
         allPartsCache,
         isDataLoaded,
         hoverSource,
+        fullStrengtheningEffects,
     } = useAppData();
 
     const navigate = useNavigate();
@@ -374,6 +375,7 @@ function AppContent() {
                     <PickedMs
                         ref={PickedMsRef}
                         msData={msData}
+                        fullStrengtheningData={fullStrengtheningEffects}
                         selectedMs={selectedMs}
                         selectedParts={selectedParts}
                         hoveredPart={hoveredPart}

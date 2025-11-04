@@ -153,6 +153,8 @@
     "close": 2,
     "mid": 3,
     "long": 3,
+    "turnPerformanceGround": 3,
+    "turnPerformanceSpace": 3,
     "description": "サイコミュ兵装のロックオン時間を25%短縮。機体HPの受けるダメージを3%軽減。MSの旋回性能が3増加"
   },
   {
@@ -223,6 +225,12 @@
     "close": 3,
     "mid": 3,
     "long": 1,
+    "meleeCorrectionByLevel": [1, 2, 3, 4, 5, 5],
+    "armorMeleeByLevel": [1, 2, 3, 4, 5, 5],
+    "highSpeedMovementByLevel": [1, 2, 3, 4, 5, 5],
+    "thrusterByLevel": [1, 2, 3, 4, 5, 5],
+    "turnPerformanceGroundByLevel": [1, 2, 3, 4, 5, 5],   
+    "turnPerformanceSpaceByLevel": [1, 2, 3, 4, 5, 5],
     "description": "格闘補正、耐格闘補正、高速移動、スラスター、MSの旋回性能が1増加する。\n機体LVが1上昇するごとに、さらに1増加。\n本パーツによる最大上昇は機体LV5まで。"
   },
   {
@@ -231,11 +239,25 @@
   "mid": 3,
   "long": 2,
   "hp": 1000,
-  "kind": "特殊強化",
+  "kind": "特殊強化装置",
   "description": "格闘補正が20%増加。機体HPが1000増加。",
   "meleeCorrection_percent": 20,
   "hp_percent": 0,
   "shoot_percent": 0,
+  "armorBeam_percent": 0,
+  "armorMelee_percent": 0,
+  "armorRange_percent": 0
+},
+{
+  "name": "特殊強化装置[Type-β]_LV1",  
+  "close": 3,
+  "mid": 3,
+  "long": 5,
+  "hp": 1000,
+  "kind": "特殊強化装置",
+  "description": "射撃補正が20%増加。機体HPが1000増加。",
+  "shoot_percent": 20,
+  "hp_percent": 0,
   "armorBeam_percent": 0,
   "armorMelee_percent": 0,
   "armorRange_percent": 0
@@ -254,5 +276,16 @@
     "mid": 4,
     "long": 4,
     "description": "支援カテゴリのみ装備可能。\n機体HPに受けるダメージを軽減。\n有利カテゴリの敵機に与えるダメージを増加。"
+  },
+  {
+    "name": "コネクティングシステム[強襲Ⅰ型]_LV1",
+    "close": 9,
+    "mid": 3,
+    "long": 2,
+    "melee": 10,
+    "armor_melee": 10,
+    "speed": 7,
+    "kind": "コネクティングシステム",
+    "description": "格闘補正と耐格闘補正が10増加。さらに強襲カテゴリに装備させると、スピードが7増加。同系統のカスタムパーツは複数装備不可。"
   }
 ]
