@@ -559,7 +559,7 @@ const StatusDisplay = ({
                 </div>
               </div>
               {/* 耐久火力行 - 横並び表示 */}
-              <div className="py-1 border-b border-gray-700 flex items-start justify-between gap-2">
+              <div className="py-1 border-b border-gray-700 flex items-center justify-between gap-2">
                 <div className="text-gray-200 text-sm whitespace-nowrap">耐久火力</div>
                 <div className="text-xs xl:text-xs">
                   <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-0 justify-items-end">
@@ -631,7 +631,7 @@ const StatusDisplay = ({
               </div>
 
               {/* 耐久火力行 - 横並び表示 */}
-              <div className="py-1 border-b border-gray-700 flex items-start justify-between gap-2">
+              <div className="py-1 border-b border-gray-700 flex items-center justify-between gap-2">
                 <div className="text-gray-200 text-sm whitespace-nowrap">耐久火力</div>
                 <div className="text-xs xl:text-xs">
                   <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-0 justify-items-start">
