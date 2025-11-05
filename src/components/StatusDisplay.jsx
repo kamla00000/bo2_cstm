@@ -268,7 +268,7 @@ const StatusDisplay = ({
 
     return (
       <div className="flex items-center gap-3">
-        <div className="text-gray-200 text-sm whitespace-nowrap w-20">
+        <div className={`text-gray-200 text-sm whitespace-nowrap w-20 ${styles.statusLabel}`}>
           {statKey === 'hp' ? 'HP' :
            statKey === 'armorRange' ? '耐実弾補正' :
            statKey === 'armorBeam' ? '耐ビーム補正' :
@@ -405,7 +405,7 @@ const StatusDisplay = ({
 
     return (
       <div key={statKey} className={`grid gap-2 py-1 border-b border-gray-700 last:border-b-0 items-center ${isMobile ? 'grid-cols-5' : 'grid-cols-7'} details-row`}>
-        <div className="text-gray-200 text-sm whitespace-nowrap">{label}</div>
+        <div className={`text-gray-200 text-sm whitespace-nowrap ${styles.statusLabel}`}>{label}</div>
         <div className="text-gray-200 text-sm text-right whitespace-nowrap">{displayNumericValue(baseValue)}</div>
         <div className={`text-sm text-right whitespace-nowrap transition-all duration-500 ease-in-out ${combinedBonusValue > 0 ? 'text-orange-300' : (combinedBonusValue < 0 ? 'text-red-500' : 'text-gray-200')}`}>
           {formatBonus(combinedBonusValue)}
@@ -551,7 +551,7 @@ const StatusDisplay = ({
               </div>
               {/* 耐久指標行 - 横並び表示（数値タブと同様） */}
               <div className="py-1 border-b border-gray-700 flex items-center justify-between">
-                <div className="text-gray-200 text-sm whitespace-nowrap">耐久指標</div>
+                <div className={`text-gray-200 text-sm whitespace-nowrap ${styles.statusLabel}`}>耐久指標</div>
                 <div className="text-xs md:text-xs xl:text-sm flex gap-4">
                   <span className="text-gray-200">耐実弾：<span className={getDurabilityIndexColorClass('range')}>{formatNumber(calculateDurabilityIndex('range'))}</span></span>
                   <span className="text-gray-200">耐ビーム：<span className={getDurabilityIndexColorClass('beam')}>{formatNumber(calculateDurabilityIndex('beam'))}</span></span>
@@ -560,25 +560,25 @@ const StatusDisplay = ({
               </div>
               {/* 耐久火力行 - 横並び表示 */}
               <div className="py-1 border-b border-gray-700 flex items-center justify-between gap-2">
-                <div className="text-gray-200 text-sm whitespace-nowrap">耐久火力</div>
+                <div className={`text-gray-200 text-sm whitespace-nowrap ${styles.statusLabel}`}>耐久火力</div>
                 <div className="text-xs xl:text-xs">
                   <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-0 justify-items-end">
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐実弾（射撃）：<span className={getDurabilityFirepowerColorClass('range', 'shoot')}>{calculateDurabilityFirepower('range', 'shoot')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐ビーム（射撃）：<span className={getDurabilityFirepowerColorClass('beam', 'shoot')}>{calculateDurabilityFirepower('beam', 'shoot')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐格闘（射撃）：<span className={getDurabilityFirepowerColorClass('melee', 'shoot')}>{calculateDurabilityFirepower('melee', 'shoot')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐実弾（格闘）：<span className={getDurabilityFirepowerColorClass('range', 'melee')}>{calculateDurabilityFirepower('range', 'melee')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐ビーム（格闘）：<span className={getDurabilityFirepowerColorClass('beam', 'melee')}>{calculateDurabilityFirepower('beam', 'melee')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐格闘（格闘）：<span className={getDurabilityFirepowerColorClass('melee', 'melee')}>{calculateDurabilityFirepower('melee', 'melee')}</span>
                     </div>
                   </div>
@@ -622,7 +622,7 @@ const StatusDisplay = ({
 
               {/* 耐久指標行 - 横並び表示 */}
               <div className="py-1 border-b border-gray-700 flex items-center justify-between">
-                <div className="text-gray-200 text-sm whitespace-nowrap">耐久指標</div>
+                <div className={`text-gray-200 text-sm whitespace-nowrap ${styles.statusLabel}`}>耐久指標</div>
                 <div className="text-xs md:text-xs xl:text-sm flex gap-4">
                   <span className="text-gray-200">耐実弾：<span className={getDurabilityIndexColorClass('range')}>{formatNumber(calculateDurabilityIndex('range'))}</span></span>
                   <span className="text-gray-200">耐ビーム：<span className={getDurabilityIndexColorClass('beam')}>{formatNumber(calculateDurabilityIndex('beam'))}</span></span>
@@ -632,25 +632,25 @@ const StatusDisplay = ({
 
               {/* 耐久火力行 - 横並び表示 */}
               <div className="py-1 border-b border-gray-700 flex items-center justify-between gap-2">
-                <div className="text-gray-200 text-sm whitespace-nowrap">耐久火力</div>
+                <div className={`text-gray-200 text-sm whitespace-nowrap ${styles.statusLabel}`}>耐久火力</div>
                 <div className="text-xs xl:text-xs">
                   <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-0 justify-items-start">
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐実弾（射撃）：<span className={getDurabilityFirepowerColorClass('range', 'shoot')}>{calculateDurabilityFirepower('range', 'shoot')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐ビーム（射撃）：<span className={getDurabilityFirepowerColorClass('beam', 'shoot')}>{calculateDurabilityFirepower('beam', 'shoot')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐格闘（射撃）：<span className={getDurabilityFirepowerColorClass('melee', 'shoot')}>{calculateDurabilityFirepower('melee', 'shoot')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐実弾（格闘）：<span className={getDurabilityFirepowerColorClass('range', 'melee')}>{calculateDurabilityFirepower('range', 'melee')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐ビーム（格闘）：<span className={getDurabilityFirepowerColorClass('beam', 'melee')}>{calculateDurabilityFirepower('beam', 'melee')}</span>
                     </div>
-                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                    <div className={`text-gray-200 whitespace-nowrap text-right ${styles.statusLabel}`} style={{ width: '130px' }}>
                       耐格闘（格闘）：<span className={getDurabilityFirepowerColorClass('melee', 'melee')}>{calculateDurabilityFirepower('melee', 'melee')}</span>
                     </div>
                   </div>
