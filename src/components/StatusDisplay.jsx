@@ -153,6 +153,78 @@ const StatusDisplay = ({
     return isDurabilityIndexModified(armorType) ? 'text-orange-500' : 'text-gray-200';
   };
 
+  // 耐久火力の計算関数
+  const calculateDurabilityFirepower = (armorType, correctionType) => {
+    // 耐久指標を取得
+    const durabilityIndex = calculateDurabilityIndex(armorType);
+    if (durabilityIndex === '∞') {
+      return '∞';
+    }
+    
+    // 射撃補正または格闘補正を取得
+    const correctionKey = correctionType === 'shoot' ? 'shoot' : 'meleeCorrection';
+    const rawCorrectionValue = getBonusValue(rawTotal, correctionKey);
+    const correctionLimit = currentLimits && currentLimits[correctionKey] !== undefined && currentLimits[correctionKey] !== null && currentLimits[correctionKey] !== Infinity
+      ? currentLimits[correctionKey]
+      : rawCorrectionValue;
+    const correctionValue = Math.min(rawCorrectionValue, correctionLimit);
+    
+    // 計算式: 耐久指標 × (100 + 補正) / 100
+    const firepower = durabilityIndex * (100 + correctionValue) / 100;
+    
+    // 下三桁を「K」で丸める
+    const roundedFirepower = Math.round(firepower / 1000);
+    return `${roundedFirepower}K`;
+  };
+
+  // 耐久火力が基本値から変動しているかどうかを判定
+  const isDurabilityFirepowerModified = (armorType, correctionType) => {
+    // 基本値での計算
+    const baseHp = getBonusValue(base, 'hp');
+    let baseArmor;
+    switch (armorType) {
+      case 'range':
+        baseArmor = getBonusValue(base, 'armorRange');
+        break;
+      case 'beam':
+        baseArmor = getBonusValue(base, 'armorBeam');
+        break;
+      case 'melee':
+        baseArmor = getBonusValue(base, 'armorMelee');
+        break;
+      default:
+        return false;
+    }
+    
+    const correctionKey = correctionType === 'shoot' ? 'shoot' : 'meleeCorrection';
+    const baseCorrection = getBonusValue(base, correctionKey);
+    
+    // 基本耐久指標
+    let baseDurabilityIndex;
+    if (baseArmor >= 100) {
+      baseDurabilityIndex = '∞';
+    } else {
+      baseDurabilityIndex = Math.round((baseHp / (100 - baseArmor)) * 100);
+    }
+    
+    // 基本耐久火力
+    let baseFirepower;
+    if (baseDurabilityIndex === '∞') {
+      baseFirepower = '∞';
+    } else {
+      baseFirepower = `${Math.round(baseDurabilityIndex * (100 + baseCorrection) / 100 / 1000)}K`;
+    }
+    
+    // 現在の耐久火力と比較
+    const currentFirepower = calculateDurabilityFirepower(armorType, correctionType);
+    return baseFirepower !== currentFirepower;
+  };
+
+  // 耐久火力の色クラスを取得
+  const getDurabilityFirepowerColorClass = (armorType, correctionType) => {
+    return isDurabilityFirepowerModified(armorType, correctionType) ? 'text-orange-500' : 'text-gray-200';
+  };
+
   // グラフタブ用の上限値を取得（暫定上限を含む）
   const getGraphLimit = (statKey) => {
     // 暫定上限値の設定
@@ -486,6 +558,32 @@ const StatusDisplay = ({
                   <span className="text-gray-200">耐格闘：<span className={getDurabilityIndexColorClass('melee')}>{formatNumber(calculateDurabilityIndex('melee'))}</span></span>
                 </div>
               </div>
+              {/* 耐久火力行 - 横並び表示 */}
+              <div className="py-1 border-b border-gray-700 flex items-start justify-between gap-2">
+                <div className="text-gray-200 text-sm whitespace-nowrap">耐久火力</div>
+                <div className="text-xs xl:text-xs">
+                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-0 justify-items-end">
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐実弾（射撃）：<span className={getDurabilityFirepowerColorClass('range', 'shoot')}>{calculateDurabilityFirepower('range', 'shoot')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐ビーム（射撃）：<span className={getDurabilityFirepowerColorClass('beam', 'shoot')}>{calculateDurabilityFirepower('beam', 'shoot')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐格闘（射撃）：<span className={getDurabilityFirepowerColorClass('melee', 'shoot')}>{calculateDurabilityFirepower('melee', 'shoot')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐実弾（格闘）：<span className={getDurabilityFirepowerColorClass('range', 'melee')}>{calculateDurabilityFirepower('range', 'melee')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐ビーム（格闘）：<span className={getDurabilityFirepowerColorClass('beam', 'melee')}>{calculateDurabilityFirepower('beam', 'melee')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐格闘（格闘）：<span className={getDurabilityFirepowerColorClass('melee', 'melee')}>{calculateDurabilityFirepower('melee', 'melee')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* 判定・カウンター行（数値タブと同様） */}
               <div className={`py-1 items-center border-b border-gray-700 last:border-b-0 ${styles.statusJudgeRow}`}> 
                 <div className="text-md text-right text-gray-200">
@@ -529,6 +627,33 @@ const StatusDisplay = ({
                   <span className="text-gray-200">耐実弾：<span className={getDurabilityIndexColorClass('range')}>{formatNumber(calculateDurabilityIndex('range'))}</span></span>
                   <span className="text-gray-200">耐ビーム：<span className={getDurabilityIndexColorClass('beam')}>{formatNumber(calculateDurabilityIndex('beam'))}</span></span>
                   <span className="text-gray-200">耐格闘：<span className={getDurabilityIndexColorClass('melee')}>{formatNumber(calculateDurabilityIndex('melee'))}</span></span>
+                </div>
+              </div>
+
+              {/* 耐久火力行 - 横並び表示 */}
+              <div className="py-1 border-b border-gray-700 flex items-start justify-between gap-2">
+                <div className="text-gray-200 text-sm whitespace-nowrap">耐久火力</div>
+                <div className="text-xs xl:text-xs">
+                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-0 justify-items-start">
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐実弾（射撃）：<span className={getDurabilityFirepowerColorClass('range', 'shoot')}>{calculateDurabilityFirepower('range', 'shoot')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐ビーム（射撃）：<span className={getDurabilityFirepowerColorClass('beam', 'shoot')}>{calculateDurabilityFirepower('beam', 'shoot')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐格闘（射撃）：<span className={getDurabilityFirepowerColorClass('melee', 'shoot')}>{calculateDurabilityFirepower('melee', 'shoot')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐実弾（格闘）：<span className={getDurabilityFirepowerColorClass('range', 'melee')}>{calculateDurabilityFirepower('range', 'melee')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐ビーム（格闘）：<span className={getDurabilityFirepowerColorClass('beam', 'melee')}>{calculateDurabilityFirepower('beam', 'melee')}</span>
+                    </div>
+                    <div className="text-gray-200 whitespace-nowrap text-right" style={{ width: '130px' }}>
+                      耐格闘（格闘）：<span className={getDurabilityFirepowerColorClass('melee', 'melee')}>{calculateDurabilityFirepower('melee', 'melee')}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
