@@ -57,28 +57,6 @@ const MSSelector = ({
       .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
       // ひらがなをカタカナに変換
       .replace(/[ぁ-ん]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0x60))
-      // 濁点・半濁点の正規化（ひらがな）
-      .replace(/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/g, (s) => {
-        const map = {
-          'が': 'か', 'ぎ': 'き', 'ぐ': 'く', 'げ': 'け', 'ご': 'こ',
-          'ざ': 'さ', 'じ': 'し', 'ず': 'す', 'ぜ': 'せ', 'ぞ': 'そ',
-          'だ': 'た', 'ぢ': 'ち', 'づ': 'つ', 'で': 'て', 'ど': 'と',
-          'ば': 'は', 'び': 'ひ', 'ぶ': 'ふ', 'べ': 'へ', 'ぼ': 'ほ',
-          'ぱ': 'は', 'ぴ': 'ひ', 'ぷ': 'ふ', 'ぺ': 'へ', 'ぽ': 'ほ'
-        };
-        return map[s] || s;
-      })
-      // 濁点・半濁点の正規化（カタカナ）
-      .replace(/[ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ]/g, (s) => {
-        const map = {
-          'ガ': 'カ', 'ギ': 'キ', 'グ': 'ク', 'ゲ': 'ケ', 'ゴ': 'コ',
-          'ザ': 'サ', 'ジ': 'シ', 'ズ': 'ス', 'ゼ': 'セ', 'ゾ': 'ソ',
-          'ダ': 'タ', 'ヂ': 'チ', 'ヅ': 'ツ', 'デ': 'テ', 'ド': 'ト',
-          'バ': 'ハ', 'ビ': 'ヒ', 'ブ': 'フ', 'ベ': 'ヘ', 'ボ': 'ホ',
-          'パ': 'ハ', 'ピ': 'ヒ', 'プ': 'フ', 'ペ': 'ヘ', 'ポ': 'ホ'
-        };
-        return map[s] || s;
-      })
       // ギリシャ文字の完全対応（大文字・小文字・全角・半角）
       .replace(/[ΑαＡａAa]/g, 'a')
       .replace(/[ΒβＢｂBb]/g, 'b')
@@ -108,7 +86,7 @@ const MSSelector = ({
       .replace(/[Νν]/g, 'v')  // ニューガンダム等
       .replace(/[Ζζ]/g, 'z')  // Ζガンダム等
       // 長音符の正規化
-      .replace(/[ーｰ]/g, '')
+      .replace(/[ーｰ]/g, 'ー')
       // 特殊文字・記号の正規化
       .replace(/[・･]/g, '')
       .replace(/[（）\(\)]/g, '')
@@ -238,9 +216,19 @@ const MSSelector = ({
         matchesLv = msLv === filterLv;
       }
       
-      // 柔軟な検索マッチング
+      // 柔軟な検索マッチング（前方一致 + ローマ字・ギリシャ文字は部分一致）
+      const normalizedMsName = createFlexibleNormalize(msName);
+      const normalizedSearchText = createFlexibleNormalize(searchText);
+      
+      // ローマ字・ギリシャ文字・数字のみで構成されている場合は部分一致を許可
+      // 全角・半角両対応、ギリシャ文字も含む
+      const isRomanOrGreek = /^[a-zA-Z0-9Ａ-Ｚａ-ｚ０-９ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω\s]+$/.test(searchText.trim());
+      
       const matchesSearch = !searchText || 
-        createFlexibleNormalize(msName).includes(createFlexibleNormalize(searchText));
+        (isRomanOrGreek 
+          ? normalizedMsName.includes(normalizedSearchText)  // ローマ字・ギリシャ文字は部分一致
+          : normalizedMsName.startsWith(normalizedSearchText) // カタカナ等は前方一致
+        );
 
       return matchesType && matchesCost && matchesLv && matchesSearch;
     });
