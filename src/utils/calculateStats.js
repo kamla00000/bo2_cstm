@@ -113,10 +113,7 @@ export const calculateMSStatsLogic = (
       // 通常speed加算は絶対に行わない
       return;
     }
-    // 通常のspeed加算（コネクティングシステム強襲Ⅰ型以外）
-    if (!Array.isArray(part.speedByLevel)) {
-      if (typeof part.speed === 'number') partBonus.speed += part.speed;
-    }
+
     console.log(`[Part Debug] Processing part: ${part.name}`);
     console.log(`[Part Debug] isFullStrengthened: ${isFullStrengthened}`);
     console.log(`[Part Debug] Part has hpByLevel: ${Array.isArray(part.hpByLevel)}`);
