@@ -153,17 +153,23 @@ const MsInfoDisplay = ({
           }
         `}</style>
         <div className="ms-imgbox-card">
-          <Link 
-            to="/" 
-            onClick={onMsImageClick}
+          <a 
+            href={selectedMs.wiki_url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block"
-            title="MSを再選択"
+            title={selectedMs.wiki_url ? "Wikiで詳細を見る" : "Wikiリンクなし"}
+            onClick={(e) => {
+              if (!selectedMs.wiki_url) {
+                e.preventDefault();
+              }
+            }}
           >
             <MSImageDisplay
               baseName={baseName}
               msName={selectedMs["MS名"]}
             />
-          </Link>
+          </a>
         </div>
         <div className="flex flex-col flex-grow">
           <div className="flex items-center mb-1">
