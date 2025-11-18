@@ -164,38 +164,66 @@ const PickedMs = React.forwardRef(({
         }
     }, [selectedMs]);
 
-    // Pull-to-Refresh抑制
+    // Pull-to-Refresh抑制（通常のスクロールは許可）
     useEffect(() => {
-        const preventPullToRefresh = (e) => {
-            // タッチ開始位置がページ最上部付近かつ下方向にスワイプしようとしている場合のみ抑制
-            if (window.scrollY === 0 && e.touches && e.touches[0]) {
-                const touch = e.touches[0];
-                const initialY = touch.clientY;
-                
-                const handleTouchMove = (moveEvent) => {
-                    const moveTouch = moveEvent.touches[0];
-                    const deltaY = moveTouch.clientY - initialY;
-                    
-                    // 下方向のスワイプ（プルダウン）を抑制
-                    if (deltaY > 0 && window.scrollY === 0) {
-                        moveEvent.preventDefault();
-                    }
-                };
-                
-                const handleTouchEnd = () => {
-                    document.removeEventListener('touchmove', handleTouchMove);
-                    document.removeEventListener('touchend', handleTouchEnd);
-                };
-                
-                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                document.addEventListener('touchend', handleTouchEnd);
+        // overscroll-behavior: noneをbodyに設定（これだけで多くのブラウザで機能する）
+        document.body.style.overscrollBehavior = 'none';
+        document.body.style.overscrollBehaviorY = 'none';
+        
+        // iOS Safariなど、overscroll-behaviorが効かない場合の追加対応
+        let lastTouchY = 0;
+        
+        const handleTouchStart = (e) => {
+            if (e.touches && e.touches[0]) {
+                lastTouchY = e.touches[0].clientY;
             }
         };
-
-        document.addEventListener('touchstart', preventPullToRefresh, { passive: false });
+        
+        const handleTouchMove = (e) => {
+            if (!e.touches || !e.touches[0]) return;
+            
+            const touchY = e.touches[0].clientY;
+            const touchDeltaY = touchY - lastTouchY;
+            
+            // 本当にページ最上部で、プルダウンしようとしている場合のみブロック
+            // かつ、まだスクロール位置が変わっていない（overscrollの兆候）
+            const isAtTop = window.scrollY <= 0;
+            const isPullingDown = touchDeltaY > 0;
+            
+            if (isAtTop && isPullingDown) {
+                // ドキュメント全体のスクロールを止めるが、内部要素のスクロールは許可
+                const target = e.target;
+                let scrollableParent = null;
+                let element = target;
+                
+                // スクロール可能な親要素を探す
+                while (element && element !== document.documentElement) {
+                    const computed = window.getComputedStyle(element);
+                    if ((computed.overflowY === 'auto' || computed.overflowY === 'scroll') && 
+                        element.scrollHeight > element.clientHeight) {
+                        scrollableParent = element;
+                        break;
+                    }
+                    element = element.parentElement;
+                }
+                
+                // スクロール可能な親要素がない、またはその要素も最上部にいる場合のみブロック
+                if (!scrollableParent || scrollableParent.scrollTop <= 0) {
+                    e.preventDefault();
+                }
+            }
+            
+            lastTouchY = touchY;
+        };
+        
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
         
         return () => {
-            document.removeEventListener('touchstart', preventPullToRefresh);
+            document.body.style.overscrollBehavior = '';
+            document.body.style.overscrollBehaviorY = '';
+            document.removeEventListener('touchstart', handleTouchStart);
+            document.removeEventListener('touchmove', handleTouchMove);
         };
     }, []);
 
