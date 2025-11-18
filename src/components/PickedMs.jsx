@@ -164,6 +164,41 @@ const PickedMs = React.forwardRef(({
         }
     }, [selectedMs]);
 
+    // Pull-to-Refresh抑制
+    useEffect(() => {
+        const preventPullToRefresh = (e) => {
+            // タッチ開始位置がページ最上部付近かつ下方向にスワイプしようとしている場合のみ抑制
+            if (window.scrollY === 0 && e.touches && e.touches[0]) {
+                const touch = e.touches[0];
+                const initialY = touch.clientY;
+                
+                const handleTouchMove = (moveEvent) => {
+                    const moveTouch = moveEvent.touches[0];
+                    const deltaY = moveTouch.clientY - initialY;
+                    
+                    // 下方向のスワイプ（プルダウン）を抑制
+                    if (deltaY > 0 && window.scrollY === 0) {
+                        moveEvent.preventDefault();
+                    }
+                };
+                
+                const handleTouchEnd = () => {
+                    document.removeEventListener('touchmove', handleTouchMove);
+                    document.removeEventListener('touchend', handleTouchEnd);
+                };
+                
+                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                document.addEventListener('touchend', handleTouchEnd);
+            }
+        };
+
+        document.addEventListener('touchstart', preventPullToRefresh, { passive: false });
+        
+        return () => {
+            document.removeEventListener('touchstart', preventPullToRefresh);
+        };
+    }, []);
+
     useFlick(
         () => { 
             if (window.innerWidth <= 767 && !showSelector && selectedMs) {
