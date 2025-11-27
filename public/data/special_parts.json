@@ -1,7 +1,6 @@
 [
   {
     "name": "脚部特殊装甲_LV1",
-    
     "close": 3,
     "mid": 1,
     "long": 0,
@@ -33,7 +32,6 @@
   },
   {
     "name": "頭部特殊装甲_LV1",
-    
     "close": 0,
     "mid": 0,
     "long": 1,
@@ -57,7 +55,6 @@
   },
   {
     "name": "背部特殊装甲_LV1",
-    
     "close": 1,
     "mid": 0,
     "long": 0,
@@ -81,7 +78,6 @@
   },
   {
     "name": "データベースリンク_LV1",
-    
     "close": 0,
     "mid": 1,
     "long": 2,
@@ -97,7 +93,6 @@
   },
   {
     "name": "スペースドフレーム_LV1",
-    
     "close": 1,
     "mid": 3,
     "long": 1,
@@ -131,25 +126,23 @@
     "close": 4,
     "mid": 0,
     "long": 4,
-    "hp":1000,
+    "hp": 1000,
     "thruster": 8,
     "description": "機体HPが1000増加。スラスターが8増加"
   },
   {
     "name": "スペースドアーマー_LV1",
-    
     "close": 4,
     "mid": 2,
     "long": 3,
     "thruster": 4,
-    "armor_beam":4,
-    "armor_melee":4,
-    "armor_range":4,
+    "armor_beam": 4,
+    "armor_melee": 4,
+    "armor_range": 4,
     "description": "スラスターが4増加。耐実弾、耐ビーム、耐格闘装甲の各補正値が4増加。"
   },
   {
     "name": "サイコフレーム_LV1",
-    
     "close": 2,
     "mid": 3,
     "long": 3,
@@ -159,7 +152,6 @@
   },
   {
     "name": "教育型コンピューター_LV1",
-    
     "close": 4,
     "mid": 4,
     "long": 6,
@@ -167,7 +159,6 @@
   },
   {
     "name": "複合フレーム[Type-A]_LV1",
-    
     "close": 2,
     "mid": 4,
     "long": 3,
@@ -177,11 +168,11 @@
     "shoot_4": 5,
     "hp_full": 1000,
     "shoot_full": 10,
-    "kind":"複合フレーム",
+    "kind": "複合フレーム",
     "description": "リペアツールのHP回復量が15%上昇する。\n機体HPが200上昇。射撃補正が2増加。\n強化リストの強化段階が3段階目に達していると追加で機体HPが300上昇し、射撃補正が3増加する。\n更に6段階目に達していると追加で機体HPが500上昇し、射撃補正が5増加する。\nなお複合フレーム系パーツは複数装備できない。"
   },
   {
-    "name": "複合フレーム[Type-B]_LV1",    
+    "name": "複合フレーム[Type-B]_LV1",
     "close": 3,
     "mid": 4,
     "long": 2,
@@ -191,12 +182,11 @@
     "melee_4": 5,
     "hp_full": 1000,
     "melee_full": 10,
-    "kind":"複合フレーム",
+    "kind": "複合フレーム",
     "description": "リペアツールのHP回復量が15%上昇する。\n機体HPが200上昇。格闘補正が2増加。\n強化リストの強化段階が3段階目に達していると追加で機体HPが300上昇し、格闘補正が3増加する。\n更に6段階目に達していると追加で機体HPが500上昇し、格闘補正が5増加する。\nなお複合フレーム系パーツは複数装備できない。"
   },
   {
     "name": "水中戦適正化装置_LV1",
-    
     "close": 4,
     "mid": 3,
     "long": 2,
@@ -204,7 +194,6 @@
   },
   {
     "name": "射撃攻防プログラム_LV1",
-    
     "close": 2,
     "mid": 2,
     "long": 5,
@@ -213,7 +202,6 @@
   },
   {
     "name": "格闘攻防プログラム_LV1",
-    
     "close": 4,
     "mid": 2,
     "long": 2,
@@ -221,47 +209,89 @@
     "description": "格闘補正が5増加。\n格闘属性から受けるダメージを10%軽減。"
   },
   {
-    "name": "総合強化プログラム_格闘_LV1",    
+    "name": "総合強化プログラム_格闘_LV1",
     "close": 3,
     "mid": 3,
     "long": 1,
-    "meleeCorrectionByLevel": [1, 2, 3, 4, 5, 5],
-    "armorMeleeByLevel": [1, 2, 3, 4, 5, 5],
-    "highSpeedMovementByLevel": [1, 2, 3, 4, 5, 5],
-    "thrusterByLevel": [1, 2, 3, 4, 5, 5],
-    "turnPerformanceGroundByLevel": [1, 2, 3, 4, 5, 5],   
-    "turnPerformanceSpaceByLevel": [1, 2, 3, 4, 5, 5],
+    "meleeCorrectionByLevel": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      5
+    ],
+    "armorMeleeByLevel": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      5
+    ],
+    "highSpeedMovementByLevel": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      5
+    ],
+    "thrusterByLevel": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      5
+    ],
+    "turnPerformanceGroundByLevel": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      5
+    ],
+    "turnPerformanceSpaceByLevel": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      5
+    ],
     "description": "格闘補正、耐格闘補正、高速移動、スラスター、MSの旋回性能が1増加する。\n機体LVが1上昇するごとに、さらに1増加。\n本パーツによる最大上昇は機体LV5まで。"
   },
   {
-  "name": "特殊強化装置[Type-α]_LV1",  
-  "close": 4,
-  "mid": 3,
-  "long": 2,
-  "hp": 1000,
-  "kind": "特殊強化装置",
-  "description": "格闘補正が20%増加。機体HPが1000増加。",
-  "meleeCorrection_percent": 20,
-  "hp_percent": 0,
-  "shoot_percent": 0,
-  "armorBeam_percent": 0,
-  "armorMelee_percent": 0,
-  "armorRange_percent": 0
-},
-{
-  "name": "特殊強化装置[Type-β]_LV1",  
-  "close": 3,
-  "mid": 3,
-  "long": 5,
-  "hp": 1000,
-  "kind": "特殊強化装置",
-  "description": "射撃補正が20%増加。機体HPが1000増加。",
-  "shoot_percent": 20,
-  "hp_percent": 0,
-  "armorBeam_percent": 0,
-  "armorMelee_percent": 0,
-  "armorRange_percent": 0
-},
+    "name": "特殊強化装置[Type-α]_LV1",
+    "close": 4,
+    "mid": 3,
+    "long": 2,
+    "hp": 1000,
+    "kind": "特殊強化装置",
+    "description": "格闘補正が20%増加。機体HPが1000増加。",
+    "meleeCorrection_percent": 20,
+    "hp_percent": 0,
+    "shoot_percent": 0,
+    "armorBeam_percent": 0,
+    "armorMelee_percent": 0,
+    "armorRange_percent": 0
+  },
+  {
+    "name": "特殊強化装置[Type-β]_LV1",
+    "close": 3,
+    "mid": 3,
+    "long": 5,
+    "hp": 1000,
+    "kind": "特殊強化装置",
+    "description": "射撃補正が20%増加。機体HPが1000増加。",
+    "shoot_percent": 20,
+    "hp_percent": 0,
+    "armorBeam_percent": 0,
+    "armorMelee_percent": 0,
+    "armorRange_percent": 0
+  },
   {
     "name": "カテゴリ特攻プログラム_汎用_LV1",
     "close": 4,
@@ -270,7 +300,7 @@
     "hp": 2000,
     "description": "汎用カテゴリのみ装備可能。\n機体HPが2000増加。\n有利カテゴリの敵機に与えるダメージを増加。"
   },
-    {
+  {
     "name": "カテゴリ特攻プログラム_支援_LV1",
     "close": 2,
     "mid": 4,

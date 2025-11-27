@@ -67,7 +67,12 @@
   {
     "name": "オーバーチューン[機動]_LV1",
     "category": "移動",
-    "highSpeedMovementByLevel": [1, 4, 7, 10],
+    "highSpeedMovementByLevel": [
+      1,
+      4,
+      7,
+      10
+    ],
     "close": 3,
     "mid": 1,
     "long": 0,
@@ -76,7 +81,12 @@
   {
     "name": "オーバーチューン[スラスター]_LV1",
     "category": "移動",
-    "thrusterByLevel": [3, 7, 11, 15],
+    "thrusterByLevel": [
+      3,
+      7,
+      11,
+      15
+    ],
     "close": 2,
     "mid": 3,
     "long": 2,
@@ -121,8 +131,20 @@
     "long": 4,
     "thruster": 15,
     "limitIncreases": {
-    "thruster": 10
+      "thruster": 10
     },
     "description": "スラスターが15増加。スラスターの上限値が10増加する。スラスターの回復速度が10%上昇。"
+  },
+  {
+    "name": "コネクティングシステム[汎用Ⅰ型] _LV1",
+    "close": 0,
+    "mid": 4,
+    "long": 3,
+    "speed": 7,
+    "thruster": 7,
+    "turnPerformanceGround": 7,
+    "turnPerformanceSpace": 7,
+    "kind": "コネクティングシステム",
+    "description": "スピード、スラスター、旋回性能が7増加。さらに汎用カテゴリに装備させると、各部位(頭部、背部、脚部)に与える部位ダメージが10％増加する。スピードが上昇するカスタムパーツ及び同系統のカスタムパーツとの同時装備不可。"
   }
 ]

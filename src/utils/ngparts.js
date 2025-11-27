@@ -14,8 +14,8 @@ export const isSpecialTurnPart = (part) => {
 
 // スピード上昇パーツ判定
 export const isSpeedPart = (part) => {
-    // コネクティングシステム［強襲Ⅰ型］_LV1は常にスピード上昇パーツ扱い（併用不可判定対象）
-    if (part.name && part.name.includes('コネクティングシステム') && part.name.includes('強襲')) return true;
+    // コネクティングシステム［強襲Ⅰ型］_LV1、コネクティングシステム[汎用Ⅰ型]_LV1は常にスピード上昇パーツ扱い（併用不可判定対象）
+    if (part.name && part.name.includes('コネクティングシステム') && (part.name.includes('強襲') || part.name.includes('汎用'))) return true;
     return (typeof part.speed === 'number' && part.speed > 0);
 };
 
