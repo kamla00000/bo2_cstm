@@ -293,6 +293,20 @@
     "armorRange_percent": 0
   },
   {
+    "name": "特殊強化装置[Type-γ]_LV1",
+    "close": 3,
+    "mid": 6,
+    "long": 5,
+    "hp": 1200,
+    "kind": "特殊強化装置",
+    "description": "耐実弾、耐ビーム、耐格闘の各補正が14%増加。機体HPが1200増加。",
+    "shoot_percent": 0,
+    "hp_percent": 0,
+    "armorBeam_percent": 14,
+    "armorMelee_percent": 14,
+    "armorRange_percent": 14
+  },
+  {
     "name": "カテゴリ特攻プログラム_汎用_LV1",
     "close": 4,
     "mid": 1,
